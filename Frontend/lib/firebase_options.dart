@@ -60,16 +60,16 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyB4vlqOduFKwyeUa6Cryu0F_jVrVPeKrbk',
     appId: '1:119081809507:android:a64e1f570a1987b093aa56',
     messagingSenderId: '119081809507',
-    projectId: 'breakbite-demo',
-    storageBucket: 'breakbite-demo.firebasestorage.app',
+    projectId: 'serveo-foods',
+    storageBucket: 'serveo-foods.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBqYMEc1PtfkxjTYF9K_ko2BYpvtgCJ2Bg',
     appId: '1:119081809507:ios:9098959d146b4ea193aa56',
     messagingSenderId: '119081809507',
-    projectId: 'breakbite-demo',
-    storageBucket: 'breakbite-demo.firebasestorage.app',
+    projectId: 'serveo-foods',
+    storageBucket: 'serveo-foods.firebasestorage.app',
     iosBundleId: 'com.example.frontend',
   );
 

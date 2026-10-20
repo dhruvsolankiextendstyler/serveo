@@ -3,11 +3,11 @@ import 'package:provider/provider.dart';
 import '../utils/order_provider.dart';
  // Ensure this points to your OrderProvider file
 
-class BreakbiteFoodCard extends StatelessWidget {
+class ServeoFoodCard extends StatelessWidget {
   final Item item; // Pass the whole Item object for easier logic
   final String imagePath;
 
-  const BreakbiteFoodCard({
+  const ServeoFoodCard({
     super.key,
     required this.item,
     required this.imagePath
@@ -127,3 +127,5 @@ class BreakbiteFoodCard extends StatelessWidget {
     );
   }
 }
+
+typedef BreakbiteFoodCard = ServeoFoodCard;

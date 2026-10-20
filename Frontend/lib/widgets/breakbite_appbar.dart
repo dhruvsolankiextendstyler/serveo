@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-class BreakBiteAppBar extends StatelessWidget implements PreferredSizeWidget{
+class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget{
   final String title;
-  const BreakBiteAppBar({super.key, this.title = "BreakBite"});
+  const ServeoAppBar({super.key, this.title = "Serveo"});
 
   @override
   Widget build(BuildContext context) {
@@ -22,3 +22,5 @@ class BreakBiteAppBar extends StatelessWidget implements PreferredSizeWidget{
   // TODO: implement preferredSize
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
+
+typedef BreakBiteAppBar = ServeoAppBar;

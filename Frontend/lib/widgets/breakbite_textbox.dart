@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class BreakBiteTextBox extends StatelessWidget{
+class ServeoTextBox extends StatelessWidget{
   final String hint;
   final IconData icon;
   final bool obscure;
   final TextInputType keyboard;
   final TextEditingController cont;
-  const BreakBiteTextBox({
+  const ServeoTextBox({
     super.key,
     required this.hint,
     required this.icon,
@@ -37,3 +37,5 @@ class BreakBiteTextBox extends StatelessWidget{
     );
   }
 }
+
+typedef BreakBiteTextBox = ServeoTextBox;

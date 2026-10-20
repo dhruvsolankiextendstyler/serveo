@@ -26,10 +26,10 @@ class DashboardPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: BreakBiteAppBar(),
-      drawer: BreakBiteDrawer(uname: uname),
+      appBar: const ServeoAppBar(),
+      drawer: ServeoDrawer(uname: uname),
       body: menuProvider.isLoading
-          ? const BreakBiteSpinner()
+          ? const ServeoSpinner()
           : RefreshIndicator(
         backgroundColor: Colors.black,
         color: Colors.yellow,
@@ -41,7 +41,7 @@ class DashboardPage extends StatelessWidget {
           children: [
             Text("Welcome, $uname!", style: const TextStyle(color: Colors.white)),
             const SizedBox(height: 20),
-            ...menuProvider.menuItems.map((item) => BreakbiteFoodCard(item: item, imagePath: imgMap[item.category].toString(),)).toList(),
+            ...menuProvider.menuItems.map((item) => ServeoFoodCard(item: item, imagePath: imgMap[item.category].toString(),)).toList(),
             const Divider(color: Colors.yellow,),
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.175,

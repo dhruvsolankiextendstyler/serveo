@@ -6,12 +6,13 @@ import 'package:frontend/pages/login_page.dart';
 import 'package:frontend/pages/report_page.dart';
 import 'package:frontend/utils/order_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart';// Import your login page
+import 'package:http/http.dart';
+import '../utils/api_config.dart';
 
-class BreakBiteDrawer extends StatelessWidget {
+class ServeoDrawer extends StatelessWidget {
   final String uname;
 
-  const BreakBiteDrawer({super.key, required this.uname});
+  const ServeoDrawer({super.key, required this.uname});
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +119,7 @@ class BreakBiteDrawer extends StatelessWidget {
                 try {
                   final token = await user.getIdToken();
                   await patch(
-                    Uri.parse("https://breakbite-unyh.onrender.com/user/clear-fcm"),
+                    Uri.parse("${ApiConfig.baseUrl}/user/clear-fcm"),
                     headers: {
                       "Content-Type": "application/json",
                       "Authorization": "Bearer $token"
@@ -159,3 +160,5 @@ class BreakBiteDrawer extends StatelessWidget {
     );
   }
 }
+
+typedef BreakBiteDrawer = ServeoDrawer;

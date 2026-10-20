@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'api_config.dart';
 
 
 class OrderProvider extends ChangeNotifier{
@@ -57,7 +58,7 @@ class OrderProvider extends ChangeNotifier{
     final user = FirebaseAuth.instance.currentUser;
     final String? token = await user?.getIdToken();
     await post(
-        Uri.parse("https://breakbite-unyh.onrender.com/order/add"),
+        Uri.parse("${ApiConfig.baseUrl}/order/add"),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token'
@@ -85,7 +86,7 @@ class OrderProvider extends ChangeNotifier{
       final token = await user?.getIdToken();
 
       final response = await get(
-        Uri.parse("https://breakbite-unyh.onrender.com/order/user"), // Verify this route matches your backend!
+        Uri.parse("${ApiConfig.baseUrl}/order/user"), // Verify this route matches your backend!
         headers: {
           "Authorization": "Bearer $token",
         },

@@ -33,7 +33,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         title: Text("My Orders", style: textTheme.titleLarge),
       ),
       body: isLoading
-          ? const Center(child: BreakBiteSpinner())
+          ? const Center(child: ServeoSpinner())
           : orders.isEmpty
           ? _buildEmptyState(context, textTheme)
           : ListView.builder(

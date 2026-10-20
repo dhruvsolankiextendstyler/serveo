@@ -14,7 +14,7 @@ export const updateStatusController = async (req) => {
             try {
                 const message = {
                     notification: {
-                        title: "BreakBite: Food is Ready!",
+                        title: "Serveo: Food is Ready!",
                         body: `Order #${order._id.toString().slice(-4)} is ready for pickup.`,
                     },
                     token: user.fcmToken,

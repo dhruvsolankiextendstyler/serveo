@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import '../utils/api_config.dart';
 import 'admin_order.dart';
 
 class AdminOrderProvider extends ChangeNotifier {
@@ -20,7 +21,7 @@ class AdminOrderProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners(); // Tells the UI to show the spinner
     final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-    final msg = await get(Uri.parse("https://breakbite-unyh.onrender.com/order/"),);
+    final msg = await get(Uri.parse("${ApiConfig.baseUrl}/order/"),);
     if(msg.statusCode == 200){
       final List<dynamic> data = jsonDecode(msg.body)['message'];
 
@@ -31,7 +32,7 @@ class AdminOrderProvider extends ChangeNotifier {
   }
 
   Future<void> fetchOrdersSilent() async {
-    final msg = await get(Uri.parse("https://breakbite-unyh.onrender.com/order/"));
+    final msg = await get(Uri.parse("${ApiConfig.baseUrl}/order/"));
     final List<dynamic> data = jsonDecode(msg.body)['message'];
     _orders = data.map((json) => AdminOrder.fromJson(json)).toList();
     notifyListeners(); // Tells the UI to show the data
@@ -41,7 +42,7 @@ class AdminOrderProvider extends ChangeNotifier {
     int index = _orders.indexWhere((o) => o.id == orderId);
     if (index != -1) {
       await patch(
-          Uri.parse("https://breakbite-unyh.onrender.com/order/updatestatus"),
+          Uri.parse("${ApiConfig.baseUrl}/order/updatestatus"),
           headers: {
             'Content-Type' : 'application/json'
           },

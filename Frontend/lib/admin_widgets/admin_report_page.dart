@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/widgets/breakbite_spinner.dart';
 import 'package:http/http.dart';
+import '../utils/api_config.dart';
 
 class AdminReportPage extends StatefulWidget {
   const AdminReportPage({super.key});
@@ -32,7 +33,7 @@ class AdminReportPageState extends State<AdminReportPage> {
     try {
       final token = await FirebaseAuth.instance.currentUser?.getIdToken();
       final response = await get(
-        Uri.parse("https://breakbite-unyh.onrender.com/order/$selectedTimeframe"),
+        Uri.parse("${ApiConfig.baseUrl}/order/$selectedTimeframe"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -96,7 +97,7 @@ class AdminReportPageState extends State<AdminReportPage> {
 
           // 2. Report Data Display
           isLoading
-              ? const Expanded(child: BreakBiteSpinner())
+              ? const Expanded(child: ServeoSpinner())
               : Expanded(
             child: ListView(
               children: [

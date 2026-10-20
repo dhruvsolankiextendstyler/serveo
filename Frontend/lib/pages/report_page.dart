@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/widgets/breakbite_spinner.dart';
 import 'package:http/http.dart' as http;
+import '../utils/api_config.dart';
 // Import your spinner if you have one, or use CircularProgressIndicator
 // import 'package:frontend/widgets/spinner.dart';
 
@@ -34,7 +35,7 @@ class _ReportPageState extends State<ReportPage> {
 
       final token = await FirebaseAuth.instance.currentUser?.getIdToken();
       final response = await http.get(
-        Uri.parse("https://breakbite-unyh.onrender.com/order/userReport"),
+        Uri.parse("${ApiConfig.baseUrl}/order/userReport"),
         headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token"
@@ -70,7 +71,7 @@ class _ReportPageState extends State<ReportPage> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: isLoading
-          ? const BreakBiteSpinner()
+          ? const ServeoSpinner()
           : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

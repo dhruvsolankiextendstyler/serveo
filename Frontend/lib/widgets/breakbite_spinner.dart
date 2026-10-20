@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class BreakBiteSpinner extends StatefulWidget{
-  const BreakBiteSpinner({super.key});
+class ServeoSpinner extends StatefulWidget{
+  const ServeoSpinner({super.key});
 
   @override
-  State<BreakBiteSpinner> createState() => SpinnerState();
+  State<ServeoSpinner> createState() => SpinnerState();
 }
 
-class SpinnerState extends State<BreakBiteSpinner> with SingleTickerProviderStateMixin{
+class SpinnerState extends State<ServeoSpinner> with SingleTickerProviderStateMixin{
   late AnimationController cont;
 
   @override
@@ -42,3 +42,5 @@ class SpinnerState extends State<BreakBiteSpinner> with SingleTickerProviderStat
     ));
   }
 }
+
+typedef BreakBiteSpinner = ServeoSpinner;

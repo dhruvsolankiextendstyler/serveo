@@ -1,6 +1,6 @@
-# frontend
+# Serveo Frontend
 
-BreakBite Frontend
+Serveo Canteen Food Ordering & Kitchen Management Platform
 
 ## Getting Started
 

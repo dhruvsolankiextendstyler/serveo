@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget{
           ),
         ),
       ),
-      title: "BreakBite",
+      title: "Serveo",
       home: const AuthGate()
     );
   }

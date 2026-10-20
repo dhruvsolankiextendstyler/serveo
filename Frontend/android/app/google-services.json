@@ -1,8 +1,8 @@
 {
   "project_info": {
     "project_number": "119081809507",
-    "project_id": "breakbite-demo",
-    "storage_bucket": "breakbite-demo.firebasestorage.app"
+    "project_id": "serveo-foods",
+    "storage_bucket": "serveo-foods.firebasestorage.app"
   },
   "client": [
     {

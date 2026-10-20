@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'api_config.dart';
 import 'order_provider.dart'; // Ensure this points to your Item class
 
 class MenuProvider extends ChangeNotifier {
@@ -16,7 +17,7 @@ class MenuProvider extends ChangeNotifier {
     try {
       // Replace with your machine's IP if testing on a physical device
       final response = await get(
-        Uri.parse("https://breakbite-unyh.onrender.com/item"),
+        Uri.parse("${ApiConfig.baseUrl}/item"),
       );
 
       if (response.statusCode == 200) {

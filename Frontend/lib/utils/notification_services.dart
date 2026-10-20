@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart';
+import 'api_config.dart';
 
 // 1. Background Message Handler (Must be OUTSIDE any class)
 
@@ -49,8 +50,8 @@ class NotificationService {
   // 3. Helper to show the popup when app is open
   Future<void> _showLocalNotification(RemoteMessage message) async {
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'breakbite_channel_id', // Channel ID
-      'BreakBite Notifications', // Channel Name
+      'serveo_channel_id', // Channel ID
+      'Serveo Notifications', // Channel Name
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -73,7 +74,7 @@ class NotificationService {
 
     try {
       final response = await patch(
-        Uri.parse("https://breakbite-unyh.onrender.com/user/update-fcm"),
+        Uri.parse("${ApiConfig.baseUrl}/user/update-fcm"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $tok"

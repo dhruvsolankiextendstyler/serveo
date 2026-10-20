@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class BreakBiteButton extends StatelessWidget{
+class ServeoButton extends StatelessWidget{
   final String child;
   final VoidCallback onPressed;
 
-  const BreakBiteButton({super.key, required this.child, required this.onPressed});
+  const ServeoButton({super.key, required this.child, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -20,3 +20,5 @@ class BreakBiteButton extends StatelessWidget{
     );
   }
 }
+
+typedef BreakBiteButton = ServeoButton;

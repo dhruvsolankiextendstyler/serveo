@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import '../utils/api_config.dart';
 import '../widgets/breakbite_textbox.dart';
 
 class ItemFormPage extends StatelessWidget{
@@ -49,9 +50,9 @@ class ItemFormPage extends StatelessWidget{
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      BreakBiteTextBox(hint: "Item Name", icon: Icons.food_bank, cont: itemName,),
+                      ServeoTextBox(hint: "Item Name", icon: Icons.food_bank, cont: itemName,),
                       const SizedBox(height: 10),
-                      BreakBiteTextBox(hint: "Item Price", icon: Icons.money, cont: itemPrice,),
+                      ServeoTextBox(hint: "Item Price", icon: Icons.money, cont: itemPrice,),
                       const SizedBox(height: 10,),
                       DropdownButtonFormField<String>(
                         hint: Text("Select Category", style: TextTheme.of(context).bodyMedium?.copyWith(color: Colors.brown)),
@@ -88,7 +89,7 @@ class ItemFormPage extends StatelessWidget{
                     onTap: () async{
                       final token = await FirebaseAuth.instance.currentUser?.getIdToken();
                       final msg = await post(
-                          Uri.parse("https://breakbite-unyh.onrender.com/item/add"),
+                          Uri.parse("${ApiConfig.baseUrl}/item/add"),
                           headers: {
                             "Content-Type": "application/json",
                             "Authorization": "Bearer $token"

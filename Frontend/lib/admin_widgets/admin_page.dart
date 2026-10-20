@@ -59,8 +59,8 @@ class _AdminPageState extends State<AdminPage> {
     if (orderProvider.isLoading) {
       return Scaffold(
         backgroundColor: Colors.black,
-        appBar: BreakBiteAppBar(),
-        body: const Center(child: BreakBiteSpinner()),
+        appBar: const ServeoAppBar(),
+        body: const Center(child: ServeoSpinner()),
       );
     }
 

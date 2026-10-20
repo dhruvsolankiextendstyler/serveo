@@ -25,7 +25,7 @@ class AuthGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             backgroundColor: Colors.black,
-            body: Center(child: BreakBiteSpinner()),
+            body: Center(child: ServeoSpinner()),
           );
         }
 

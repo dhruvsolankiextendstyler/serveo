@@ -26,7 +26,7 @@ class LandingPage2 extends StatelessWidget{
                   style: Theme.of(context).textTheme.labelLarge
               ),
               SizedBox(height: 10,),
-              BreakBiteButton(child: "Get Started", onPressed: () => Navigator.of(context).pushReplacement(PageNav(child:LandingPage3())))
+              ServeoButton(child: "Get Started", onPressed: () => Navigator.of(context).pushReplacement(PageNav(child:LandingPage3())))
             ],
           )
       ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:frontend/utils/api_config.dart';
 import 'package:frontend/utils/auth_check.dart';
 import 'package:frontend/widgets/breakbite_textbox.dart';
 
@@ -86,15 +87,15 @@ class _SignupPageState extends State<SignupPage> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        BreakBiteTextBox(hint: "Full Name", icon: Icons.person, cont: uname),
+                        ServeoTextBox(hint: "Full Name", icon: Icons.person, cont: uname),
                         const SizedBox(height: 10),
-                        BreakBiteTextBox(hint: "Email", icon: Icons.email, keyboard: TextInputType.emailAddress, cont: uemail),
+                        ServeoTextBox(hint: "Email", icon: Icons.email, keyboard: TextInputType.emailAddress, cont: uemail),
                         const SizedBox(height: 10),
-                        BreakBiteTextBox(hint: "Password", icon: Icons.password, cont: upass),
+                        ServeoTextBox(hint: "Password", icon: Icons.password, cont: upass),
                         const SizedBox(height: 10),
-                        BreakBiteTextBox(hint: "Phone Number", icon: Icons.phone, keyboard: TextInputType.phone, cont: unum),
+                        ServeoTextBox(hint: "Phone Number", icon: Icons.phone, keyboard: TextInputType.phone, cont: unum),
                         const SizedBox(height: 10),
-                        BreakBiteTextBox(hint: "SAP id", icon: Icons.badge, keyboard: TextInputType.number, cont: usap),
+                        ServeoTextBox(hint: "SAP id", icon: Icons.badge, keyboard: TextInputType.number, cont: usap),
                       ],
                     ),
                   ),
@@ -114,7 +115,7 @@ class _SignupPageState extends State<SignupPage> {
 
                             // NOTE: Use 10.0.2.2 if on Android Emulator
                             final response = await post(
-                                Uri.parse("https://breakbite-unyh.onrender.com/user/signup"),
+                                Uri.parse("${ApiConfig.baseUrl}/user/signup"),
                                 headers: {
                                   "Content-Type": "application/json",
                                   "Authorization": "Bearer $token"

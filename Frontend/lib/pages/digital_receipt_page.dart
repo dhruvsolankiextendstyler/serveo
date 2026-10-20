@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:screen_protector/screen_protector.dart';
+import '../utils/api_config.dart';
 
 class DigitalReceiptPage extends StatefulWidget {
   final String orderId;
@@ -39,7 +40,7 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
 
     try {
       final response = await patch(
-        Uri.parse("https://breakbite.onrender.com/order/updatecollected"),
+        Uri.parse("${ApiConfig.baseUrl}/order/updatecollected"),
         headers: {
           "Content-Type": "application/json"
         },

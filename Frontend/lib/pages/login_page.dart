@@ -11,6 +11,7 @@ import 'package:frontend/utils/auth_check.dart';
 import 'package:frontend/widgets/breakbite_textbox.dart';
 import 'package:provider/provider.dart';
 
+import '../utils/api_config.dart';
 import '../utils/menu_provider.dart';
 import '../utils/order_provider.dart';
 import 'dashboard_page.dart';
@@ -60,9 +61,9 @@ class LoginPage extends StatelessWidget{
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        BreakBiteTextBox(hint: "Email", icon: Icons.email, cont: uemail,),
+                        ServeoTextBox(hint: "Email", icon: Icons.email, cont: uemail,),
                         const SizedBox(height: 10),
-                        BreakBiteTextBox(hint: "Password", icon: Icons.password, cont: upass, obscure: true,),
+                        ServeoTextBox(hint: "Password", icon: Icons.password, cont: upass, obscure: true,),
                       ],
                     ),
                   ),
@@ -78,7 +79,7 @@ class LoginPage extends StatelessWidget{
                         if(user!=null) {
                           final String? token = await user.getIdToken();
                           final udata = await get(
-                            Uri.parse("https://breakbite-unyh.onrender.com/user/login/"),
+                            Uri.parse("${ApiConfig.baseUrl}/user/login/"),
                             headers: {
                               "Content-Type": "application/json",
                               "Authorization": "Bearer $token",

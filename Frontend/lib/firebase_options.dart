@@ -47,13 +47,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBHP44loyXsmjJAb2XpCdurA_IjeNmcN_4',
-    appId: '1:119081809507:web:f2005eadd1ac3c9193aa56',
-    messagingSenderId: '119081809507',
-    projectId: 'breakbite-demo',
-    authDomain: 'breakbite-demo.firebaseapp.com',
-    storageBucket: 'breakbite-demo.firebasestorage.app',
-    measurementId: 'G-F5MGXLVTZN',
+    apiKey: 'AIzaSyAIBv18JZigZLT-hqgYwL07A5YAt2QvKIc',
+    appId: '1:241395982914:web:e15fde731176d6b024c3db',
+    messagingSenderId: '241395982914',
+    projectId: 'serveo-foods',
+    authDomain: 'serveo-foods.firebaseapp.com',
+    storageBucket: 'serveo-foods.firebasestorage.app',
+    measurementId: 'G-Y1DLGM290Q',
   );
 
   static const FirebaseOptions android = FirebaseOptions(

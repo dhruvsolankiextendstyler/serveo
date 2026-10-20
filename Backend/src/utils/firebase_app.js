@@ -1,4 +1,6 @@
-import firebase from "firebase-admin"
+import dotenv from "dotenv";
+dotenv.config();
+import firebase from "firebase-admin";
 
 export const admin = firebase.initializeApp({
     credential: firebase.credential.cert({

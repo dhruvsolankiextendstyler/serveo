@@ -1,12 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'package:frontend/utils/api_config.dart';
 import 'package:frontend/utils/auth_check.dart';
 import 'package:frontend/widgets/breakbite_textbox.dart';
 
-// 1. Change to StatefulWidget
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
@@ -15,11 +16,9 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  // 2. Define controllers here
   late final TextEditingController uname;
   late final TextEditingController uemail;
   late final TextEditingController upass;
-  late final TextEditingController usap;
   late final TextEditingController unum;
 
   bool _isRegistering = false;
@@ -27,21 +26,17 @@ class _SignupPageState extends State<SignupPage> {
   @override
   void initState() {
     super.initState();
-    // 3. Initialize them when the widget starts
     uname = TextEditingController();
     uemail = TextEditingController();
     upass = TextEditingController();
-    usap = TextEditingController();
     unum = TextEditingController();
   }
 
   @override
   void dispose() {
-    // 4. Dispose them AUTOMATICALLY when the screen closes
     uname.dispose();
     uemail.dispose();
     upass.dispose();
-    usap.dispose();
     unum.dispose();
     super.dispose();
   }
@@ -89,15 +84,36 @@ class _SignupPageState extends State<SignupPage> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        ServeoTextBox(hint: "Full Name", icon: Icons.person, cont: uname),
+                        ServeoTextBox(
+                          hint: "Full Name",
+                          icon: Icons.person,
+                          cont: uname,
+                        ),
                         const SizedBox(height: 10),
-                        ServeoTextBox(hint: "Email", icon: Icons.email, keyboard: TextInputType.emailAddress, cont: uemail),
+                        ServeoTextBox(
+                          hint: "Email",
+                          icon: Icons.email,
+                          keyboard: TextInputType.emailAddress,
+                          cont: uemail,
+                        ),
                         const SizedBox(height: 10),
-                        ServeoTextBox(hint: "Password", icon: Icons.password, cont: upass),
+                        ServeoTextBox(
+                          hint: "Password",
+                          icon: Icons.password,
+                          obscure: true,
+                          cont: upass,
+                        ),
                         const SizedBox(height: 10),
-                        ServeoTextBox(hint: "Phone Number", icon: Icons.phone, keyboard: TextInputType.phone, cont: unum),
-                        const SizedBox(height: 10),
-                        ServeoTextBox(hint: "SAP id", icon: Icons.badge, keyboard: TextInputType.number, cont: usap),
+                        ServeoTextBox(
+                          hint: "Phone Number",
+                          icon: Icons.phone,
+                          keyboard: TextInputType.phone,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(15),
+                          ],
+                          cont: unum,
+                        ),
                       ],
                     ),
                   ),
@@ -110,27 +126,58 @@ class _SignupPageState extends State<SignupPage> {
                     child: InkWell(
                       onTap: () async {
                         if (_isRegistering) return;
+
                         final String name = uname.text.trim();
                         final String email = uemail.text.trim();
-                        final String pass = upass.text.trim();
+                        final String pass = upass.text; // Note: do not trim password
                         final String phone = unum.text.trim();
-                        final String sap = usap.text.trim();
 
-                        if (name.isEmpty || email.isEmpty || pass.isEmpty || phone.isEmpty || sap.isEmpty) {
+                        if (name.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please fill in all fields")),
+                            const SnackBar(content: Text("Please enter your full name")),
                           );
                           return;
                         }
-                        if (!email.contains("@") || !email.contains(".")) {
+
+                        if (email.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please enter your email")),
+                          );
+                          return;
+                        }
+
+                        final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                        if (!emailRegex.hasMatch(email)) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Please enter a valid email address")),
                           );
                           return;
                         }
+
+                        if (pass.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please enter a password")),
+                          );
+                          return;
+                        }
+
                         if (pass.length < 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Password must be at least 6 characters")),
+                            const SnackBar(content: Text("Password must be at least 6 characters long")),
+                          );
+                          return;
+                        }
+
+                        if (phone.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please enter your phone number")),
+                          );
+                          return;
+                        }
+
+                        if (phone.length < 10 || phone.length > 15) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please enter a valid phone number (10 to 15 digits)")),
                           );
                           return;
                         }
@@ -142,56 +189,72 @@ class _SignupPageState extends State<SignupPage> {
                           if (user != null) {
                             String? token = await user.getIdToken();
 
-                            // NOTE: Use 10.0.2.2 if on Android Emulator
                             final response = await post(
-                                Uri.parse("${ApiConfig.baseUrl}/user/signup"),
-                                headers: {
-                                  "Content-Type": "application/json",
-                                  "Authorization": "Bearer $token"
-                                },
-                                body: jsonEncode({
-                                  "uname": name,
-                                  "uemail": email,
-                                  "upass": pass,
-                                  "upnum": phone,
-                                  "usap": sap,
-                                })
+                              Uri.parse("${ApiConfig.baseUrl}/user/signup"),
+                              headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": "Bearer $token",
+                              },
+                              body: jsonEncode({
+                                "uname": name,
+                                "uemail": email,
+                                "upass": pass,
+                                "upnum": phone,
+                              }),
                             );
 
                             if (!context.mounted) return;
 
                             if (response.statusCode == 200 || response.statusCode == 201) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("User Created: ${user.email}")),
+                                const SnackBar(content: Text("Account created successfully! Please login.")),
                               );
                               Navigator.of(context).pop();
-                              // No need to manually clear/dispose here.
-                              // The dispose() method above handles it.
-                            } else {
-                              String msg = response.body;
-                              try { msg = jsonDecode(response.body)["message"] ?? msg; } catch (_) {}
+                            } else if (response.statusCode >= 500) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Signup failed: $msg")),
+                                const SnackBar(content: Text("Server unavailable. Please try again later.")),
+                              );
+                            } else {
+                              String msg = "Registration failed";
+                              try {
+                                final body = jsonDecode(response.body);
+                                if (body is Map && body.containsKey("message")) {
+                                  msg = body["message"].toString();
+                                }
+                              } catch (_) {}
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(msg)),
                               );
                             }
                           }
                         } on FirebaseAuthException catch (e) {
                           if (!context.mounted) return;
-                          const messages = {
-                            "email-already-in-use": "An account with this email already exists.",
-                            "invalid-email": "Please enter a valid email address.",
-                            "weak-password": "Password must be at least 6 characters.",
-                            "network-request-failed": "Network error. Check your connection and try again.",
-                            "too-many-requests": "Too many attempts. Please try again later.",
-                          };
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(messages[e.code] ?? "Signup failed: ${e.message ?? e.code}")),
+                            SnackBar(content: Text(AuthCheck.getFirebaseAuthErrorMessage(e))),
                           );
-                        } catch (e) {
+                        } on ClientException catch (_) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Error: $e")),
+                            const SnackBar(content: Text("Network connection failed. Please check your internet connection.")),
                           );
+                        } on TimeoutException catch (_) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Server timed out. Please try again later.")),
+                          );
+                        } catch (e) {
+                          debugPrint("Signup error: $e");
+                          if (!context.mounted) return;
+                          final errStr = e.toString().toLowerCase();
+                          if (errStr.contains("socketexception") || errStr.contains("network") || errStr.contains("connection")) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Network connection failed. Please check your internet connection.")),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("An unexpected error occurred. Please try again.")),
+                            );
+                          }
                         } finally {
                           if (mounted) setState(() => _isRegistering = false);
                         }

@@ -31,8 +31,7 @@ const userSchema = new mongoose.Schema(
         },
         sapId : {
             type: String,
-            unique: true,
-            required: true
+            required: false
         }
     },
     {
@@ -40,6 +39,9 @@ const userSchema = new mongoose.Schema(
     })
 
 export const User = mongoose.model("User", userSchema)
+
+// Ensure legacy unique index on sapId is dropped if it exists so registrations succeed without sapId
+User.collection.dropIndex("sapId_1").catch(() => {});
 
 
 

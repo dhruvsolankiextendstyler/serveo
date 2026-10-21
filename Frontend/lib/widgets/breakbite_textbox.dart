@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ServeoTextBox extends StatelessWidget{
   final String hint;
@@ -6,6 +7,8 @@ class ServeoTextBox extends StatelessWidget{
   final bool obscure;
   final TextInputType keyboard;
   final TextEditingController cont;
+  final List<TextInputFormatter>? inputFormatters;
+
   const ServeoTextBox({
     super.key,
     required this.hint,
@@ -13,7 +16,7 @@ class ServeoTextBox extends StatelessWidget{
     required this.cont,
     this.obscure = false,
     this.keyboard = TextInputType.text,
-
+    this.inputFormatters,
   });
 
   @override
@@ -22,6 +25,7 @@ class ServeoTextBox extends StatelessWidget{
       obscureText: obscure,
       keyboardType: keyboard,
       controller: cont,
+      inputFormatters: inputFormatters,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color:Colors.brown),
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.brown,),

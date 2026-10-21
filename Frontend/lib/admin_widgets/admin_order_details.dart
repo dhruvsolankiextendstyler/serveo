@@ -27,8 +27,14 @@ class AdminOrderDetailsPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(order.id, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.orange)),
-                Text(order.orderDate.toString(), style: const TextStyle(color: Colors.grey)),
+                Text(
+                  "Order #${order.id.length >= 6 ? order.id.substring(order.id.length - 6) : order.id}",
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.orange),
+                ),
+                Text(
+                  order.formattedPlacementTime,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
               ],
             ),
             const SizedBox(height: 30),

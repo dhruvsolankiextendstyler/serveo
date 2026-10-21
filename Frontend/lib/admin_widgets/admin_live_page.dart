@@ -14,28 +14,32 @@ class LivePage extends StatefulWidget{
 }
 
 class _LivePageState extends State<LivePage> {
-  Timer? tim;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
-    tim = Timer.periodic(const Duration(seconds: 5), (timer) { autoRef();});
-  }
-
-  void autoRef() {
-    context.read<AdminOrderProvider>().fetchOrdersSilent();
+    // Preserves existing 5-second polling interval
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) {
+        context.read<AdminOrderProvider>().fetchOrdersSilent();
+      }
+    });
   }
 
   @override
   void dispose() {
-    tim?.cancel();
+    _pollingTimer?.cancel();
+    _pollingTimer = null;
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final liveOrders = context.watch<AdminOrderProvider>().liveOrders;
-    final completedOrdersCount = context.watch<AdminOrderProvider>().historyOrders.length;
+    final orderProvider = context.watch<AdminOrderProvider>();
+    final liveOrders = orderProvider.liveOrders;
+    final completedOrdersCount = orderProvider.historyOrders.length;
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -45,33 +49,77 @@ class _LivePageState extends State<LivePage> {
           Row(
             children: [
               AdminStatCard(
-                  title: "Processing",
-                  count: liveOrders.where((o) => o.status == 'Processing').length.toString(),
-                  color: Colors.orange),
+                title: "Processing",
+                count: liveOrders.where((o) => o.status == 'Processing').length.toString(),
+                color: Colors.orange,
+              ),
               const SizedBox(width: 10),
               AdminStatCard(
-                  title: "Preparing",
-                  count: liveOrders.where((o) => o.status == 'Preparing').length.toString(),
-                  color: Colors.blue),
+                title: "Preparing",
+                count: liveOrders.where((o) => o.status == 'Preparing').length.toString(),
+                color: Colors.blue,
+              ),
               const SizedBox(width: 10),
               AdminStatCard(
-                  title: "Completed",
-                  count: completedOrdersCount.toString(),
-                  color: Colors.green),
+                title: "Completed",
+                count: completedOrdersCount.toString(),
+                color: Colors.green,
+              ),
             ],
           ),
           const SizedBox(height: 20),
-          const Text("Active Orders", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 10),
 
-          // 2. Orders List
+          // 2. Active Orders Header with Live Auto-Refresh Indicator
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Active Orders",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: Colors.greenAccent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    "Auto-refresh (5s)",
+                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // 3. Orders List or Empty State
           Expanded(
-            child: ListView.builder(
-              itemCount: liveOrders.length,
-              itemBuilder: (context, index) {
-                return AdminOrderCard(order:liveOrders[index]);
-              },
-            ),
+            child: liveOrders.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.check_circle_outline, color: Colors.white38, size: 48),
+                        SizedBox(height: 12),
+                        Text(
+                          "No active orders right now",
+                          style: TextStyle(color: Colors.white54, fontSize: 15),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: liveOrders.length,
+                    itemBuilder: (context, index) {
+                      return AdminOrderCard(order: liveOrders[index]);
+                    },
+                  ),
           ),
         ],
       ),

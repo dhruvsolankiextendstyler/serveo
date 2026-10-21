@@ -1,6 +1,4 @@
 import 'dart:convert';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import '../utils/api_config.dart';
@@ -9,9 +7,12 @@ import 'admin_order.dart';
 class AdminOrderProvider extends ChangeNotifier {
   List<AdminOrder> _orders = [];
   bool _isLoading = false;
+  bool _isPolling = false;
+  DateTime? _lastUpdated;
 
   List<AdminOrder> get orders => _orders;
   bool get isLoading => _isLoading;
+  DateTime? get lastUpdated => _lastUpdated;
 
   // Filtered Lists
   List<AdminOrder> get liveOrders => _orders.where((o) => o.status != 'Completed' && o.status != "Collected").toList();
@@ -19,41 +20,76 @@ class AdminOrderProvider extends ChangeNotifier {
 
   Future<void> fetchOrders() async {
     _isLoading = true;
-    notifyListeners(); // Tells the UI to show the spinner
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-    final msg = await get(Uri.parse("${ApiConfig.baseUrl}/order/"),);
-    if(msg.statusCode == 200){
-      final List<dynamic> data = jsonDecode(msg.body)['message'];
+    notifyListeners();
 
-      _orders = data.map((json) => AdminOrder.fromJson(json)).toList();
+    try {
+      final response = await get(
+        Uri.parse("${ApiConfig.baseUrl}/order/"),
+      ).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['message'] is List) {
+          final List<dynamic> data = decoded['message'];
+          _orders = data.map((json) => AdminOrder.fromJson(json)).toList();
+          _lastUpdated = DateTime.now();
+        }
+      }
+    } catch (e) {
+      debugPrint("fetchOrders error: $e");
+    } finally {
       _isLoading = false;
       notifyListeners();
-    } // Tells the UI to show the data
+    }
   }
 
   Future<void> fetchOrdersSilent() async {
-    final msg = await get(Uri.parse("${ApiConfig.baseUrl}/order/"));
-    final List<dynamic> data = jsonDecode(msg.body)['message'];
-    _orders = data.map((json) => AdminOrder.fromJson(json)).toList();
-    notifyListeners(); // Tells the UI to show the data
+    // Prevent overlapping requests if a previous cycle is still executing
+    if (_isPolling) return;
+    _isPolling = true;
+
+    try {
+      final response = await get(
+        Uri.parse("${ApiConfig.baseUrl}/order/"),
+      ).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['message'] is List) {
+          final List<dynamic> data = decoded['message'];
+          final updatedOrders = data.map((json) => AdminOrder.fromJson(json)).toList();
+
+          // Update orders list smoothly
+          _orders = updatedOrders;
+          _lastUpdated = DateTime.now();
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      // Gracefully retain existing orders on network hiccups and retry on the next cycle
+      debugPrint("Silent polling error: $e");
+    } finally {
+      _isPolling = false;
+    }
   }
 
   Future<void> updateStatus(String orderId, String newStatus) async {
     int index = _orders.indexWhere((o) => o.id == orderId);
     if (index != -1) {
-      await patch(
+      try {
+        await patch(
           Uri.parse("${ApiConfig.baseUrl}/order/updatestatus"),
-          headers: {
-            'Content-Type' : 'application/json'
-          },
+          headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             "id": orderId,
-            "newStatus": newStatus
-          })
-      );
-      _orders[index].status = newStatus;
-      notifyListeners(); // This is the magic! Everyone (Stats, Cards) updates now.
+            "newStatus": newStatus,
+          }),
+        );
+        _orders[index].status = newStatus;
+        notifyListeners();
+      } catch (e) {
+        debugPrint("updateStatus error: $e");
+      }
     }
-
   }
 }

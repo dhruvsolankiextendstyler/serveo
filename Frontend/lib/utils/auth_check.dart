@@ -36,7 +36,8 @@ class AuthCheck{
       case 'email-already-in-use':
         return 'An account with this email already exists.';
       case 'operation-not-allowed':
-        return 'Email/password sign-in is not enabled.';
+      case 'configuration-not-found':
+        return 'Email/password sign-in is not enabled in Firebase Console (Authentication > Sign-in method).';
       case 'weak-password':
         return 'Password must be at least 6 characters long.';
       case 'network-request-failed':

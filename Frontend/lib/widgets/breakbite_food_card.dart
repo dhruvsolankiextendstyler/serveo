@@ -36,10 +36,57 @@ class ServeoFoodCard extends StatelessWidget {
                 height: 160,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  IconData fallbackIcon = Icons.fastfood;
+                  switch (item.category.toLowerCase()) {
+                    case 'burgers':
+                      fallbackIcon = Icons.lunch_dining;
+                      break;
+                    case 'pizza':
+                      fallbackIcon = Icons.local_pizza;
+                      break;
+                    case 'sandwiches':
+                      fallbackIcon = Icons.bakery_dining;
+                      break;
+                    case 'snacks':
+                      fallbackIcon = Icons.fastfood;
+                      break;
+                    case 'beverages':
+                      fallbackIcon = Icons.local_cafe;
+                      break;
+                    case 'desserts':
+                      fallbackIcon = Icons.cake;
+                      break;
+                    case 'south indian':
+                    case 'thali':
+                      fallbackIcon = Icons.restaurant;
+                      break;
+                  }
+                  return Container(
+                    height: 160,
+                    width: double.infinity,
+                    color: const Color(0xFF252525),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(fallbackIcon, color: Colors.yellow, size: 48),
+                        const SizedBox(height: 8),
+                        Text(
+                          item.category,
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 12,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
             // 🔹 Title
-            Padding(padding: EdgeInsets.all(14),
+            Padding(padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
             children: [     Text(
@@ -52,9 +99,11 @@ class ServeoFoodCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
 
-            // 🔹 Description (Using category as description for now)
+            // 🔹 Description
             Text(
-              item.category,
+              (item.description != null && item.description!.isNotEmpty)
+                  ? item.description!
+                  : item.category,
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 13,
@@ -76,7 +125,19 @@ class ServeoFoodCard extends StatelessWidget {
                 ),
 
                 // --- TOGGLE LOGIC ---
-                currentQty == 0
+                !item.isAvailable
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[800],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          "Unavailable",
+                          style: TextStyle(color: Colors.white60, fontSize: 12),
+                        ),
+                      )
+                    : currentQty == 0
                     ? ElevatedButton(
                   onPressed: () => orderProvider.addToCart(item, context),
                   style: ElevatedButton.styleFrom(

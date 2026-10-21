@@ -68,8 +68,16 @@ class ItemFormPage extends StatelessWidget{
                           ),
                         ),
                         style: TextTheme.of(context).bodyMedium?.copyWith(color: Colors.brown),
-                        items: ["Beverages", "Snacks", "Thali", "South Indian"]
-                            .map((label) => DropdownMenuItem(
+                        items: [
+                          "Burgers",
+                          "Pizza",
+                          "Sandwiches",
+                          "Snacks",
+                          "Beverages",
+                          "Desserts",
+                          "Thali",
+                          "South Indian"
+                        ].map((label) => DropdownMenuItem(
                           value: label,
                           child: Text(label),
                         )).toList(),

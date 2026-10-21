@@ -110,6 +110,20 @@ void main() {
 
       expect(
         AuthCheck.getFirebaseAuthErrorMessage(
+          FirebaseAuthException(code: 'operation-not-allowed'),
+        ),
+        equals('Email/password sign-in is not enabled in Firebase Console (Authentication > Sign-in method).'),
+      );
+
+      expect(
+        AuthCheck.getFirebaseAuthErrorMessage(
+          FirebaseAuthException(code: 'configuration-not-found'),
+        ),
+        equals('Email/password sign-in is not enabled in Firebase Console (Authentication > Sign-in method).'),
+      );
+
+      expect(
+        AuthCheck.getFirebaseAuthErrorMessage(
           FirebaseAuthException(code: 'too-many-requests'),
         ),
         equals('Too many attempts. Please try again later.'),

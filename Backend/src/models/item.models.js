@@ -13,8 +13,17 @@ const itemSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            enum: ["Beverages", "Snacks", "Thali", "South Indian"],
+            enum: ["Burgers", "Pizza", "Sandwiches", "Snacks", "Beverages", "Desserts", "Thali", "South Indian"],
             required: true
+        },
+        description: {
+            type: String,
+            required: false,
+            default: ""
+        },
+        isAvailable: {
+            type: Boolean,
+            default: true
         }
     },
     {timestamps: true}

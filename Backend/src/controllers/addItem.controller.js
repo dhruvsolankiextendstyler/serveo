@@ -8,6 +8,8 @@ export const addItemController = async (req) => {
         itemName: req.body.itemName,
         itemPrice: req.body.itemPrice,
         category: req.body.category,
+        description: req.body.description || "",
+        isAvailable: req.body.isAvailable !== undefined ? req.body.isAvailable : true,
     })
     await newItem.save()
     console.log("Item Created Succesfully")

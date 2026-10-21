@@ -144,15 +144,27 @@ class Order {
 class Item{
   final String itemId, itemName, category;
   final int itemPrice;
+  final String? description;
+  final bool isAvailable;
   int quantity = 0;
-  Item({required this.itemId, required this.itemName, required this.itemPrice, required this.category});
+
+  Item({
+    required this.itemId,
+    required this.itemName,
+    required this.itemPrice,
+    required this.category,
+    this.description,
+    this.isAvailable = true,
+  });
 
   factory Item.fromJson(Map<String,dynamic> json){
     return Item(
-      itemId: json['_id'],
-      itemName: json['itemName'],
-      itemPrice: json['itemPrice'],
-      category: json['category'],
+      itemId: json['_id'] ?? '',
+      itemName: json['itemName'] ?? '',
+      itemPrice: json['itemPrice'] != null ? int.parse(json['itemPrice'].toString()) : 0,
+      category: json['category'] ?? '',
+      description: json['description'],
+      isAvailable: json['isAvailable'] ?? true,
     );
   }
 

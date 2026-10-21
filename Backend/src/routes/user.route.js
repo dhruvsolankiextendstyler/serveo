@@ -8,6 +8,7 @@ export const userRoute = express.Router()
 
 userRoute.post('/signup/', authCheck, async (req,res) => {
     const msg = await signupController(req)
+    if (msg !== "User Created Successfully") return res.status(400).json({"message": msg})
     res.json({"message": msg})
     console.log("User Signed Up")
 })

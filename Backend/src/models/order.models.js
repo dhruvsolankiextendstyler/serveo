@@ -49,4 +49,9 @@ orderSchema.pre("save", function(){
     });
     this.totalAmount = total
 })
+
+// Hot query paths: per-user order lists and the KDS createdAt sort
+orderSchema.index({ userId: 1 })
+orderSchema.index({ createdAt: 1 })
+
 export const Order = mongoose.model("Order", orderSchema)

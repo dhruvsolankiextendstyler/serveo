@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/admin_widgets/admin_page.dart';
 import 'package:frontend/pages/dashboard_page.dart';
-import 'package:frontend/pages/landing_page.dart';
+import 'package:frontend/pages/login_page.dart';
 import 'package:frontend/widgets/breakbite_spinner.dart';
 import 'package:provider/provider.dart';
 
@@ -50,8 +50,8 @@ class AuthGate extends StatelessWidget {
             child: DashboardPage(uname: user.displayName ?? "User"),
           );
           }
-        // 4. No user found? Show the Landing Page (Login/Signup)
-        return const LandingPage();
+        // 4. No user found? Show the Login Page (Login/Signup)
+        return LoginPage();
       },
     );
   }

@@ -22,6 +22,8 @@ class _SignupPageState extends State<SignupPage> {
   late final TextEditingController usap;
   late final TextEditingController unum;
 
+  bool _isRegistering = false;
+
   @override
   void initState() {
     super.initState();
@@ -107,8 +109,35 @@ class _SignupPageState extends State<SignupPage> {
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () async {
+                        if (_isRegistering) return;
+                        final String name = uname.text.trim();
+                        final String email = uemail.text.trim();
+                        final String pass = upass.text.trim();
+                        final String phone = unum.text.trim();
+                        final String sap = usap.text.trim();
+
+                        if (name.isEmpty || email.isEmpty || pass.isEmpty || phone.isEmpty || sap.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please fill in all fields")),
+                          );
+                          return;
+                        }
+                        if (!email.contains("@") || !email.contains(".")) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please enter a valid email address")),
+                          );
+                          return;
+                        }
+                        if (pass.length < 6) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Password must be at least 6 characters")),
+                          );
+                          return;
+                        }
+
+                        setState(() => _isRegistering = true);
                         try {
-                          User? user = await AuthCheck.signUp(uemail.text.trim(), upass.text.trim(), uname.text.trim());
+                          User? user = await AuthCheck.signUp(email, pass, name);
 
                           if (user != null) {
                             String? token = await user.getIdToken();
@@ -121,11 +150,11 @@ class _SignupPageState extends State<SignupPage> {
                                   "Authorization": "Bearer $token"
                                 },
                                 body: jsonEncode({
-                                  "uname": uname.text,
-                                  "uemail": uemail.text,
-                                  "upass": upass.text,
-                                  "upnum": unum.text,
-                                  "usap": usap.text,
+                                  "uname": name,
+                                  "uemail": email,
+                                  "upass": pass,
+                                  "upnum": phone,
+                                  "usap": sap,
                                 })
                             );
 
@@ -139,31 +168,53 @@ class _SignupPageState extends State<SignupPage> {
                               // No need to manually clear/dispose here.
                               // The dispose() method above handles it.
                             } else {
+                              String msg = response.body;
+                              try { msg = jsonDecode(response.body)["message"] ?? msg; } catch (_) {}
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Backend Error: ${response.body}")),
+                                SnackBar(content: Text("Signup failed: $msg")),
                               );
                             }
                           }
+                        } on FirebaseAuthException catch (e) {
+                          if (!context.mounted) return;
+                          const messages = {
+                            "email-already-in-use": "An account with this email already exists.",
+                            "invalid-email": "Please enter a valid email address.",
+                            "weak-password": "Password must be at least 6 characters.",
+                            "network-request-failed": "Network error. Check your connection and try again.",
+                            "too-many-requests": "Too many attempts. Please try again later.",
+                          };
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(messages[e.code] ?? "Signup failed: ${e.message ?? e.code}")),
+                          );
                         } catch (e) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Error: $e")),
                           );
+                        } finally {
+                          if (mounted) setState(() => _isRegistering = false);
                         }
                       },
                       child: Container(
                         width: double.infinity,
                         alignment: Alignment.center,
                         padding: const EdgeInsets.symmetric(vertical: 25),
-                        child: const Text(
-                          "Create Account",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
+                        child: _isRegistering
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : const Text(
+                                "Create Account",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
                       ),
                     ),
                   ),

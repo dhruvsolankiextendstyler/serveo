@@ -26,7 +26,7 @@ export const signupController = async (req) => {
     })
     await newUser.save()
     console.log("User Created")
-    return "User Creaated Successfully"
+    return "User Created Successfully"
 }catch(e){
     console.log("Duplicate fields")
     return "Duplicate Fields"

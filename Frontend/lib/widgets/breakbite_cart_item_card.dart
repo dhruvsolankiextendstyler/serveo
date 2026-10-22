@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../utils/order_provider.dart';// Ensure correct path to your provider
+import '../utils/order_provider.dart';
+import '../utils/theme_provider.dart';
 
 class CartItemCard extends StatelessWidget {
   final Item item;
@@ -10,30 +10,43 @@ class CartItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We listen to the provider to handle the + and - logic
     final orderProvider = context.read<OrderProvider>();
-    final textTheme = Theme.of(context).textTheme;
+    final isDark = context.watch<ThemeProvider>().isDark;
+
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final iconBg = isDark ? Colors.black : const Color(0xFFF3F4F6);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A), // Matches your card background
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Row(
         children: [
-          // 1. Food Icon / Image Placeholder
+          // 1. Food Icon / Placeholder
           Container(
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.yellow.withOpacity(0.5)),
+              color: iconBg,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.yellow.withValues(alpha: 0.5)),
             ),
-            child: const Icon(Icons.fastfood, color: Colors.yellow, size: 30),
+            child: const Icon(Icons.fastfood, color: Colors.yellow, size: 28),
           ),
 
           const SizedBox(width: 16),
@@ -45,17 +58,19 @@ class CartItemCard extends StatelessWidget {
               children: [
                 Text(
                   item.itemName,
-                  style: textTheme.titleMedium?.copyWith(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: primaryTextColor,
+                    fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "₹${item.itemPrice * item.quantity}", // Total for this specific item
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: Colors.yellow,
+                  "₹${item.itemPrice * item.quantity}",
+                  style: const TextStyle(
+                    color: Color(0xFFD97706),
                     fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
                 ),
               ],
@@ -79,9 +94,10 @@ class CartItemCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
                     "${item.quantity}",
-                    style: textTheme.bodyLarge?.copyWith(
+                    style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                   ),
                 ),

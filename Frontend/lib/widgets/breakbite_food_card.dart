@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/order_provider.dart';
+import '../utils/theme_provider.dart';
 
 IconData getCategoryIcon(String category) {
   switch (category.toLowerCase().trim()) {
@@ -42,21 +43,20 @@ class ServeoFoodCard extends StatelessWidget {
     required this.imagePath,
   });
 
-  Widget _buildFallbackBanner() {
+  Widget _buildFallbackBanner(bool isDark) {
     final icon = getCategoryIcon(item.category);
     return Container(
       height: 135,
       width: double.infinity,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF282828),
-            Color(0xFF161616),
-          ],
+          colors: isDark
+              ? const [Color(0xFF282828), Color(0xFF161616)]
+              : const [Color(0xFFF3F4F6), Color(0xFFE5E7EB)],
         ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Stack(
         children: [
@@ -66,7 +66,9 @@ class ServeoFoodCard extends StatelessWidget {
             child: Icon(
               icon,
               size: 80,
-              color: Colors.white.withOpacity(0.04),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : Colors.black.withValues(alpha: 0.04),
             ),
           ),
           Center(
@@ -76,24 +78,33 @@ class ServeoFoodCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.yellow.withOpacity(0.12),
+                    color: Colors.yellow.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.yellow.withOpacity(0.25), width: 1),
+                    border: Border.all(
+                      color: Colors.yellow.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
                   ),
-                  child: Icon(icon, color: Colors.yellow, size: 30),
+                  child: Icon(
+                    icon,
+                    color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                    size: 30,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.black45,
+                    color: isDark ? Colors.black45 : Colors.white70,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white10),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : Colors.black12,
+                    ),
                   ),
                   child: Text(
                     item.category.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white70,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.1,
@@ -111,28 +122,45 @@ class ServeoFoodCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orderProvider = context.watch<OrderProvider>();
+    final isDark = context.watch<ThemeProvider>().isDark;
     final int currentQty = orderProvider.getItemQuantity(item.itemId);
     final bool isSoldOut = !item.isAvailable;
+
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final borderColor = currentQty > 0
+        ? Colors.yellow
+        : (isSoldOut
+            ? (isDark ? Colors.white10 : const Color(0xFFE5E7EB))
+            : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)));
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final descTextColor = isDark ? Colors.white60 : const Color(0xFF6B7280);
+    final priceColor = isDark ? Colors.yellow : const Color(0xFFD97706);
 
     Widget cardBody = Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: const Color(0xFF1A1A1A),
+        color: cardBg,
         border: Border.all(
-          color: currentQty > 0
-              ? Colors.yellow
-              : (isSoldOut ? Colors.white10 : Colors.white12),
+          color: borderColor,
           width: currentQty > 0 ? 1.5 : 1.0,
         ),
         boxShadow: currentQty > 0
             ? [
                 BoxShadow(
-                  color: Colors.yellow.withOpacity(0.15),
+                  color: Colors.yellow.withValues(alpha: 0.15),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
               ]
-            : null,
+            : (isDark
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,9 +177,10 @@ class ServeoFoodCard extends StatelessWidget {
                         height: 135,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => _buildFallbackBanner(),
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildFallbackBanner(isDark),
                       )
-                    : _buildFallbackBanner(),
+                    : _buildFallbackBanner(isDark),
               ),
               if (isSoldOut)
                 Positioned(
@@ -160,7 +189,7 @@ class ServeoFoodCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD32F2F),
+                      color: const Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Row(
@@ -194,15 +223,15 @@ class ServeoFoodCard extends StatelessWidget {
                   item.itemName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: primaryTextColor,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
 
-                // 🔹 Description (fixed maxLines so cards stay balanced)
+                // 🔹 Description
                 SizedBox(
                   height: 34,
                   child: Text(
@@ -211,8 +240,8 @@ class ServeoFoodCard extends StatelessWidget {
                         : item.category,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white60,
+                    style: TextStyle(
+                      color: descTextColor,
                       fontSize: 12,
                       height: 1.3,
                     ),
@@ -226,8 +255,8 @@ class ServeoFoodCard extends StatelessWidget {
                   children: [
                     Text(
                       "₹${item.itemPrice}",
-                      style: const TextStyle(
-                        color: Colors.yellow,
+                      style: TextStyle(
+                        color: priceColor,
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
                       ),
@@ -238,14 +267,18 @@ class ServeoFoodCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.06)
+                              : const Color(0xFFF3F4F6),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white10),
+                          border: Border.all(
+                            color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+                          ),
                         ),
-                        child: const Text(
+                        child: Text(
                           "Unavailable",
                           style: TextStyle(
-                            color: Colors.white38,
+                            color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),

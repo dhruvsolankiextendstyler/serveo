@@ -73,9 +73,15 @@ class _LivePageState extends State<LivePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 "Active Orders",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : const Color(0xFF1F2937),
+                ),
               ),
               Row(
                 children: [
@@ -88,9 +94,14 @@ class _LivePageState extends State<LivePage> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Text(
+                  Text(
                     "Auto-refresh (5s)",
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white54
+                          : const Color(0xFF6B7280),
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -104,12 +115,23 @@ class _LivePageState extends State<LivePage> {
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.check_circle_outline, color: Colors.white38, size: 48),
-                        SizedBox(height: 12),
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white38
+                              : Colors.black26,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 12),
                         Text(
                           "No active orders right now",
-                          style: TextStyle(color: Colors.white54, fontSize: 15),
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white54
+                                : const Color(0xFF6B7280),
+                            fontSize: 15,
+                          ),
                         ),
                       ],
                     ),

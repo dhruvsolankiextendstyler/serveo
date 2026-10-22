@@ -15,6 +15,12 @@ class AdminOrderCard extends StatelessWidget{
     if (order.status == 'Preparing') statusColor = Colors.blue;
     if (order.status == 'Completed' || order.status == 'Collected') statusColor = Colors.green;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF6B7280);
+    final dividerColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+
     return GestureDetector(
       onTap: () {
         final provider = context.read<AdminOrderProvider>();
@@ -31,9 +37,18 @@ class AdminOrderCard extends StatelessWidget{
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: cardBg,
           borderRadius: BorderRadius.circular(15),
           border: Border(left: BorderSide(color: statusColor, width: 5)),
+          boxShadow: isDark
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,17 +62,17 @@ class AdminOrderCard extends StatelessWidget{
                   children: [
                     Text(
                       "Order #${order.id.length >= 4 ? order.id.substring(order.id.length - 4) : order.id}",
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryTextColor),
                     ),
                     if (order.formattedPlacementTime.isNotEmpty) ...[
                       const SizedBox(height: 3),
                       Row(
                         children: [
-                          const Icon(Icons.access_time, size: 12, color: Colors.white60),
+                          Icon(Icons.access_time, size: 12, color: secondaryTextColor),
                           const SizedBox(width: 4),
                           Text(
                             order.formattedPlacementTime,
-                            style: const TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w500),
+                            style: TextStyle(color: secondaryTextColor, fontSize: 12, fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -74,8 +89,11 @@ class AdminOrderCard extends StatelessWidget{
                 ),
               ],
             ),
-            const Divider(color: Colors.white24),
-            Text("${order.orderItems.length} Items • ₹${order.totalAmount}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Divider(color: dividerColor),
+            Text(
+              "${order.orderItems.length} Items • ₹${order.totalAmount}",
+              style: TextStyle(color: primaryTextColor, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ),

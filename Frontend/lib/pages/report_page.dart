@@ -64,76 +64,93 @@ class _ReportPageState extends State<ReportPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text("My Food Stats", style: TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text("My Food Stats", style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: isLoading
           ? const ServeoSpinner()
           : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              "Your Canteen Journey",
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    "Your Serveo Journey",
+                    style: TextStyle(
+                      color: primaryTextColor,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
-            // Total Spent Card
-            buildStatCard(
-              title: "Total Spent",
-              value: "₹$totalSpent",
-              subtitle: "Lifetime spending",
-              icon: Icons.account_balance_wallet,
-              color: Colors.green,
-            ),
+                  // Total Spent Card
+                  buildStatCard(
+                    title: "Total Spent",
+                    value: "₹$totalSpent",
+                    subtitle: "Lifetime spending",
+                    icon: Icons.account_balance_wallet,
+                    color: Colors.green,
+                    isDark: isDark,
+                  ),
 
-            const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-            // Favourite Item Card
-            buildStatCard(
-              title: "Most Ordered",
-              value: favouriteItemName,
-              subtitle: favouriteItemQuantity > 0
-                  ? "Ordered $favouriteItemQuantity times"
-                  : "Go place an order!",
-              icon: Icons.favorite,
-              color: Colors.redAccent,
+                  // Favourite Item Card
+                  buildStatCard(
+                    title: "Most Ordered",
+                    value: favouriteItemName,
+                    subtitle: favouriteItemQuantity > 0
+                        ? "Ordered $favouriteItemQuantity times"
+                        : "Go place an order!",
+                    icon: Icons.favorite,
+                    color: Colors.redAccent,
+                    isDark: isDark,
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
-  // Helper widget to keep the UI code clean and match your admin theme
   Widget buildStatCard({
     required String title,
     required String value,
     required String subtitle,
     required IconData icon,
     required Color color,
+    required bool isDark,
   }) {
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final titleColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final valueColor = isDark ? Colors.white : const Color(0xFF1F2937);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 32, color: color),
@@ -143,15 +160,19 @@ class _ReportPageState extends State<ReportPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                Text(title, style: TextStyle(color: titleColor, fontSize: 14)),
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: valueColor,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: TextStyle(color: color.withOpacity(0.8), fontSize: 12)),
+                Text(subtitle, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
               ],
             ),
           ),

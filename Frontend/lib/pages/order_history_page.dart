@@ -26,39 +26,60 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     final orderProvider = context.watch<OrderProvider>();
     final orders = orderProvider.myOrders;
     final isLoading = orderProvider.isLoading;
-    final textTheme = Theme.of(context).textTheme;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("My Orders", style: textTheme.titleLarge),
+        title: Text(
+          "My Orders",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: primaryTextColor,
+          ),
+        ),
       ),
       body: isLoading
           ? const Center(child: ServeoSpinner())
           : orders.isEmpty
-          ? _buildEmptyState(context, textTheme)
-          : ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: orders.length,
-        itemBuilder: (context, index) {
-          return _buildOrderCard(context, orders[index], textTheme);
-        },
-      ),
+              ? _buildEmptyState(context, isDark)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: orders.length,
+                  itemBuilder: (context, index) {
+                    return _buildOrderCard(context, orders[index], isDark);
+                  },
+                ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, TextTheme textTheme) {
+  Widget _buildEmptyState(BuildContext context, bool isDark) {
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final iconColor = isDark ? Colors.grey[800] : Colors.grey[400];
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.fastfood_outlined, size: 80, color: Colors.grey[800]),
+          Icon(Icons.fastfood_outlined, size: 80, color: iconColor),
           const SizedBox(height: 20),
-          Text("No orders yet!", style: textTheme.headlineSmall),
+          Text(
+            "No orders yet!",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: primaryTextColor,
+            ),
+          ),
           const SizedBox(height: 10),
           Text(
             "You haven't ordered any food yet.\nHungry?",
             textAlign: TextAlign.center,
-            style: textTheme.bodyMedium?.copyWith(color: Colors.white70),
+            style: TextStyle(
+              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 30),
           ElevatedButton(
@@ -66,30 +87,53 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.yellow,
               foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text("Order Now", style: textTheme.labelLarge?.copyWith(color: Colors.black, fontWeight: FontWeight.bold)),
+            child: const Text("Order Now", style: TextStyle(fontWeight: FontWeight.bold)),
           )
         ],
       ),
     );
   }
 
-  Widget _buildOrderCard(BuildContext context, Order order, TextTheme textTheme) {
+  Widget _buildOrderCard(BuildContext context, Order order, bool isDark) {
     Color statusColor;
     switch (order.status) {
-      case 'Completed': statusColor = Colors.green; break;
-      case 'Processing': statusColor = Colors.orange; break;
-      case 'Collected': statusColor = Colors.green; break;
-      default: statusColor = Colors.blue;
+      case 'Completed':
+        statusColor = Colors.green;
+        break;
+      case 'Processing':
+        statusColor = Colors.orange;
+        break;
+      case 'Collected':
+        statusColor = Colors.green;
+        break;
+      default:
+        statusColor = Colors.blue;
     }
+
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final dividerColor = isDark ? Colors.white24 : const Color(0xFFE5E7EB);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,35 +142,48 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Order #${order.id.substring(order.id.length - 4)}",
-                style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                "Order #${order.id.length >= 4 ? order.id.substring(order.id.length - 4) : order.id}",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: primaryTextColor,
+                ),
               ),
-              _buildStatusChip(order.status, statusColor, textTheme),
+              _buildStatusChip(order.status, statusColor),
             ],
           ),
-          const Divider(color: Colors.white24, height: 24),
+          Divider(color: dividerColor, height: 24),
           Text(
             "${order.orderItems.length} Items",
-            style: textTheme.bodyMedium?.copyWith(color: Colors.white70),
+            style: TextStyle(color: secondaryTextColor, fontSize: 14),
           ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(order.orderDate, style: textTheme.labelSmall?.copyWith(color: Colors.grey)),
+              Text(
+                order.orderDate,
+                style: TextStyle(
+                  color: isDark ? Colors.grey : const Color(0xFF9CA3AF),
+                  fontSize: 12,
+                ),
+              ),
               Text(
                 "Total: ₹${order.totalAmount}",
-                style: textTheme.titleMedium?.copyWith(color: Colors.yellow, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Color(0xFFD97706),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          if (order.status == 'Completed')
+          if (order.status == 'Completed') ...[
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () async { // 1. Make this async
-                  // 2. Await the navigation
+                onPressed: () async {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -137,9 +194,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                     ),
                   );
 
-                  // 3. This runs AFTER the user exits the receipt page
                   if (context.mounted) {
-                    // Refresh the orders from the backend to show "Collected"
                     context.read<OrderProvider>().fetchMyOrders();
                   }
                 },
@@ -149,28 +204,34 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow, // Matches the receipt theme
+                  backgroundColor: Colors.yellow,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildStatusChip(String status, Color color, TextTheme textTheme) {
+  Widget _buildStatusChip(String status, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         status,
-        style: textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
+        ),
       ),
     );
   }

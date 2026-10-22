@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../utils/order_provider.dart';
+import '../utils/theme_provider.dart';
 
 class BillDetailsCard extends StatelessWidget {
   const BillDetailsCard({super.key});
@@ -9,40 +9,68 @@ class BillDetailsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orderProvider = context.watch<OrderProvider>();
+    final isDark = context.watch<ThemeProvider>().isDark;
     final total = orderProvider.getTotal();
-    final textTheme = Theme.of(context).textTheme;
+
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final dividerColor = isDark ? Colors.white24 : const Color(0xFFE5E7EB);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        // Using a Card-like background to separate it from the scaffold black
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Column(
         children: [
           // Row 1: Item Total
-          _buildRow(context, "Item Total", "₹$total"),
+          _buildRow(
+            label: "Item Total",
+            value: "₹$total",
+            labelColor: secondaryTextColor,
+            valueColor: primaryTextColor,
+          ),
 
-          // Row 2: Canteen Charges (Hardcoded for now)
-          _buildRow(context, "Canteen Charges", "₹0"),
+          // Row 2: Taxes & Charges (Free / Demo)
+          _buildRow(
+            label: "Taxes & Charges",
+            value: "₹0",
+            labelColor: secondaryTextColor,
+            valueColor: primaryTextColor,
+          ),
 
-          const Divider(color: Colors.white24, height: 24),
+          Divider(color: dividerColor, height: 24),
 
-          // Row 3: Grand Total (Uses bigger font)
+          // Row 3: Grand Total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 "Grand Total",
-                style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: primaryTextColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 "₹$total",
-                // Using yellow only for the final price to make it pop
-                style: textTheme.headlineSmall?.copyWith(
-                  color: Colors.yellow,
+                style: const TextStyle(
+                  color: Color(0xFFD97706),
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -53,15 +81,19 @@ class BillDetailsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(BuildContext context, String label, String value) {
-    final textTheme = Theme.of(context).textTheme;
+  Widget _buildRow({
+    required String label,
+    required String value,
+    required Color labelColor,
+    required Color valueColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: textTheme.bodyMedium?.copyWith(color: Colors.white70)),
-          Text(value, style: textTheme.bodyMedium),
+          Text(label, style: TextStyle(color: labelColor, fontSize: 14)),
+          Text(value, style: TextStyle(color: valueColor, fontSize: 14, fontWeight: FontWeight.w600)),
         ],
       ),
     );

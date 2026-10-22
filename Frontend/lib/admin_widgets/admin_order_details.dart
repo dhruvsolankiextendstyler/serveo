@@ -11,12 +11,19 @@ class AdminOrderDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orderProvider = context.read<AdminOrderProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final itemBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final dividerColor = isDark ? Colors.white24 : const Color(0xFFE5E7EB);
+
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text("Order Details", style: TextTheme.of(context).headlineSmall),
+        title: Text(
+          "Order Details",
+          style: TextStyle(fontWeight: FontWeight.bold, color: primaryTextColor),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -29,17 +36,17 @@ class AdminOrderDetailsPage extends StatelessWidget {
               children: [
                 Text(
                   "Order #${order.id.length >= 6 ? order.id.substring(order.id.length - 6) : order.id}",
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.orange),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFD97706)),
                 ),
                 Text(
                   order.formattedPlacementTime,
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  style: TextStyle(color: secondaryTextColor, fontSize: 14),
                 ),
               ],
             ),
             const SizedBox(height: 30),
             // Item List
-            const Text("Items Ordered:", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text("Items Ordered:", style: TextStyle(color: primaryTextColor, fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
@@ -48,16 +55,20 @@ class AdminOrderDetailsPage extends StatelessWidget {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(color: Colors.grey[900], borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(
+                      color: itemBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: borderColor),
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(order.orderItems[index]['itemName'], style: const TextStyle(color: Colors.white, fontSize: 16)),
+                        Text(order.orderItems[index]['itemName'], style: TextStyle(color: primaryTextColor, fontSize: 16, fontWeight: FontWeight.w600)),
                         Text(
                             "${order.orderItems[index]['quantity'].toString()} x ₹${order.orderItems[index]['itemPrice'].toString()}"
-                            , style: TextStyle(color: Colors.orange)),
+                            , style: const TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.w600)),
                         Text("₹${(order.orderItems[index]['quantity'] * order.orderItems[index]['itemPrice']).toString()}"
-                            , style: TextStyle(color: Colors.orange)),
+                            , style: const TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.bold)),
                       ],
                     ),
                   );
@@ -66,12 +77,12 @@ class AdminOrderDetailsPage extends StatelessWidget {
             ),
 
             // Total Section
-            const Divider(color: Colors.white24),
+            Divider(color: dividerColor),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Total Amount", style: TextStyle(color: Colors.white70, fontSize: 16)),
-                Text("₹${order.totalAmount}", style: const TextStyle(color: Colors.greenAccent, fontSize: 24, fontWeight: FontWeight.bold)),
+                Text("Total Amount", style: TextStyle(color: secondaryTextColor, fontSize: 16)),
+                Text("₹${order.totalAmount}", style: const TextStyle(color: Colors.green, fontSize: 24, fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 20),

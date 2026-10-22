@@ -9,6 +9,7 @@ import '../pages/login_page.dart';
 import 'admin_history_page.dart';
 import 'admin_live_page.dart';
 import 'admin_report_page.dart';
+import '../utils/theme_provider.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -56,11 +57,13 @@ class _AdminPageState extends State<AdminPage> {
     // Watch the provider for the loading status
     final orderProvider = context.watch<AdminOrderProvider>();
 
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDark;
+
     if (orderProvider.isLoading) {
-      return Scaffold(
-        backgroundColor: Colors.black,
-        appBar: const ServeoAppBar(),
-        body: const Center(child: ServeoSpinner()),
+      return const Scaffold(
+        appBar: ServeoAppBar(),
+        body: Center(child: ServeoSpinner()),
       );
     }
 
@@ -68,15 +71,21 @@ class _AdminPageState extends State<AdminPage> {
       const LivePage(),
       const HistoryPage(),
       ItemFormPage(),
-      AdminReportPage()
+      const AdminReportPage(),
     ];
 
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text("Admin Panel", style: TextStyle(color: Colors.white)),
+        title: const Text("Admin Panel", style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: Icon(
+              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              color: isDark ? Colors.amber : const Color(0xFF1F2937),
+            ),
+            tooltip: isDark ? "Switch to Light mode" : "Switch to Dark mode",
+            onPressed: () => context.read<ThemeProvider>().toggleTheme(),
+          ),
           IconButton(
             onPressed: () => _handleLogout(context),
             icon: const Icon(Icons.logout, color: Colors.redAccent),
@@ -87,9 +96,9 @@ class _AdminPageState extends State<AdminPage> {
       body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.orange,
-        unselectedItemColor: Colors.white70,
+        backgroundColor: isDark ? const Color(0xFF181818) : Colors.white,
+        selectedItemColor: isDark ? Colors.yellow : const Color(0xFFD97706),
+        unselectedItemColor: isDark ? Colors.white60 : const Color(0xFF6B7280),
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         items: const [

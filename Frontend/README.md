@@ -1,6 +1,6 @@
 # Serveo Frontend
 
-Serveo Canteen Food Ordering & Kitchen Management Platform
+Serveo Food Ordering & Kitchen Management Platform
 
 ## Getting Started
 

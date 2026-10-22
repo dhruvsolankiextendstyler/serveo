@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/order_provider.dart';
+import '../utils/theme_provider.dart';
 import '../widgets/breakbite_bill_details_card.dart';
 import '../widgets/breakbite_cart_item_card.dart';
-
-// import '../widgets/breakbite_bill_details_card.dart'; // I included the updated code for this below
+import 'payment_page.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
@@ -12,115 +12,170 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orderProvider = context.watch<OrderProvider>();
+    final isDark = context.watch<ThemeProvider>().isDark;
     final cartItems = orderProvider.orderItems;
-    final textTheme = Theme.of(context).textTheme; // Access your Poppins theme
+
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
 
     return Scaffold(
-      // No backgroundColor needed; strictly uses main.dart's scaffoldBackgroundColor
       appBar: AppBar(
-        // No backgroundColor needed; strictly uses main.dart's appBarTheme
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               "Checkout",
-              style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: primaryTextColor,
+              ),
             ),
             if (cartItems.isNotEmpty)
               Text(
                 "${cartItems.length} items in tray",
-                // Use labelSmall or bodySmall for subtitles
-                style: textTheme.bodySmall?.copyWith(color: Colors.white70),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: secondaryTextColor,
+                ),
               ),
           ],
         ),
       ),
       body: cartItems.isEmpty
-          ? _buildEmptyState(context)
+          ? _buildEmptyState(context, isDark)
           : Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // Dynamic List
-                  ...cartItems.map((item) => CartItemCard(item: item)).toList(),
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        // Dynamic List
+                        ...cartItems.map((item) => CartItemCard(item: item)),
 
-                  const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                  // We pass the provider data to the bill card
-                  const BillDetailsCard(),
-                  const SizedBox(height: 100),
-                ],
-              ),
+                        // Bill card
+                        const BillDetailsCard(),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+                ),
+                _buildProceedToPayButton(context, orderProvider, isDark),
+              ],
             ),
-          ),
-          _buildPlaceOrderButton(context, orderProvider),
-        ],
-      ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+  Widget _buildEmptyState(BuildContext context, bool isDark) {
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final iconColor = isDark ? Colors.white24 : Colors.black26;
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.shopping_basket_outlined, size: 80, color: Colors.white24),
-          const SizedBox(height: 16),
-          Text(
-            "Your tray is empty!",
-            // Uses your defined Poppins white style
-            style: textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              "Go back to Menu",
-              // We use bodyLarge but override color for the clickable action
-              style: textTheme.bodyLarge?.copyWith(color: Colors.yellow),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.shopping_basket_outlined, size: 84, color: iconColor),
+            const SizedBox(height: 16),
+            Text(
+              "Your tray is empty!",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: primaryTextColor,
+              ),
             ),
-          )
-        ],
+            const SizedBox(height: 8),
+            Text(
+              "Browse our delicious menu and add items to your tray.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.yellow,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text(
+                "Go to Menu",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildPlaceOrderButton(BuildContext context, OrderProvider provider) {
+  Widget _buildProceedToPayButton(
+    BuildContext context,
+    OrderProvider provider,
+    bool isDark,
+  ) {
+    final total = provider.getTotal();
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1A1A1A), // Slightly lighter black for contrast
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border(top: BorderSide(color: borderColor)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
       ),
       child: SafeArea(
         child: ElevatedButton(
-          onPressed: () async {
-            await provider.placeOrder();
-            if (context.mounted) {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Order sent to kitchen!")),
-              );
-            }
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChangeNotifierProvider.value(
+                  value: provider,
+                  child: const PaymentPage(),
+                ),
+              ),
+            );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.yellow, // Brand color
-            foregroundColor: Colors.black,  // Text on yellow must be black
-            minimumSize: const Size(double.infinity, 55),
+            backgroundColor: Colors.yellow,
+            foregroundColor: Colors.black,
+            minimumSize: const Size(double.infinity, 54),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 0,
           ),
-          child: Text(
-            "Confirm Order",
-            // We use titleMedium for button text, but force black for contrast against yellow
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Proceed to Pay • ₹$total",
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 20),
+            ],
           ),
         ),
       ),

@@ -12,8 +12,11 @@ export const updateStatusController = async (req) => {
     }
 
     const allowedStatuses = [
+        "Pending",
         "Processing",
+        "Accepted",
         "Preparing",
+        "Ready",
         "Completed",
         "Collected",
         "Pending Verification",
@@ -31,14 +34,14 @@ export const updateStatusController = async (req) => {
     }
 
     // Do not allow transitioning a rejected payment order into kitchen preparation
-    if (order.paymentStatus === "Rejected" && (newStatus === "Preparing" || newStatus === "Completed")) {
+    if (order.paymentStatus === "Rejected" && (newStatus === "Preparing" || newStatus === "Completed" || newStatus === "Ready")) {
         throw new Error("Cannot transition order with rejected payment to preparation");
     }
 
     order.status = newStatus;
     await order.save();
 
-    if (newStatus === "Completed") {
+    if (newStatus === "Completed" || newStatus === "Ready") {
         const user = await User.findById(order.userId);
         if (user && user.fcmToken) {
             const message = {

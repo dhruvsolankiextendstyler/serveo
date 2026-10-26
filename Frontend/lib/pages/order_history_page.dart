@@ -100,15 +100,22 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     Color statusColor;
     switch (order.status) {
       case 'Completed':
+      case 'Ready':
         statusColor = Colors.green;
         break;
       case 'Processing':
+      case 'Pending':
+      case 'Accepted':
         statusColor = Colors.orange;
+        break;
+      case 'Preparing':
+        statusColor = Colors.blue;
         break;
       case 'Collected':
         statusColor = Colors.green;
         break;
       case 'Payment Rejected':
+      case 'Cancelled':
         statusColor = Colors.redAccent;
         break;
       default:
@@ -184,7 +191,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               ),
             ],
           ),
-          if (order.status == 'Completed') ...[
+          if (order.status == 'Completed' || order.status == 'Ready') ...[
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,

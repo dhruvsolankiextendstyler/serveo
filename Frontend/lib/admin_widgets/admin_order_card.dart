@@ -11,10 +11,10 @@ class AdminOrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color statusColor = Colors.grey;
-    if (order.status == 'Processing') statusColor = Colors.orange;
+    if (order.status == 'Processing' || order.status == 'Pending' || order.status == 'Accepted') statusColor = Colors.orange;
     if (order.status == 'Preparing') statusColor = Colors.blue;
-    if (order.status == 'Completed' || order.status == 'Collected') statusColor = Colors.green;
-    if (order.status == 'Payment Rejected') statusColor = Colors.redAccent;
+    if (order.status == 'Completed' || order.status == 'Ready' || order.status == 'Collected') statusColor = Colors.green;
+    if (order.status == 'Payment Rejected' || order.status == 'Cancelled') statusColor = Colors.redAccent;
 
     // Highlight orders awaiting UPI verification with Amber emphasis
     if (order.isUpi && order.isAwaitingVerification) {

@@ -102,10 +102,10 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
         : currentOrder.id;
 
     Color statusBadgeColor = Colors.grey;
-    if (currentOrder.status == 'Processing') statusBadgeColor = Colors.orange;
+    if (currentOrder.status == 'Processing' || currentOrder.status == 'Pending' || currentOrder.status == 'Accepted') statusBadgeColor = Colors.orange;
     if (currentOrder.status == 'Preparing') statusBadgeColor = Colors.blue;
-    if (currentOrder.status == 'Completed' || currentOrder.status == 'Collected') statusBadgeColor = Colors.green;
-    if (currentOrder.status == 'Payment Rejected') statusBadgeColor = Colors.redAccent;
+    if (currentOrder.status == 'Completed' || currentOrder.status == 'Ready' || currentOrder.status == 'Collected') statusBadgeColor = Colors.green;
+    if (currentOrder.status == 'Payment Rejected' || currentOrder.status == 'Cancelled') statusBadgeColor = Colors.redAccent;
     if (currentOrder.isUpi && currentOrder.isAwaitingVerification) statusBadgeColor = Colors.amber;
 
     return Scaffold(
@@ -583,7 +583,7 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
     }
 
     // Standard Preparation workflow for COD or verified UPI
-    if (order.status == 'Processing') {
+    if (order.status == 'Processing' || order.status == 'Pending' || order.status == 'Accepted') {
       return SizedBox(
         width: double.infinity,
         height: 52,
@@ -615,7 +615,7 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
           ),
         ),
       );
-    } else if (order.status == 'Completed') {
+    } else if (order.status == 'Completed' || order.status == 'Ready') {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),

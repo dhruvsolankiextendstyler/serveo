@@ -6,6 +6,7 @@ import { userRoute } from "./routes/user.route.js";
 import { DBConnect } from "./utils/db_connect.js";
 import { itemRoute } from "./routes/item.route.js";
 import { orderRoute } from "./routes/order.route.js";
+import { analyticsRoute } from "./routes/analytics.route.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get("/health", (req, res) => {
 app.use('/user', userRoute);
 app.use('/item', itemRoute);
 app.use('/order', orderRoute);
+app.use('/admin/analytics', analyticsRoute);
 
 app.listen(process.env.PORT || 5000, () => {
   console.log("Server Started");

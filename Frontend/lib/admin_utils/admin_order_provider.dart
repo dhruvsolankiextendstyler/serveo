@@ -29,9 +29,9 @@ class AdminOrderProvider extends ChangeNotifier {
 
   // Filtered Lists
   List<AdminOrder> get liveOrders =>
-      _orders.where((o) => o.status != 'Completed' && o.status != "Collected").toList();
+      _orders.where((o) => o.status != 'Completed' && o.status != 'Ready' && o.status != "Collected" && o.status != 'Cancelled').toList();
   List<AdminOrder> get historyOrders =>
-      _orders.where((o) => o.status == 'Completed' || o.status == "Collected").toList();
+      _orders.where((o) => o.status == 'Completed' || o.status == 'Ready' || o.status == "Collected" || o.status == 'Cancelled').toList();
 
   void startPolling() {
     _pollingTimer?.cancel();

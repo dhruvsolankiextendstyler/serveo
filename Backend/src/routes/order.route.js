@@ -10,8 +10,12 @@ import { getReportController } from '../controllers/getReport.controller.js'
 import { getUserReportController } from '../controllers/getUserReport.controller.js'
 import { claimPaymentController } from '../controllers/claimPayment.controller.js'
 import { verifyPaymentController } from '../controllers/verifyPayment.controller.js'
+import { analyticsRoute } from './analytics.route.js'
 
 export const orderRoute = express.Router()
+
+// 🔹 Analytics Endpoints (Admin Only, protected)
+orderRoute.use("/analytics", analyticsRoute)
 
 // 🔹 1. GET ALL ORDERS (Admin Only, protected)
 orderRoute.get("/", adminCheck, async (req,res) => {

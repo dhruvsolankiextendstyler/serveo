@@ -201,7 +201,7 @@ class _AdminPageState extends State<AdminPage> {
           ),
           const BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
           const BottomNavigationBarItem(icon: Icon(Icons.list), label: "Add Item"),
-          const BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Report"),
+          const BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: "Analytics"),
         ],
       ),
     );

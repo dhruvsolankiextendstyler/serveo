@@ -48,7 +48,7 @@ const orderSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["Processing", "Preparing", "Completed", "Collected", "Pending Verification", "Payment Rejected", "Cancelled"],
+            enum: ["Pending", "Processing", "Accepted", "Preparing", "Ready", "Completed", "Collected", "Pending Verification", "Payment Rejected", "Cancelled"],
             required: true,
             default: "Processing"
         },
@@ -90,5 +90,7 @@ orderSchema.pre("save", function(){
 orderSchema.index({ userId: 1 })
 orderSchema.index({ createdAt: 1 })
 orderSchema.index({ paymentStatus: 1 })
+// Analytics aggregation index for high performance date-range and revenue-status matching
+orderSchema.index({ createdAt: 1, status: 1, paymentStatus: 1, paymentMethod: 1 })
 
 export const Order = mongoose.model("Order", orderSchema)

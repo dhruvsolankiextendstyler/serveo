@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/admin_utils/admin_order.dart';
@@ -8,6 +10,7 @@ import 'package:frontend/pages/upi_qr_payment_page.dart';
 import 'package:frontend/utils/order_provider.dart';
 import 'package:frontend/utils/payment_config.dart';
 import 'package:frontend/utils/theme_provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 void main() {
@@ -374,4 +377,256 @@ void main() {
       expect(provider.pendingVerificationOrders.length, 1);
     });
   });
+
+  group('PaymentConfig UPI Intent & QR Generator Tests', () {
+    test('PaymentConfig.getPaymentIntentUri returns null when upiId is unconfigured', () {
+      expect(PaymentConfig.getPaymentIntentUri(orderId: '123', amount: 100), isNull);
+    });
+
+    test('PaymentConfig.getQrUrlForOrder returns null when unconfigured without custom network URL', () {
+      expect(PaymentConfig.getQrUrlForOrder(orderId: '123', amount: 100), isNull);
+    });
+  });
+
+  group('OrderProvider UPI Payment Initiation & Error Handling Tests', () {
+    test('Rejects placeOrder when order tray is empty without calling backend', () async {
+      final orderProvider = OrderProvider();
+      bool called = false;
+      final mockClient = MockOrderHttpClient((request) async {
+        called = true;
+        return http.Response('{}', 200);
+      });
+
+      final order = await orderProvider.placeOrder(
+        paymentMethod: 'UPI',
+        client: mockClient,
+        overrideToken: 'mock_token',
+      );
+
+      expect(order, isNull);
+      expect(called, isFalse);
+      expect(orderProvider.lastOrderError, 'Your order tray is empty.');
+    });
+
+    test('Rejects placeOrder when user is unauthenticated', () async {
+      final orderProvider = OrderProvider();
+      orderProvider.addToCart(Item(itemId: '1', itemName: 'Burger', itemPrice: 100, category: 'Food'));
+      bool called = false;
+      final mockClient = MockOrderHttpClient((request) async {
+        called = true;
+        return http.Response('{}', 200);
+      });
+
+      final order = await orderProvider.placeOrder(
+        paymentMethod: 'UPI',
+        client: mockClient,
+      );
+
+      expect(order, isNull);
+      expect(called, isFalse);
+      expect(orderProvider.lastOrderError, 'Please sign in to place your order.');
+      // Cart items MUST be preserved
+      expect(orderProvider.orderItems.length, 1);
+    });
+
+    test('Successfully initiates UPI payment with modern backend format and clears tray', () async {
+      final orderProvider = OrderProvider();
+      orderProvider.addToCart(Item(itemId: '101', itemName: 'Paneer Wrap', itemPrice: 150, category: 'Wraps'));
+      expect(orderProvider.getTotal(), 150);
+
+      final mockClient = MockOrderHttpClient((request) async {
+        expect(request.url.path, '/order/add');
+        expect(request.headers['Authorization'], 'Bearer valid_test_token');
+        return http.Response(
+          jsonEncode({
+            'message': 'Order Placed !!',
+            'order': {
+              '_id': 'ord_modern_999',
+              'totalAmount': 150,
+              'status': 'Processing',
+              'paymentMethod': 'UPI',
+              'paymentStatus': 'Pending',
+              'createdAt': '2026-10-26T14:30:00.000Z',
+              'orderItems': [
+                {'itemId': '101', 'itemName': 'Paneer Wrap', 'itemPrice': 150, 'quantity': 1}
+              ],
+            }
+          }),
+          201,
+        );
+      });
+
+      final order = await orderProvider.placeOrder(
+        paymentMethod: 'UPI',
+        client: mockClient,
+        overrideToken: 'valid_test_token',
+      );
+
+      expect(order, isNotNull);
+      expect(order!.id, 'ord_modern_999');
+      expect(order.totalAmount, 150);
+      expect(order.paymentMethod, 'UPI');
+      expect(order.paymentStatus, 'Pending');
+      expect(orderProvider.lastOrderError, isNull);
+      // Tray cleared upon confirmed order placement
+      expect(orderProvider.orderItems.isEmpty, isTrue);
+    });
+
+    test('Successfully initiates UPI payment with legacy response ({ message: "Order Placed !!" }) without failing', () async {
+      final orderProvider = OrderProvider();
+      orderProvider.addToCart(Item(itemId: '202', itemName: 'Thali', itemPrice: 200, category: 'Meals'));
+
+      final mockClient = MockOrderHttpClient((request) async {
+        if (request.url.path == '/order/add') {
+          // Deployed server returns only message
+          return http.Response(jsonEncode({'message': 'Order Placed !!'}), 201);
+        } else if (request.url.path == '/order/user') {
+          return http.Response(
+            jsonEncode({
+              'message': [
+                {
+                  '_id': 'ord_legacy_resolved_123',
+                  'totalAmount': 200,
+                  'status': 'Processing',
+                  'paymentMethod': 'UPI',
+                  'paymentStatus': 'Pending',
+                  'createdAt': '2026-10-26T14:35:00.000Z',
+                  'orderItems': [
+                    {'itemId': '202', 'itemName': 'Thali', 'itemPrice': 200, 'quantity': 1}
+                  ],
+                }
+              ]
+            }),
+            200,
+          );
+        }
+        return http.Response('Not Found', 404);
+      });
+
+      final order = await orderProvider.placeOrder(
+        paymentMethod: 'UPI',
+        client: mockClient,
+        overrideToken: 'valid_token_legacy',
+      );
+
+      expect(order, isNotNull);
+      expect(order!.id, 'ord_legacy_resolved_123');
+      expect(order.totalAmount, 200);
+      expect(order.paymentMethod, 'UPI');
+      expect(orderProvider.lastOrderError, isNull);
+      expect(orderProvider.orderItems.isEmpty, isTrue);
+    });
+
+    test('Preserves customer cart and sets descriptive error when server returns 401 Unauthorized', () async {
+      final orderProvider = OrderProvider();
+      orderProvider.addToCart(Item(itemId: '303', itemName: 'Biryani', itemPrice: 220, category: 'Rice'));
+
+      final mockClient = MockOrderHttpClient((request) async {
+        return http.Response(jsonEncode({'message': 'Access denied No token'}), 401);
+      });
+
+      final order = await orderProvider.placeOrder(
+        paymentMethod: 'UPI',
+        client: mockClient,
+        overrideToken: 'expired_or_invalid_token',
+      );
+
+      expect(order, isNull);
+      expect(orderProvider.lastOrderError, 'Authentication failed. Please sign in again.');
+      // Customer tray is NOT cleared so they can sign in and retry!
+      expect(orderProvider.orderItems.length, 1);
+      expect(orderProvider.orderItems.first.itemName, 'Biryani');
+    });
+
+    test('Preserves customer cart and displays specific server error when backend returns 400 Bad Request', () async {
+      final orderProvider = OrderProvider();
+      orderProvider.addToCart(Item(itemId: '404', itemName: 'Pizza', itemPrice: 299, category: 'Pizza'));
+
+      final mockClient = MockOrderHttpClient((request) async {
+        return http.Response(jsonEncode({'error': 'Item out of stock: Pizza'}), 400);
+      });
+
+      final order = await orderProvider.placeOrder(
+        paymentMethod: 'UPI',
+        client: mockClient,
+        overrideToken: 'valid_token',
+      );
+
+      expect(order, isNull);
+      expect(orderProvider.lastOrderError, 'Item out of stock: Pizza');
+      expect(orderProvider.orderItems.length, 1);
+    });
+
+    test('Preserves customer cart and displays server unavailable message when backend returns 500', () async {
+      final orderProvider = OrderProvider();
+      orderProvider.addToCart(Item(itemId: '505', itemName: 'Sandwich', itemPrice: 80, category: 'Snacks'));
+
+      final mockClient = MockOrderHttpClient((request) async {
+        return http.Response(jsonEncode({'error': 'Internal server error'}), 500);
+      });
+
+      final order = await orderProvider.placeOrder(
+        paymentMethod: 'UPI',
+        client: mockClient,
+        overrideToken: 'valid_token',
+      );
+
+      expect(order, isNull);
+      expect(orderProvider.lastOrderError, 'Server is temporarily unavailable. Please try again shortly.');
+      expect(orderProvider.orderItems.length, 1);
+    });
+
+    test('Preserves customer cart and displays friendly message on network timeout', () async {
+      final orderProvider = OrderProvider();
+      orderProvider.addToCart(Item(itemId: '606', itemName: 'Cold Drink', itemPrice: 40, category: 'Beverages'));
+
+      final mockClient = MockOrderHttpClient((request) async {
+        throw TimeoutException('Simulated timeout during cold start');
+      });
+
+      final order = await orderProvider.placeOrder(
+        paymentMethod: 'UPI',
+        client: mockClient,
+        overrideToken: 'valid_token',
+      );
+
+      expect(order, isNull);
+      expect(orderProvider.lastOrderError, contains('Server took too long to respond'));
+      expect(orderProvider.orderItems.length, 1);
+    });
+
+    test('Preserves customer cart and displays connection message on network failure', () async {
+      final orderProvider = OrderProvider();
+      orderProvider.addToCart(Item(itemId: '707', itemName: 'Noodles', itemPrice: 110, category: 'Chinese'));
+
+      final mockClient = MockOrderHttpClient((request) async {
+        throw http.ClientException('Failed host lookup');
+      });
+
+      final order = await orderProvider.placeOrder(
+        paymentMethod: 'UPI',
+        client: mockClient,
+        overrideToken: 'valid_token',
+      );
+
+      expect(order, isNull);
+      expect(orderProvider.lastOrderError, 'Unable to connect to server. Please check your internet connection.');
+      expect(orderProvider.orderItems.length, 1);
+    });
+  });
+}
+
+class MockOrderHttpClient extends http.BaseClient {
+  final Future<http.Response> Function(http.BaseRequest request) handler;
+  MockOrderHttpClient(this.handler);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    final res = await handler(request);
+    return http.StreamedResponse(
+      Stream.value(utf8.encode(res.body)),
+      res.statusCode,
+      headers: res.headers,
+    );
+  }
 }

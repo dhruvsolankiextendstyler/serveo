@@ -4,9 +4,34 @@ import { Item } from '../models/item.models.js'
 
 export const addOrderController = async (req) => {
     const uid = req.user.uid
-    const user = await User.findOne({uid: uid})
+    let user = await User.findOne({uid: uid})
+
+    if (!user && req.user.email) {
+        user = await User.findOne({email: req.user.email})
+        if (user) {
+            user.uid = uid;
+            await user.save();
+        }
+    }
+
     if (!user) {
-        throw new Error("User account not found");
+        // Auto-provision user record for valid Firebase authenticated user
+        user = new User({
+            uid: uid,
+            fullName: req.user.name || (req.user.email ? req.user.email.split('@')[0] : "Customer"),
+            email: req.user.email || `${uid}@serveo.app`,
+            phoneNumber: req.user.phone_number || `+91${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+            password: "firebase_authenticated",
+        });
+        try {
+            await user.save();
+        } catch (_) {
+            user = await User.findOne({ $or: [{ email: req.user.email }, { uid }] });
+        }
+    }
+
+    if (!user) {
+        throw new Error("Unable to associate user account with order");
     }
 
     const { orderItems, paymentMethod = "COD" } = req.body

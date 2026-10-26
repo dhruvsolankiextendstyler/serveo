@@ -339,21 +339,36 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.grey.shade300),
                               ),
-                              child: PaymentConfig.qrNetworkUrl != null
-                                  ? Image.network(
-                                      PaymentConfig.qrNetworkUrl!,
+                              child: Builder(
+                                builder: (context) {
+                                  final qrUrl = PaymentConfig.getQrUrlForOrder(
+                                    orderId: widget.order.id,
+                                    amount: widget.order.totalAmount,
+                                  );
+                                  if (qrUrl != null) {
+                                    return Image.network(
+                                      qrUrl,
                                       width: 200,
                                       height: 200,
                                       fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => _buildUnconfiguredQrFallback(isDark),
-                                    )
-                                  : Image.asset(
-                                      PaymentConfig.qrAssetPath,
-                                      width: 200,
-                                      height: 200,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => _buildUnconfiguredQrFallback(isDark),
-                                    ),
+                                      errorBuilder: (_, __, ___) => Image.asset(
+                                        PaymentConfig.qrAssetPath,
+                                        width: 200,
+                                        height: 200,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) => _buildUnconfiguredQrFallback(isDark),
+                                      ),
+                                    );
+                                  }
+                                  return Image.asset(
+                                    PaymentConfig.qrAssetPath,
+                                    width: 200,
+                                    height: 200,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, __, ___) => _buildUnconfiguredQrFallback(isDark),
+                                  );
+                                },
+                              ),
                             ),
                             const SizedBox(height: 16),
                             if (PaymentConfig.recipientName.isNotEmpty) ...[

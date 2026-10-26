@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/order_provider.dart';
 import '../utils/theme_provider.dart';
+import 'login_page.dart';
 import 'order_history_page.dart';
 
 import 'upi_qr_payment_page.dart';
@@ -50,6 +52,29 @@ class _PaymentPageState extends State<PaymentPage> {
       return;
     }
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Please sign in to complete your order"),
+          backgroundColor: Colors.amber.shade900,
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: "Sign In",
+            textColor: Colors.yellow,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => LoginPage()),
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isProcessing = true);
 
     try {
@@ -73,10 +98,26 @@ class _PaymentPageState extends State<PaymentPage> {
           );
           return;
         } else {
+          final errorMsg = orderProvider.lastOrderError ??
+              "Failed to initiate UPI payment. Please try again.";
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Failed to initiate UPI payment. Please try again."),
+            SnackBar(
+              content: Text(errorMsg),
               backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+              action: (errorMsg.contains("sign in") || errorMsg.contains("Authentication"))
+                  ? SnackBarAction(
+                      label: "Sign In",
+                      textColor: Colors.yellow,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => LoginPage()),
+                        );
+                      },
+                    )
+                  : null,
             ),
           );
         }
@@ -86,6 +127,17 @@ class _PaymentPageState extends State<PaymentPage> {
         final createdOrder = await orderProvider.placeOrder(paymentMethod: "COD");
 
         if (!mounted) return;
+
+        if (createdOrder == null && orderProvider.lastOrderError != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(orderProvider.lastOrderError!),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
 
         // Show COD Order Placed confirmation dialog (No QR code)
         final shortId = createdOrder != null && createdOrder.id.length >= 4

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../utils/api_config.dart';
 import '../utils/order_provider.dart';
 import '../utils/theme_provider.dart';
 
@@ -119,6 +120,57 @@ class ServeoFoodCard extends StatelessWidget {
     );
   }
 
+  Widget _buildFoodImage(bool isDark) {
+    final rawUrl = item.imageUrl;
+    if (rawUrl != null && rawUrl.trim().isNotEmpty) {
+      final fullUrl = ApiConfig.resolveImageUrl(rawUrl);
+      return Image.network(
+        fullUrl,
+        height: 135,
+        width: double.infinity,
+        fit: BoxFit.cover, // Ensures images fit their containers without stretching or distorting
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            height: 135,
+            color: isDark ? const Color(0xFF282828) : const Color(0xFFF3F4F6),
+            child: const Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.yellow),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          if (imagePath.isNotEmpty) {
+            return Image.asset(
+              imagePath,
+              height: 135,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _buildFallbackBanner(isDark),
+            );
+          }
+          return _buildFallbackBanner(isDark);
+        },
+      );
+    }
+
+    if (imagePath.isNotEmpty) {
+      return Image.asset(
+        imagePath,
+        height: 135,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildFallbackBanner(isDark),
+      );
+    }
+
+    return _buildFallbackBanner(isDark);
+  }
+
   @override
   Widget build(BuildContext context) {
     final orderProvider = context.watch<OrderProvider>();
@@ -171,16 +223,7 @@ class ServeoFoodCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: imagePath.isNotEmpty
-                    ? Image.asset(
-                        imagePath,
-                        height: 135,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildFallbackBanner(isDark),
-                      )
-                    : _buildFallbackBanner(isDark),
+                child: _buildFoodImage(isDark),
               ),
               if (isSoldOut)
                 Positioned(

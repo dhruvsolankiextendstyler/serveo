@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../utils/api_config.dart';
 import '../utils/order_provider.dart';
 import '../utils/theme_provider.dart';
 
@@ -37,16 +38,36 @@ class CartItemCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 1. Food Icon / Placeholder
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.yellow.withValues(alpha: 0.5)),
-            ),
-            child: const Icon(Icons.fastfood, color: Colors.yellow, size: 28),
+          // 1. Food Image / Placeholder
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: (item.imageUrl != null && item.imageUrl!.trim().isNotEmpty)
+                ? Image.network(
+                    ApiConfig.resolveImageUrl(item.imageUrl),
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: iconBg,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.yellow.withValues(alpha: 0.5)),
+                      ),
+                      child: const Icon(Icons.fastfood, color: Colors.yellow, size: 28),
+                    ),
+                  )
+                : Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: iconBg,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.yellow.withValues(alpha: 0.5)),
+                    ),
+                    child: const Icon(Icons.fastfood, color: Colors.yellow, size: 28),
+                  ),
           ),
 
           const SizedBox(width: 16),

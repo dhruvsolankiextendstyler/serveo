@@ -200,6 +200,7 @@ class Item{
   final int itemPrice;
   final String? description;
   final bool isAvailable;
+  final String? imageUrl;
   int quantity = 0;
 
   Item({
@@ -209,6 +210,7 @@ class Item{
     required this.category,
     this.description,
     this.isAvailable = true,
+    this.imageUrl,
   });
 
   factory Item.fromJson(Map<String,dynamic> json){
@@ -219,6 +221,7 @@ class Item{
       category: json['category'] ?? '',
       description: json['description'],
       isAvailable: json['isAvailable'] ?? true,
+      imageUrl: json['imageUrl']?.toString(),
     );
   }
 
@@ -228,6 +231,7 @@ class Item{
       'itemName': itemName,
       'itemPrice': itemPrice,
       'quantity': quantity,
+      if (imageUrl != null && imageUrl!.isNotEmpty) 'imageUrl': imageUrl,
     };
   }
 }

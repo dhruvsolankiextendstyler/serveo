@@ -44,6 +44,7 @@ dependencies:
   screen_protector: ^1.5.1
   flutter_launcher_icons: ^0.13.1
   shared_preferences: ^2.5.5
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:

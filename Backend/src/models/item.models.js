@@ -24,6 +24,11 @@ const itemSchema = new mongoose.Schema(
         isAvailable: {
             type: Boolean,
             default: true
+        },
+        imageUrl: {
+            type: String,
+            required: false,
+            default: ""
         }
     },
     {timestamps: true}

@@ -6,10 +6,11 @@ export const addItemController = async (req) => {
     if(itemExists) return "Item Exists!"
     const newItem = new Item({
         itemName: req.body.itemName,
-        itemPrice: req.body.itemPrice,
+        itemPrice: Number(req.body.itemPrice),
         category: req.body.category,
         description: req.body.description || "",
-        isAvailable: req.body.isAvailable !== undefined ? req.body.isAvailable : true,
+        isAvailable: req.body.isAvailable !== undefined ? (req.body.isAvailable === true || req.body.isAvailable === 'true') : true,
+        imageUrl: req.body.imageUrl || "",
     })
     await newItem.save()
     console.log("Item Created Succesfully")

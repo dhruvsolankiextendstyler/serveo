@@ -23,5 +23,16 @@ class ApiConfig {
     }
     return prodUrl;
   }
+
+  /// Resolves an image URL (whether relative or absolute) against the active backend.
+  static String resolveImageUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return '';
+    final trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    final cleanPath = trimmed.startsWith('/') ? trimmed : '/$trimmed';
+    return '$baseUrl$cleanPath';
+  }
 }
 

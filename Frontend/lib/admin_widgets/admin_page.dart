@@ -100,7 +100,7 @@ class _AdminPageState extends State<AdminPage> {
     final screens = [
       const LivePage(),
       const HistoryPage(),
-      ItemFormPage(),
+      const ItemFormPage(),
       const AdminReportPage(),
     ];
 

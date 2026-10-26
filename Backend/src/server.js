@@ -28,6 +28,15 @@ app.use('/user', userRoute);
 app.use('/item', itemRoute);
 app.use('/order', orderRoute);
 app.use('/admin/analytics', analyticsRoute);
+app.use('/analytics', analyticsRoute);
+
+// Catch-all 404 handler: return structured JSON error instead of Express default HTML page
+app.use((req, res) => {
+  res.status(404).json({
+    error: `Cannot ${req.method} ${req.originalUrl}`,
+    status: 404,
+  });
+});
 
 app.listen(process.env.PORT || 5000, () => {
   console.log("Server Started");

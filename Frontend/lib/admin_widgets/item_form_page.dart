@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../utils/api_config.dart';
+import '../utils/order_provider.dart';
 import '../widgets/breakbite_textbox.dart';
 
 class ItemFormPage extends StatefulWidget {
   final Uint8List? initialImageBytes;
   final String? initialImageName;
   final String? initialCategory;
+  final Item? editingItem;
   final Future<http.Response> Function(http.BaseRequest request)? mockSubmitHandler;
 
   const ItemFormPage({
@@ -18,6 +20,7 @@ class ItemFormPage extends StatefulWidget {
     this.initialImageBytes,
     this.initialImageName,
     this.initialCategory,
+    this.editingItem,
     this.mockSubmitHandler,
   });
 
@@ -37,10 +40,16 @@ class _ItemFormPageState extends State<ItemFormPage> {
   bool _isSubmitting = false;
   String? _validationError;
 
+  bool get _isEditing => widget.editingItem != null;
+
   @override
   void initState() {
     super.initState();
-    if (widget.initialCategory != null) {
+    if (widget.editingItem != null) {
+      itemName.text = widget.editingItem!.itemName;
+      itemPrice.text = widget.editingItem!.itemPrice.toString();
+      category.text = widget.editingItem!.category;
+    } else if (widget.initialCategory != null) {
       category.text = widget.initialCategory!;
     }
     if (widget.initialImageBytes != null) {
@@ -246,11 +255,16 @@ class _ItemFormPageState extends State<ItemFormPage> {
       }
       http.Response response;
 
+      final method = _isEditing ? 'PUT' : 'POST';
+      final endpoint = _isEditing
+          ? "${ApiConfig.baseUrl}/item/${widget.editingItem!.itemId}"
+          : "${ApiConfig.baseUrl}/item/add";
+
       if (_imageBytes != null) {
         // Multipart request with optional food image
         final request = http.MultipartRequest(
-          'POST',
-          Uri.parse("${ApiConfig.baseUrl}/item/add"),
+          method,
+          Uri.parse(endpoint),
         );
 
         if (token != null) {
@@ -286,16 +300,24 @@ class _ItemFormPageState extends State<ItemFormPage> {
         });
 
         if (widget.mockSubmitHandler != null) {
-          final request = http.Request('POST', Uri.parse("${ApiConfig.baseUrl}/item/add"))
+          final request = http.Request(method, Uri.parse(endpoint))
             ..headers.addAll(headers)
             ..body = body;
           response = await widget.mockSubmitHandler!(request);
         } else {
-          response = await http.post(
-            Uri.parse("${ApiConfig.baseUrl}/item/add"),
-            headers: headers,
-            body: body,
-          );
+          if (_isEditing) {
+            response = await http.put(
+              Uri.parse(endpoint),
+              headers: headers,
+              body: body,
+            );
+          } else {
+            response = await http.post(
+              Uri.parse(endpoint),
+              headers: headers,
+              body: body,
+            );
+          }
         }
       }
 
@@ -303,23 +325,28 @@ class _ItemFormPageState extends State<ItemFormPage> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
-        final message = decoded['message']?.toString() ?? "Item Created Succssfully";
+        final message = decoded['message']?.toString() ?? (_isEditing ? "Item updated successfully" : "Item Created Succssfully");
 
         if (message == "Item Exists!") {
           _showToast("An item named '$name' already exists!", isError: true);
         } else {
-          _showToast("Item Added Successfully!", isError: false);
-          // Clear form fields
-          itemName.clear();
-          itemPrice.clear();
-          category.clear();
-          _removeImage();
+          _showToast(_isEditing ? "Item Updated Successfully!" : "Item Added Successfully!", isError: false);
+          if (!_isEditing) {
+            // Clear form fields on add
+            itemName.clear();
+            itemPrice.clear();
+            category.clear();
+            _removeImage();
+          }
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context, true);
+          }
         }
       } else {
         final decoded = jsonDecode(response.body);
         final errorMsg = decoded['error'] ??
             decoded['message'] ??
-            "Failed to add item (${response.statusCode})";
+            "Failed to ${_isEditing ? 'update' : 'add'} item (${response.statusCode})";
         _showToast(errorMsg.toString(), isError: true);
       }
     } catch (e) {
@@ -359,7 +386,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
                     ],
                   ),
                   child: Text(
-                    "Add Item",
+                    _isEditing ? "Edit Item" : "Add Item",
                     style: Theme.of(context)
                         .textTheme
                         .headlineLarge
@@ -709,10 +736,10 @@ class _ItemFormPageState extends State<ItemFormPage> {
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: _isSubmitting
-                          ? const Row(
+                          ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 18,
                                   height: 18,
                                   child: CircularProgressIndicator(
@@ -720,8 +747,8 @@ class _ItemFormPageState extends State<ItemFormPage> {
                                 ),
                                 SizedBox(width: 10),
                                 Text(
-                                  "Adding Item...",
-                                  style: TextStyle(
+                                  _isEditing ? "Updating Item..." : "Adding Item...",
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -729,9 +756,9 @@ class _ItemFormPageState extends State<ItemFormPage> {
                                 ),
                               ],
                             )
-                          : const Text(
-                              "Add Item",
-                              style: TextStyle(
+                          : Text(
+                              _isEditing ? "Update Item" : "Add Item",
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,

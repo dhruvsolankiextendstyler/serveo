@@ -89,10 +89,10 @@ class AnalyticsOverview {
   });
 
   factory AnalyticsOverview.fromJson(Map<String, dynamic> json) {
-    final summary = json['summary'] ?? {};
-    final prev = json['previousPeriod'] ?? {};
-    final comp = json['comparison'] ?? {};
-    final range = json['selectedRange'] ?? {};
+    final summary = json['summary'] is Map ? (json['summary'] as Map) : const <String, dynamic>{};
+    final prev = json['previousPeriod'] is Map ? (json['previousPeriod'] as Map) : const <String, dynamic>{};
+    final comp = json['comparison'] is Map ? Map<String, dynamic>.from(json['comparison']) : <String, dynamic>{};
+    final range = json['selectedRange'] is Map ? Map<String, dynamic>.from(json['selectedRange']) : <String, dynamic>{};
 
     return AnalyticsOverview(
       selectedRange: SelectedRangeInfo.fromJson(range),
@@ -552,35 +552,44 @@ class AdminAnalyticsProvider extends ChangeNotifier {
       // Fetch overview, sales, orders, items, peak-hours, and payments concurrently
       final baseUrl = ApiConfig.baseUrl;
 
-      final results = await Future.wait([
-        http.get(Uri.parse("$baseUrl/order/analytics/overview?$queryParams"), headers: headers),
-        http.get(Uri.parse("$baseUrl/order/analytics/sales?$queryParams"), headers: headers),
-        http.get(Uri.parse("$baseUrl/order/analytics/orders?$queryParams"), headers: headers),
-        http.get(Uri.parse("$baseUrl/order/analytics/items?$queryParams"), headers: headers),
-        http.get(Uri.parse("$baseUrl/order/analytics/peak-hours?$queryParams"), headers: headers),
-        http.get(Uri.parse("$baseUrl/order/analytics/payments?$queryParams"), headers: headers),
+      // Try /order/analytics first; if 404, fallback to /admin/analytics
+      String basePath = "$baseUrl/order/analytics";
+      var results = await Future.wait([
+        http.get(Uri.parse("$basePath/overview?$queryParams"), headers: headers),
+        http.get(Uri.parse("$basePath/sales?$queryParams"), headers: headers),
+        http.get(Uri.parse("$basePath/orders?$queryParams"), headers: headers),
+        http.get(Uri.parse("$basePath/items?$queryParams"), headers: headers),
+        http.get(Uri.parse("$basePath/peak-hours?$queryParams"), headers: headers),
+        http.get(Uri.parse("$basePath/payments?$queryParams"), headers: headers),
       ]);
+
+      // If the primary path returns 404, check if mounted under /admin/analytics
+      if (results[0].statusCode == 404) {
+        final altBasePath = "$baseUrl/admin/analytics";
+        final altResults = await Future.wait([
+          http.get(Uri.parse("$altBasePath/overview?$queryParams"), headers: headers),
+          http.get(Uri.parse("$altBasePath/sales?$queryParams"), headers: headers),
+          http.get(Uri.parse("$altBasePath/orders?$queryParams"), headers: headers),
+          http.get(Uri.parse("$altBasePath/items?$queryParams"), headers: headers),
+          http.get(Uri.parse("$altBasePath/peak-hours?$queryParams"), headers: headers),
+          http.get(Uri.parse("$altBasePath/payments?$queryParams"), headers: headers),
+        ]);
+        if (altResults[0].statusCode != 404) {
+          results = altResults;
+          basePath = altBasePath;
+        }
+      }
 
       // Check for stale response
       if (requestId != _activeRequestId) return;
 
-      // Validate HTTP responses
-      for (final res in results) {
-        if (res.statusCode == 401) {
-          throw Exception("Unauthorized: Admin privileges required.");
-        }
-        if (res.statusCode >= 400) {
-          final errBody = jsonDecode(res.body);
-          throw Exception(errBody['error'] ?? "Failed to load analytics data (${res.statusCode})");
-        }
-      }
-
-      final overviewData = AnalyticsOverview.fromJson(jsonDecode(results[0].body));
-      final salesData = SalesTimeline.fromJson(jsonDecode(results[1].body));
-      final ordersData = OrderPerformance.fromJson(jsonDecode(results[2].body));
-      final itemsData = ItemInsights.fromJson(jsonDecode(results[3].body));
-      final peakHoursData = PeakHoursData.fromJson(jsonDecode(results[4].body));
-      final paymentsData = PaymentAnalytics.fromJson(jsonDecode(results[5].body));
+      // Safely parse each endpoint response with HTML detection and status checks
+      final overviewData = AnalyticsOverview.fromJson(_safeParseJsonResponse(results[0], "overview"));
+      final salesData = SalesTimeline.fromJson(_safeParseJsonResponse(results[1], "sales"));
+      final ordersData = OrderPerformance.fromJson(_safeParseJsonResponse(results[2], "orders"));
+      final itemsData = ItemInsights.fromJson(_safeParseJsonResponse(results[3], "items"));
+      final peakHoursData = PeakHoursData.fromJson(_safeParseJsonResponse(results[4], "peak-hours"));
+      final paymentsData = PaymentAnalytics.fromJson(_safeParseJsonResponse(results[5], "payments"));
 
       _overview = overviewData;
       _salesTimeline = salesData;
@@ -630,12 +639,29 @@ class AdminAnalyticsProvider extends ChangeNotifier {
         queryParams += "&startDate=$s&endDate=$e";
       }
 
-      final res = await http.get(
+      var res = await http.get(
         Uri.parse("${ApiConfig.baseUrl}/order/analytics/export?$queryParams"),
         headers: headers,
       );
 
-      if (res.statusCode == 200) {
+      if (res.statusCode == 404) {
+        final altRes = await http.get(
+          Uri.parse("${ApiConfig.baseUrl}/admin/analytics/export?$queryParams"),
+          headers: headers,
+        );
+        if (altRes.statusCode != 404) {
+          res = altRes;
+        }
+      }
+
+      final contentType = res.headers['content-type']?.toLowerCase() ?? '';
+      final bodyTrimmed = res.body.trim();
+      final isHtml = contentType.contains('text/html') ||
+          bodyTrimmed.startsWith('<!DOCTYPE') ||
+          bodyTrimmed.startsWith('<!doctype') ||
+          bodyTrimmed.startsWith('<html');
+
+      if (res.statusCode == 200 && !isHtml) {
         final csvText = res.body;
         await Clipboard.setData(ClipboardData(text: csvText));
 
@@ -661,13 +687,17 @@ class AdminAnalyticsProvider extends ChangeNotifier {
           );
         }
       } else {
+        if (isHtml) {
+          debugPrint("[Serveo Analytics] CSV Export returned HTML (HTTP ${res.statusCode}).");
+          throw Exception("Unable to load CSV export. The server returned an unexpected response.");
+        }
         throw Exception("Failed to generate CSV export (HTTP ${res.statusCode})");
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("CSV Export Error: ${e.toString()}"),
+            content: Text("CSV Export Error: ${e.toString().replaceFirst("Exception: ", "")}"),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -675,6 +705,60 @@ class AdminAnalyticsProvider extends ChangeNotifier {
     } finally {
       _isExporting = false;
       notifyListeners();
+    }
+  }
+
+  /// Safely decodes a JSON HTTP response, gracefully detecting and handling HTML/error responses
+  /// without triggering FormatSyntaxError / FormatException crashes.
+  static Map<String, dynamic> _safeParseJsonResponse(http.Response res, String endpointName) {
+    final contentType = res.headers['content-type']?.toLowerCase() ?? '';
+    final bodyTrimmed = res.body.trim();
+    final isHtml = contentType.contains('text/html') ||
+        bodyTrimmed.startsWith('<!DOCTYPE') ||
+        bodyTrimmed.startsWith('<!doctype') ||
+        bodyTrimmed.startsWith('<html');
+
+    if (isHtml) {
+      debugPrint(
+        "[Serveo Analytics] Endpoint '$endpointName' returned HTML instead of JSON (HTTP ${res.statusCode}). "
+        "Snippet: ${bodyTrimmed.length > 100 ? bodyTrimmed.substring(0, 100) : bodyTrimmed}",
+      );
+      throw Exception(
+        "Unable to load analytics. The server returned an unexpected response. Please try again or contact support.",
+      );
+    }
+
+    if (res.statusCode == 401 || res.statusCode == 403) {
+      throw Exception("Unauthorized: Admin privileges required.");
+    }
+
+    if (res.statusCode >= 400) {
+      try {
+        final decoded = jsonDecode(res.body);
+        if (decoded is Map) {
+          final err = decoded['error'] ?? decoded['message'];
+          if (err != null) throw Exception(err.toString());
+        }
+      } catch (e) {
+        if (e is! FormatException) rethrow;
+      }
+      throw Exception("Failed to load analytics data (HTTP ${res.statusCode})");
+    }
+
+    try {
+      final decoded = jsonDecode(res.body);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      throw Exception("Unexpected data structure received from '$endpointName'.");
+    } catch (e) {
+      if (e is FormatException) {
+        debugPrint("[Serveo Analytics] JSON parsing failed for '$endpointName': $e");
+        throw Exception(
+          "Unable to load analytics. The server returned an unexpected response. Please try again or contact support.",
+        );
+      }
+      rethrow;
     }
   }
 }

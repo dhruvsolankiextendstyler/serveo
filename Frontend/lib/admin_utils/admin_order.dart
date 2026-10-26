@@ -94,6 +94,50 @@ class AdminOrder {
   /// e.g. "7:42 PM" for today's orders or "21 Oct, 7:42 PM" for older dates.
   String get formattedPlacementTime => _formatTimeKolkata(createdAt, fallback: orderDate);
 
+  /// Formats full order placement date and time in Asia/Kolkata (e.g. "27 Oct 2026, 12:30 AM")
+  String get formattedDateTimeKolkata {
+    if (createdAt == null) {
+      return orderDate.isNotEmpty ? orderDate : 'N/A';
+    }
+    final utc = createdAt!.toUtc();
+    final kolkataTime = utc.add(const Duration(hours: 5, minutes: 30));
+
+    int hour = kolkataTime.hour;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12;
+    if (hour == 0) hour = 12;
+    final minute = kolkataTime.minute.toString().padLeft(2, '0');
+    final timeStr = '$hour:$minute $period';
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final monthName = months[kolkataTime.month - 1];
+    return '${kolkataTime.day} $monthName ${kolkataTime.year}, $timeStr';
+  }
+
+  /// Parses orderItems into structured list of maps with itemName, quantity, and itemPrice
+  List<Map<String, dynamic>> get parsedOrderItems {
+    final List<Map<String, dynamic>> list = [];
+    for (final item in orderItems) {
+      if (item is Map) {
+        final name = (item['itemName'] ?? item['name'] ?? 'Item').toString();
+        final qty = int.tryParse(item['quantity']?.toString() ?? '1') ?? 1;
+        final price = int.tryParse(item['itemPrice']?.toString() ?? '0') ?? 0;
+        list.add({
+          'itemName': name,
+          'quantity': qty,
+          'itemPrice': price,
+        });
+      } else if (item is String && item.isNotEmpty) {
+        list.add({
+          'itemName': item,
+          'quantity': 1,
+          'itemPrice': 0,
+        });
+      }
+    }
+    return list;
+  }
+
   /// Formats payment claim time in Asia/Kolkata timezone
   String get formattedClaimTime => _formatTimeKolkata(paymentClaimedAt, fallback: 'N/A');
 

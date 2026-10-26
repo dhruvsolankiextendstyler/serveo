@@ -2,12 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/admin_utils/admin_order_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/admin_widgets/item_form_page.dart';
 import 'package:frontend/widgets/breakbite_appbar.dart';
 import 'package:frontend/widgets/breakbite_spinner.dart';
 import '../pages/login_page.dart';
 import 'admin_history_page.dart';
 import 'admin_live_page.dart';
+import 'admin_menu_list_page.dart';
 import 'admin_notification_overlay.dart';
 import 'admin_order_details.dart';
 import 'admin_report_page.dart';
@@ -100,7 +100,7 @@ class _AdminPageState extends State<AdminPage> {
     final screens = [
       const LivePage(),
       const HistoryPage(),
-      const ItemFormPage(),
+      const AdminMenuListPage(),
       const AdminReportPage(),
     ];
 
@@ -200,7 +200,7 @@ class _AdminPageState extends State<AdminPage> {
             label: "Live Orders",
           ),
           const BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
-          const BottomNavigationBarItem(icon: Icon(Icons.list), label: "Add Item"),
+          const BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: "Menu List"),
           const BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: "Analytics"),
         ],
       ),

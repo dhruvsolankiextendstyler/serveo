@@ -4,6 +4,8 @@ import '../utils/order_provider.dart';
 import '../utils/theme_provider.dart';
 import 'order_history_page.dart';
 
+import 'upi_qr_payment_page.dart';
+
 class PaymentPage extends StatefulWidget {
   const PaymentPage({super.key});
 
@@ -51,126 +53,275 @@ class _PaymentPageState extends State<PaymentPage> {
     setState(() => _isProcessing = true);
 
     try {
-      // 1. Simulate demo payment processing delay
-      await Future.delayed(const Duration(milliseconds: 1200));
+      if (_selectedMethod == 'upi') {
+        // Option A: Online / UPI Payment flow
+        // 1. Create order on backend with paymentMethod = "UPI"
+        final createdOrder = await orderProvider.placeOrder(paymentMethod: "UPI");
 
-      // 2. Perform single actual backend order creation and clear cart
-      await orderProvider.placeOrder();
+        if (!mounted) return;
 
-      if (!mounted) return;
-
-      // 3. Show explicit Demo Payment Completed dialog
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) {
-          final isDark = dialogContext.watch<ThemeProvider>().isDark;
-          final dialogBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-          final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
-
-          return AlertDialog(
-            backgroundColor: dialogBg,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 54),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  "Demo Payment Successful",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-                  ),
-                  child: const Text(
-                    "SIMULATED PAYMENT COMPLETED",
-                    style: TextStyle(
-                      color: Color(0xFFD97706),
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  "This was a product demonstration. No money was charged.\nYour demo order has been sent to the kitchen!",
-                  style: TextStyle(
-                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-                    fontSize: 13,
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(dialogContext); // Close dialog
-                      if (!mounted) return;
-                      // Navigate to Order History
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChangeNotifierProvider.value(
-                            value: orderProvider,
-                            child: const OrderHistoryPage(),
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.yellow,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text(
-                      "View Order History",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(dialogContext); // Close dialog
-                    if (!mounted) return;
-                    Navigator.pop(context); // Back to menu/dashboard
-                  },
-                  child: Text(
-                    "Back to Menu",
-                    style: TextStyle(
-                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+        if (createdOrder != null) {
+          // Navigate to dedicated UPI QR payment screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChangeNotifierProvider.value(
+                value: orderProvider,
+                child: UpiQrPaymentPage(order: createdOrder),
+              ),
             ),
           );
-        },
-      );
+          return;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Failed to initiate UPI payment. Please try again."),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      } else if (_selectedMethod == 'cash') {
+        // Option B: Cash on Delivery / Pay at Counter flow
+        final total = orderProvider.getTotal();
+        final createdOrder = await orderProvider.placeOrder(paymentMethod: "COD");
+
+        if (!mounted) return;
+
+        // Show COD Order Placed confirmation dialog (No QR code)
+        final shortId = createdOrder != null && createdOrder.id.length >= 4
+            ? createdOrder.id.substring(createdOrder.id.length - 4)
+            : "";
+
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            final isDark = dialogContext.watch<ThemeProvider>().isDark;
+            final dialogBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+            final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+
+            return AlertDialog(
+              backgroundColor: dialogBg,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 54),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    "Order Placed (Cash on Delivery)",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                    ),
+                    child: const Text(
+                      "PAY CASH AT COUNTER",
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    shortId.isNotEmpty
+                        ? "Your order #$shortId has been sent to the kitchen!\nPlease pay ₹$total in cash upon collecting your order."
+                        : "Your order has been sent to the kitchen!\nPlease pay ₹$total in cash upon collecting your order.",
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        if (!mounted) return;
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChangeNotifierProvider.value(
+                              value: orderProvider,
+                              child: const OrderHistoryPage(),
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellow,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text(
+                        "View Order History",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      if (!mounted) return;
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      "Back to Menu",
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      } else {
+        // Preserved Option: Simulated Card Transaction Demo
+        await Future.delayed(const Duration(milliseconds: 1200));
+        await orderProvider.placeOrder(paymentMethod: "Card");
+
+        if (!mounted) return;
+
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            final isDark = dialogContext.watch<ThemeProvider>().isDark;
+            final dialogBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+            final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+
+            return AlertDialog(
+              backgroundColor: dialogBg,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 54),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    "Demo Payment Successful",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                    ),
+                    child: const Text(
+                      "SIMULATED PAYMENT COMPLETED",
+                      style: TextStyle(
+                        color: Color(0xFFD97706),
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    "This was a product demonstration. No money was charged.\nYour demo order has been sent to the kitchen!",
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        if (!mounted) return;
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChangeNotifierProvider.value(
+                              value: orderProvider,
+                              child: const OrderHistoryPage(),
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellow,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text(
+                        "View Order History",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      if (!mounted) return;
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      "Back to Menu",
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

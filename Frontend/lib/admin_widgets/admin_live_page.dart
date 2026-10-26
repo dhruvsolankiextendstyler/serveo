@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/admin_utils/admin_order.dart';
 import 'package:frontend/admin_utils/admin_order_provider.dart';
 import 'package:frontend/admin_widgets/admin_order_card.dart';
 import 'package:frontend/admin_widgets/admin_stat_card.dart';
@@ -39,6 +40,13 @@ class _LivePageState extends State<LivePage> {
     final orderProvider = context.watch<AdminOrderProvider>();
     final liveOrders = orderProvider.liveOrders;
     final completedOrdersCount = orderProvider.historyOrders.length;
+
+    final sortedLiveOrders = List<AdminOrder>.from(liveOrders)
+      ..sort((a, b) {
+        if (a.isAwaitingVerification && !b.isAwaitingVerification) return -1;
+        if (!a.isAwaitingVerification && b.isAwaitingVerification) return 1;
+        return 0;
+      });
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -111,7 +119,7 @@ class _LivePageState extends State<LivePage> {
 
           // 3. Orders List or Empty State
           Expanded(
-            child: liveOrders.isEmpty
+            child: sortedLiveOrders.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -137,9 +145,9 @@ class _LivePageState extends State<LivePage> {
                     ),
                   )
                 : ListView.builder(
-                    itemCount: liveOrders.length,
+                    itemCount: sortedLiveOrders.length,
                     itemBuilder: (context, index) {
-                      return AdminOrderCard(order: liveOrders[index]);
+                      return AdminOrderCard(order: sortedLiveOrders[index]);
                     },
                   ),
           ),

@@ -7,6 +7,20 @@ const orderSchema = new mongoose.Schema(
             ref: 'User',
             required: true
         },
+        customerDetails: {
+            fullName: {
+                type: String,
+                default: ""
+            },
+            phoneNumber: {
+                type: String,
+                default: ""
+            },
+            email: {
+                type: String,
+                default: ""
+            }
+        },
         orderItems: [
             {
                 itemId: {
@@ -34,9 +48,31 @@ const orderSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["Processing", "Preparing", "Completed", "Collected"],
+            enum: ["Processing", "Preparing", "Completed", "Collected", "Pending Verification", "Payment Rejected", "Cancelled"],
             required: true,
             default: "Processing"
+        },
+        paymentMethod: {
+            type: String,
+            enum: ["UPI", "COD", "Card"],
+            default: "COD"
+        },
+        paymentStatus: {
+            type: String,
+            enum: ["Pending", "Awaiting Verification", "Verified", "Rejected"],
+            default: "Pending"
+        },
+        paymentClaimedAt: {
+            type: Date,
+            default: null
+        },
+        paymentVerifiedAt: {
+            type: Date,
+            default: null
+        },
+        verifiedBy: {
+            type: String,
+            default: null
         }
     },
     {timestamps:true}
@@ -53,5 +89,6 @@ orderSchema.pre("save", function(){
 // Hot query paths: per-user order lists and the KDS createdAt sort
 orderSchema.index({ userId: 1 })
 orderSchema.index({ createdAt: 1 })
+orderSchema.index({ paymentStatus: 1 })
 
 export const Order = mongoose.model("Order", orderSchema)

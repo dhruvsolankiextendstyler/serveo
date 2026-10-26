@@ -108,6 +108,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       case 'Collected':
         statusColor = Colors.green;
         break;
+      case 'Payment Rejected':
+        statusColor = Colors.redAccent;
+        break;
       default:
         statusColor = Colors.blue;
     }
@@ -152,7 +155,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               _buildStatusChip(order.status, statusColor),
             ],
           ),
-          Divider(color: dividerColor, height: 24),
+          const SizedBox(height: 8),
+          // Payment method & payment status badge
+          _buildPaymentBadge(order, isDark),
+          Divider(color: dividerColor, height: 20),
           Text(
             "${order.orderItems.length} Items",
             style: TextStyle(color: secondaryTextColor, fontSize: 14),
@@ -232,6 +238,62 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
           fontWeight: FontWeight.bold,
           fontSize: 11,
         ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentBadge(Order order, bool isDark) {
+    String label = "COD (Cash)";
+    Color badgeColor = Colors.blue;
+    IconData icon = Icons.payments_outlined;
+
+    if (order.paymentMethod.toUpperCase() == 'UPI') {
+      icon = Icons.qr_code_2_rounded;
+      if (order.paymentStatus == 'Awaiting Verification') {
+        label = "UPI • Awaiting Verification";
+        badgeColor = const Color(0xFFD97706);
+      } else if (order.paymentStatus == 'Verified') {
+        label = "UPI • Payment Confirmed";
+        badgeColor = Colors.green;
+      } else if (order.paymentStatus == 'Rejected') {
+        label = "UPI • Payment Not Confirmed";
+        badgeColor = Colors.redAccent;
+      } else {
+        label = "UPI • Payment Pending";
+        badgeColor = Colors.orange;
+      }
+    } else if (order.paymentMethod.toUpperCase() == 'CARD') {
+      label = "Card (Demo)";
+      badgeColor = Colors.purple;
+      icon = Icons.credit_card_outlined;
+    } else {
+      label = "Cash on Pickup";
+      badgeColor = Colors.teal;
+      icon = Icons.money_rounded;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: badgeColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: badgeColor),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              color: badgeColor,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -4,16 +4,22 @@ import 'package:frontend/admin_utils/admin_order_provider.dart';
 import 'package:provider/provider.dart';
 import 'admin_order_details.dart';
 
-class AdminOrderCard extends StatelessWidget{
+class AdminOrderCard extends StatelessWidget {
   final AdminOrder order;
   const AdminOrderCard({super.key, required this.order});
-  
+
   @override
   Widget build(BuildContext context) {
     Color statusColor = Colors.grey;
     if (order.status == 'Processing') statusColor = Colors.orange;
     if (order.status == 'Preparing') statusColor = Colors.blue;
     if (order.status == 'Completed' || order.status == 'Collected') statusColor = Colors.green;
+    if (order.status == 'Payment Rejected') statusColor = Colors.redAccent;
+
+    // Highlight orders awaiting UPI verification with Amber emphasis
+    if (order.isUpi && order.isAwaitingVerification) {
+      statusColor = Colors.amber;
+    }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
@@ -21,15 +27,19 @@ class AdminOrderCard extends StatelessWidget{
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF6B7280);
     final dividerColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
 
+    final shortOrderId = order.id.length >= 4
+        ? order.id.substring(order.id.length - 4)
+        : order.id;
+
     return GestureDetector(
       onTap: () {
         final provider = context.read<AdminOrderProvider>();
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) =>
-            ChangeNotifierProvider.value(
-                value: provider,
-                child: AdminOrderDetailsPage(order: order)
-            )
+          MaterialPageRoute(
+            builder: (context) => ChangeNotifierProvider.value(
+              value: provider,
+              child: AdminOrderDetailsPage(order: order),
+            ),
           ),
         );
       },
@@ -39,7 +49,12 @@ class AdminOrderCard extends StatelessWidget{
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(15),
-          border: Border(left: BorderSide(color: statusColor, width: 5)),
+          border: Border(
+            left: BorderSide(
+              color: statusColor,
+              width: order.isAwaitingVerification ? 6 : 5,
+            ),
+          ),
           boxShadow: isDark
               ? null
               : [
@@ -60,9 +75,36 @@ class AdminOrderCard extends StatelessWidget{
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Order #${order.id.length >= 4 ? order.id.substring(order.id.length - 4) : order.id}",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryTextColor),
+                    Row(
+                      children: [
+                        Text(
+                          "Order #$shortOrderId",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: primaryTextColor,
+                          ),
+                        ),
+                        if (order.isAwaitingVerification) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                            ),
+                            child: const Text(
+                              "VERIFY UPI",
+                              style: TextStyle(
+                                color: Color(0xFFD97706),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     if (order.formattedPlacementTime.isNotEmpty) ...[
                       const SizedBox(height: 3),
@@ -72,7 +114,11 @@ class AdminOrderCard extends StatelessWidget{
                           const SizedBox(width: 4),
                           Text(
                             order.formattedPlacementTime,
-                            style: TextStyle(color: secondaryTextColor, fontSize: 12, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: secondaryTextColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
@@ -85,18 +131,135 @@ class AdminOrderCard extends StatelessWidget{
                     color: statusColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(order.status.toUpperCase(), style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10)),
+                  child: Text(
+                    order.isAwaitingVerification
+                        ? "AWAITING VERIFICATION"
+                        : order.status.toUpperCase(),
+                    style: TextStyle(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            // Customer Details snippet
+            Row(
+              children: [
+                Icon(Icons.person_outline, size: 13, color: secondaryTextColor),
+                const SizedBox(width: 4),
+                Text(
+                  order.customerName,
+                  style: TextStyle(
+                    color: secondaryTextColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (order.customerPhone.isNotEmpty && order.customerPhone != 'N/A') ...[
+                  const SizedBox(width: 8),
+                  Text("•", style: TextStyle(color: secondaryTextColor, fontSize: 12)),
+                  const SizedBox(width: 8),
+                  Icon(Icons.phone_outlined, size: 13, color: secondaryTextColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    order.customerPhone,
+                    style: TextStyle(
+                      color: secondaryTextColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
+            ),
             Divider(color: dividerColor),
-            Text(
-              "${order.orderItems.length} Items • ₹${order.totalAmount}",
-              style: TextStyle(color: primaryTextColor, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "${order.orderItems.length} Items • ₹${order.totalAmount}",
+                  style: TextStyle(color: primaryTextColor, fontWeight: FontWeight.bold),
+                ),
+                _buildMethodBadge(order, isDark),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildMethodBadge(AdminOrder order, bool isDark) {
+    if (order.isUpi) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: order.isAwaitingVerification
+              ? Colors.amber.withValues(alpha: 0.15)
+              : Colors.green.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.qr_code_2_rounded,
+              size: 13,
+              color: order.isAwaitingVerification ? const Color(0xFFD97706) : Colors.green,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              order.isAwaitingVerification ? "UPI (Unverified)" : "UPI (Paid)",
+              style: TextStyle(
+                color: order.isAwaitingVerification ? const Color(0xFFD97706) : Colors.green,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (order.isCod) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: Colors.blue.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.payments_outlined, size: 13, color: Colors.blue),
+            SizedBox(width: 4),
+            Text(
+              "COD",
+              style: TextStyle(
+                color: Colors.blue,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: Colors.purple.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: const Text(
+          "Card (Demo)",
+          style: TextStyle(
+            color: Colors.purple,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    }
   }
 }

@@ -42,7 +42,7 @@ const uploadMiddleware = (req, res, next) => {
 // 🔹 1. GET ALL ITEMS (Customer Menu & Admin)
 itemRoute.get("/", async (req, res) => {
   try {
-    const msg = await getItemController();
+    const msg = await getItemController(req);
     res.json({ message: msg });
   } catch (error) {
     res.status(500).json({ error: error.message });

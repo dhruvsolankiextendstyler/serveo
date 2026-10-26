@@ -171,6 +171,29 @@ class ServeoFoodCard extends StatelessWidget {
     return _buildFallbackBanner(isDark);
   }
 
+  Widget _buildVegNonVegEmblem(bool isVeg) {
+    final color = isVeg ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
+    return Container(
+      width: 14,
+      height: 14,
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        border: Border.all(color: color, width: 1.2),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Center(
+        child: Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final orderProvider = context.watch<OrderProvider>();
@@ -262,15 +285,23 @@ class ServeoFoodCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.itemName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: primaryTextColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    _buildVegNonVegEmblem(item.isVeg),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        item.itemName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: primaryTextColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
 

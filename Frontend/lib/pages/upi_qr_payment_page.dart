@@ -5,6 +5,7 @@ import '../utils/order_provider.dart';
 import '../utils/payment_config.dart';
 import '../utils/theme_provider.dart';
 import 'order_history_page.dart';
+import 'order_tracking_page.dart';
 
 class UpiQrPaymentPage extends StatefulWidget {
   final Order order;
@@ -132,7 +133,10 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                       MaterialPageRoute(
                         builder: (context) => ChangeNotifierProvider.value(
                           value: orderProvider,
-                          child: const OrderHistoryPage(),
+                          child: OrderTrackingPage(
+                            orderId: widget.order.id,
+                            initialOrder: widget.order,
+                          ),
                         ),
                       ),
                     );
@@ -143,7 +147,7 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text(
-                    "Track in Order History",
+                    "Track Order",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                 ),

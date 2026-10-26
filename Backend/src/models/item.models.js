@@ -29,6 +29,15 @@ const itemSchema = new mongoose.Schema(
             type: String,
             required: false,
             default: ""
+        },
+        isVeg: {
+            type: Boolean,
+            default: true
+        },
+        dietary: {
+            type: String,
+            enum: ["Veg", "Non-Veg", "Vegan", ""],
+            default: "Veg"
         }
     },
     {timestamps: true}

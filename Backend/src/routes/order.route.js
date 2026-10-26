@@ -11,6 +11,7 @@ import { getUserReportController } from '../controllers/getUserReport.controller
 import { claimPaymentController } from '../controllers/claimPayment.controller.js'
 import { verifyPaymentController } from '../controllers/verifyPayment.controller.js'
 import { analyticsRoute } from './analytics.route.js'
+import { trackOrderController } from '../controllers/trackOrder.controller.js'
 
 export const orderRoute = express.Router()
 
@@ -36,6 +37,26 @@ orderRoute.get("/user", authCheck, async (req,res) => {
         console.log("User Orders sent")
     } catch (error) {
         res.status(500).json({"error": error.message})
+    }
+})
+
+// 🔹 2b. TRACK SINGLE ORDER (Customer, verified ownership)
+orderRoute.get("/track/:id", authCheck, async (req, res) => {
+    try {
+        const orderData = await trackOrderController(req);
+        res.json({ order: orderData });
+    } catch (error) {
+        res.status(error.status || 500).json({ error: error.message });
+    }
+})
+
+// 🔹 2c. GET ORDER DETAILS (Customer, verified ownership)
+orderRoute.get("/detail/:id", authCheck, async (req, res) => {
+    try {
+        const orderData = await trackOrderController(req);
+        res.json({ order: orderData });
+    } catch (error) {
+        res.status(error.status || 500).json({ error: error.message });
     }
 })
 

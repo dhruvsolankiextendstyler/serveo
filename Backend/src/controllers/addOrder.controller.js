@@ -55,6 +55,10 @@ export const addOrderController = async (req) => {
             dbItem = await Item.findOne({ itemName: item.itemName });
         }
 
+        if (dbItem && dbItem.isAvailable === false) {
+            throw new Error(`Item '${dbItem.itemName}' is currently sold out and cannot be ordered.`);
+        }
+
         const price = dbItem ? dbItem.itemPrice : Number(item.itemPrice || 0);
         const name = dbItem ? dbItem.itemName : (item.itemName || "Item");
         const qty = Math.max(1, Math.min(Number(item.quantity) || 1, 10));

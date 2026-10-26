@@ -4,7 +4,6 @@ import 'package:frontend/admin_utils/admin_analytics_provider.dart';
 import 'package:frontend/admin_widgets/admin_report_page.dart';
 import 'package:frontend/admin_widgets/analytics/serveo_peak_hours_chart.dart';
 import 'package:frontend/admin_widgets/analytics/serveo_sales_chart.dart';
-import 'package:provider/provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

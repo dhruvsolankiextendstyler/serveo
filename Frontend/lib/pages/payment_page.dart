@@ -5,6 +5,7 @@ import '../utils/order_provider.dart';
 import '../utils/theme_provider.dart';
 import 'login_page.dart';
 import 'order_history_page.dart';
+import 'order_tracking_page.dart';
 
 import 'upi_qr_payment_page.dart';
 
@@ -215,15 +216,30 @@ class _PaymentPageState extends State<PaymentPage> {
                       onPressed: () {
                         Navigator.pop(dialogContext);
                         if (!mounted) return;
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChangeNotifierProvider.value(
-                              value: orderProvider,
-                              child: const OrderHistoryPage(),
+                        if (createdOrder != null) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChangeNotifierProvider.value(
+                                value: orderProvider,
+                                child: OrderTrackingPage(
+                                  orderId: createdOrder.id,
+                                  initialOrder: createdOrder,
+                                ),
+                              ),
                             ),
-                          ),
-                        );
+                          );
+                        } else {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChangeNotifierProvider.value(
+                                value: orderProvider,
+                                child: const OrderHistoryPage(),
+                              ),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.yellow,
@@ -231,7 +247,7 @@ class _PaymentPageState extends State<PaymentPage> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: const Text(
-                        "View Order History",
+                        "Track Order",
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ),
@@ -241,10 +257,18 @@ class _PaymentPageState extends State<PaymentPage> {
                     onPressed: () {
                       Navigator.pop(dialogContext);
                       if (!mounted) return;
-                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChangeNotifierProvider.value(
+                            value: orderProvider,
+                            child: const OrderHistoryPage(),
+                          ),
+                        ),
+                      );
                     },
                     child: Text(
-                      "Back to Menu",
+                      "View Order History",
                       style: TextStyle(
                         color: isDark ? Colors.white70 : const Color(0xFF4B5563),
                         fontWeight: FontWeight.w600,

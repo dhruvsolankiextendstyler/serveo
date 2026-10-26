@@ -276,15 +276,171 @@ class OrderProvider extends ChangeNotifier{
     }
   }
 
+  /// Fetches real-time status of a single order for live tracking.
+  Future<Order?> trackOrder(String orderId) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+
+      final response = await http.get(
+        Uri.parse("${ApiConfig.baseUrl}/order/track/$orderId"),
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
+      ).timeout(const Duration(seconds: 12));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['order'] != null) {
+          final liveOrder = Order.fromJson(Map<String, dynamic>.from(decoded['order']));
+          // Update in cached list if present
+          final idx = _myOrders.indexWhere((o) => o.id == liveOrder.id);
+          if (idx != -1) {
+            _myOrders[idx] = liveOrder;
+            notifyListeners();
+          }
+          return liveOrder;
+        }
+      }
+    } catch (e) {
+      debugPrint("[Serveo Order] trackOrder error: $e");
+    }
+
+    // Fallback: check in-memory orders if network fails or endpoint pending
+    final localMatch = _myOrders.where((o) => o.id == orderId);
+    if (localMatch.isNotEmpty) {
+      return localMatch.first;
+    }
+    return null;
+  }
+
+  /// Reorder items from a historical order:
+  /// - Matches items against current catalog
+  /// - Enforces current prices (never silently charges historical prices)
+  /// - Filters out sold-out or deleted items
+  /// - Merges into cart without automatic order placement
+  ReorderResult reorderOrder(Order order, List<Item> currentCatalog) {
+    final List<ReorderItemInfo> addedItems = [];
+    final List<String> unavailableOrDeleted = [];
+    final List<PriceChangeInfo> priceChanges = [];
+
+    for (final rawItem in order.orderItems) {
+      final itemMap = rawItem is Map ? rawItem : {};
+      final String rawId = (itemMap['itemId'] ?? itemMap['_id'] ?? '').toString();
+      final String rawName = (itemMap['itemName'] ?? itemMap['name'] ?? 'Unknown Item').toString();
+      final int histPrice = int.tryParse(itemMap['itemPrice']?.toString() ?? '0') ?? 0;
+      final int reqQty = int.tryParse(itemMap['quantity']?.toString() ?? '1') ?? 1;
+
+      // Find in current catalog
+      Item? catalogItem;
+      if (rawId.isNotEmpty) {
+        try {
+          catalogItem = currentCatalog.firstWhere((c) => c.itemId == rawId);
+        } catch (_) {}
+      }
+      if (catalogItem == null && rawName.isNotEmpty) {
+        try {
+          catalogItem = currentCatalog.firstWhere(
+            (c) => c.itemName.toLowerCase().trim() == rawName.toLowerCase().trim(),
+          );
+        } catch (_) {}
+      }
+
+      // Check item validity & availability
+      if (catalogItem == null) {
+        unavailableOrDeleted.add("$rawName (Discontinued)");
+        continue;
+      }
+
+      if (!catalogItem.isAvailable) {
+        unavailableOrDeleted.add("$rawName (Sold Out)");
+        continue;
+      }
+
+      // Check price changes
+      if (catalogItem.itemPrice != histPrice) {
+        priceChanges.add(PriceChangeInfo(
+          itemName: catalogItem.itemName,
+          oldPrice: histPrice,
+          newPrice: catalogItem.itemPrice,
+        ));
+      }
+
+      // Add to cart with current catalog price
+      final int existingQty = getItemQuantity(catalogItem.itemId);
+      final int toAdd = (existingQty + reqQty).clamp(1, 3) - existingQty;
+
+      if (toAdd > 0) {
+        for (int i = 0; i < toAdd; i++) {
+          addToCart(catalogItem);
+        }
+        addedItems.add(ReorderItemInfo(
+          itemName: catalogItem.itemName,
+          currentPrice: catalogItem.itemPrice,
+          quantityAdded: toAdd,
+        ));
+      }
+    }
+
+    notifyListeners();
+
+    return ReorderResult(
+      addedItems: addedItems,
+      unavailableItems: unavailableOrDeleted,
+      priceChanges: priceChanges,
+    );
+  }
+
   void showToast(String message, BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: TextStyle(fontFamily: 'Poppins', color: Colors.black)),
+        content: Text(message, style: const TextStyle(fontFamily: 'Poppins', color: Colors.black)),
         backgroundColor: Colors.yellow,
         behavior: SnackBarBehavior.floating,
       ),
     );
   }
+}
+
+class ReorderItemInfo {
+  final String itemName;
+  final int currentPrice;
+  final int quantityAdded;
+
+  ReorderItemInfo({
+    required this.itemName,
+    required this.currentPrice,
+    required this.quantityAdded,
+  });
+}
+
+class PriceChangeInfo {
+  final String itemName;
+  final int oldPrice;
+  final int newPrice;
+
+  PriceChangeInfo({
+    required this.itemName,
+    required this.oldPrice,
+    required this.newPrice,
+  });
+}
+
+class ReorderResult {
+  final List<ReorderItemInfo> addedItems;
+  final List<String> unavailableItems;
+  final List<PriceChangeInfo> priceChanges;
+
+  ReorderResult({
+    required this.addedItems,
+    required this.unavailableItems,
+    required this.priceChanges,
+  });
+
+  bool get hasAddedItems => addedItems.isNotEmpty;
+  bool get hasUnavailableItems => unavailableItems.isNotEmpty;
+  bool get hasPriceChanges => priceChanges.isNotEmpty;
 }
 
 class Order {
@@ -297,6 +453,8 @@ class Order {
   final String paymentStatus;
   final DateTime? paymentClaimedAt;
   final DateTime? paymentVerifiedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Order({
     required this.id,
@@ -308,9 +466,20 @@ class Order {
     this.paymentStatus = 'Pending',
     this.paymentClaimedAt,
     this.paymentVerifiedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
+  bool get isTerminal =>
+      ['Collected', 'Completed', 'Cancelled', 'Payment Rejected'].contains(status);
+
+  bool get isCancelled =>
+      ['Cancelled', 'Payment Rejected'].contains(status);
+
   factory Order.fromJson(Map<String, dynamic> json) {
+    final cAt = json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null;
+    final uAt = json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null;
+
     return Order(
       id: (json['_id'] ?? json['id'] ?? json['orderId'] ?? '').toString(),
       totalAmount: int.tryParse(json['totalAmount']?.toString() ?? '0') ?? 0,
@@ -327,6 +496,8 @@ class Order {
       paymentVerifiedAt: json['paymentVerifiedAt'] != null
           ? DateTime.tryParse(json['paymentVerifiedAt'].toString())
           : null,
+      createdAt: cAt,
+      updatedAt: uAt,
     );
   }
 }
@@ -337,6 +508,8 @@ class Item{
   final String? description;
   final bool isAvailable;
   final String? imageUrl;
+  final bool isVeg;
+  final String dietary;
   int quantity = 0;
 
   Item({
@@ -347,9 +520,14 @@ class Item{
     this.description,
     this.isAvailable = true,
     this.imageUrl,
+    this.isVeg = true,
+    this.dietary = 'Veg',
   });
 
   factory Item.fromJson(Map<String,dynamic> json){
+    final dietaryStr = json['dietary']?.toString() ?? 'Veg';
+    final bool vegVal = json['isVeg'] ?? (dietaryStr.toLowerCase() != 'non-veg');
+
     return Item(
       itemId: json['_id'] ?? '',
       itemName: json['itemName'] ?? '',
@@ -358,6 +536,8 @@ class Item{
       description: json['description'],
       isAvailable: json['isAvailable'] ?? true,
       imageUrl: json['imageUrl']?.toString(),
+      isVeg: vegVal,
+      dietary: dietaryStr,
     );
   }
 
@@ -368,6 +548,8 @@ class Item{
       'itemPrice': itemPrice,
       'quantity': quantity,
       if (imageUrl != null && imageUrl!.isNotEmpty) 'imageUrl': imageUrl,
+      'isVeg': isVeg,
+      'dietary': dietary,
     };
   }
 }

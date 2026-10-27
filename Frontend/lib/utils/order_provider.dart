@@ -52,6 +52,16 @@ class OrderProvider extends ChangeNotifier{
     }
   }
 
+  void removeItem(Item item) {
+    _orderItems.removeWhere((it) => it.itemId == item.itemId);
+    notifyListeners();
+  }
+
+  void clearCart() {
+    _orderItems.clear();
+    notifyListeners();
+  }
+
   int getTotal(){
     return _orderItems.fold(0, (total, item) => total + (item.itemPrice * item.quantity));
   }
@@ -524,17 +534,51 @@ class Item{
     this.dietary = 'Veg',
   });
 
+  Item copyWith({
+    String? itemId,
+    String? itemName,
+    int? itemPrice,
+    String? category,
+    String? description,
+    bool? isAvailable,
+    String? imageUrl,
+    bool? isVeg,
+    String? dietary,
+    int? quantity,
+  }) {
+    final copy = Item(
+      itemId: itemId ?? this.itemId,
+      itemName: itemName ?? this.itemName,
+      itemPrice: itemPrice ?? this.itemPrice,
+      category: category ?? this.category,
+      description: description ?? this.description,
+      isAvailable: isAvailable ?? this.isAvailable,
+      imageUrl: imageUrl ?? this.imageUrl,
+      isVeg: isVeg ?? this.isVeg,
+      dietary: dietary ?? this.dietary,
+    );
+    copy.quantity = quantity ?? this.quantity;
+    return copy;
+  }
+
   factory Item.fromJson(Map<String,dynamic> json){
     final dietaryStr = json['dietary']?.toString() ?? 'Veg';
     final bool vegVal = json['isVeg'] ?? (dietaryStr.toLowerCase() != 'non-veg');
 
+    final rawPrice = json['itemPrice'];
+    int parsedPrice = 0;
+    if (rawPrice != null) {
+      parsedPrice = int.tryParse(rawPrice.toString()) ??
+          (double.tryParse(rawPrice.toString())?.round() ?? 0);
+    }
+
     return Item(
-      itemId: json['_id'] ?? '',
-      itemName: json['itemName'] ?? '',
-      itemPrice: json['itemPrice'] != null ? int.parse(json['itemPrice'].toString()) : 0,
-      category: json['category'] ?? '',
-      description: json['description'],
-      isAvailable: json['isAvailable'] ?? true,
+      itemId: (json['_id'] ?? json['id'] ?? json['itemId'] ?? '').toString(),
+      itemName: (json['itemName'] ?? '').toString(),
+      itemPrice: parsedPrice,
+      category: (json['category'] ?? '').toString(),
+      description: json['description']?.toString(),
+      isAvailable: json['isAvailable'] == null ? true : (json['isAvailable'] == true || json['isAvailable'] == 'true'),
       imageUrl: json['imageUrl']?.toString(),
       isVeg: vegVal,
       dietary: dietaryStr,

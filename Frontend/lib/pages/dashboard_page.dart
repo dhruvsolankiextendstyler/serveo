@@ -714,10 +714,16 @@ class _DashboardPageState extends State<DashboardPage> {
                       ],
                     ),
                     ElevatedButton.icon(
+                      key: const Key('dashboard_view_tray_btn'),
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const CartPage()),
+                          MaterialPageRoute(
+                            builder: (context) => ChangeNotifierProvider.value(
+                              value: orderProvider,
+                              child: const CartPage(),
+                            ),
+                          ),
                         );
                       },
                       icon: const Icon(Icons.shopping_bag_outlined, color: Colors.black, size: 18),

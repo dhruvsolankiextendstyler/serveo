@@ -2,6 +2,8 @@ import "package:flutter/material.dart";
 import "package:firebase_core/firebase_core.dart";
 import "package:firebase_messaging/firebase_messaging.dart";
 import "package:frontend/pages/auth_gate.dart";
+import "package:frontend/utils/menu_provider.dart";
+import "package:frontend/utils/order_provider.dart";
 import "package:frontend/utils/theme_provider.dart";
 import "package:provider/provider.dart";
 import "firebase_options.dart";
@@ -22,8 +24,12 @@ void main() async {
   await themeProvider.loadThemePreference();
 
   runApp(
-    ChangeNotifierProvider<ThemeProvider>.value(
-      value: themeProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
+        ChangeNotifierProvider<OrderProvider>(create: (_) => OrderProvider()),
+        ChangeNotifierProvider<MenuProvider>(create: (_) => MenuProvider()..fetchMenu()),
+      ],
       child: const MyApp(),
     ),
   );

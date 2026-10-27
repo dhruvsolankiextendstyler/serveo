@@ -8,7 +8,14 @@ import '../utils/order_provider.dart';
 import 'item_form_page.dart';
 
 class AdminMenuListPage extends StatefulWidget {
-  const AdminMenuListPage({super.key});
+  final http.Client? mockHttpClient;
+  final List<Item>? initialItems;
+
+  const AdminMenuListPage({
+    super.key,
+    this.mockHttpClient,
+    this.initialItems,
+  });
 
   @override
   State<AdminMenuListPage> createState() => _AdminMenuListPageState();
@@ -20,6 +27,7 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
   String? _errorMessage;
   String _selectedCategory = 'All';
   String _searchQuery = '';
+  final Set<String> _togglingItemIds = {};
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -38,7 +46,12 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
   @override
   void initState() {
     super.initState();
-    _fetchItems();
+    if (widget.initialItems != null) {
+      _items = List<Item>.from(widget.initialItems!);
+      _isLoading = false;
+    } else {
+      _fetchItems();
+    }
   }
 
   @override
@@ -63,10 +76,16 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         if (token != null) "Authorization": "Bearer $token",
       };
 
-      final response = await http.get(
-        Uri.parse("${ApiConfig.baseUrl}/item"),
-        headers: headers,
-      ).timeout(const Duration(seconds: 12));
+      final client = widget.mockHttpClient;
+      final response = await (client != null
+          ? client.get(
+              Uri.parse("${ApiConfig.baseUrl}/item"),
+              headers: headers,
+            )
+          : http.get(
+              Uri.parse("${ApiConfig.baseUrl}/item"),
+              headers: headers,
+            ).timeout(const Duration(seconds: 12)));
 
       if (!mounted) return;
 
@@ -109,26 +128,23 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
   }
 
   Future<void> _toggleAvailability(Item item) async {
-    final newStatus = !item.isAvailable;
-    final originalItems = List<Item>.from(_items);
+    if (item.itemId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Cannot update availability: Item ID is missing."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
 
-    // Optimistic update
+    if (_togglingItemIds.contains(item.itemId)) return;
+
     setState(() {
-      final index = _items.indexWhere((it) => it.itemId == item.itemId);
-      if (index != -1) {
-        _items[index] = Item(
-          itemId: item.itemId,
-          itemName: item.itemName,
-          itemPrice: item.itemPrice,
-          category: item.category,
-          description: item.description,
-          isAvailable: newStatus,
-          imageUrl: item.imageUrl,
-          isVeg: item.isVeg,
-          dietary: item.dietary,
-        );
-      }
+      _togglingItemIds.add(item.itemId);
     });
+
+    final newStatus = !item.isAvailable;
 
     try {
       String? token;
@@ -136,47 +152,89 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         token = await FirebaseAuth.instance.currentUser?.getIdToken();
       } catch (_) {}
 
-      final response = await http.put(
-        Uri.parse("${ApiConfig.baseUrl}/item/${item.itemId}"),
-        headers: {
-          "Content-Type": "application/json",
-          if (token != null) "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({"isAvailable": newStatus}),
-      ).timeout(const Duration(seconds: 8));
+      final client = widget.mockHttpClient;
+      final response = await (client != null
+          ? client.put(
+              Uri.parse("${ApiConfig.baseUrl}/item/${item.itemId}"),
+              headers: {
+                "Content-Type": "application/json",
+                if (token != null) "Authorization": "Bearer $token",
+              },
+              body: jsonEncode({"isAvailable": newStatus}),
+            )
+          : http.put(
+              Uri.parse("${ApiConfig.baseUrl}/item/${item.itemId}"),
+              headers: {
+                "Content-Type": "application/json",
+                if (token != null) "Authorization": "Bearer $token",
+              },
+              body: jsonEncode({"isAvailable": newStatus}),
+            ).timeout(const Duration(seconds: 10)));
 
       if (!mounted) return;
 
-      if (response.statusCode == 200) {
+      final contentType = response.headers['content-type']?.toLowerCase() ?? '';
+      final bodyTrimmed = response.body.trim();
+      final isHtml = contentType.contains('text/html') ||
+          bodyTrimmed.startsWith('<!DOCTYPE') ||
+          bodyTrimmed.startsWith('<!doctype') ||
+          bodyTrimmed.startsWith('<html');
+
+      if (response.statusCode == 200 && !isHtml) {
+        bool confirmedStatus = newStatus;
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map && decoded['item'] is Map && decoded['item']['isAvailable'] != null) {
+            confirmedStatus = decoded['item']['isAvailable'] == true;
+          }
+        } catch (_) {}
+
+        // Requirement: Update UI only after successful server response
+        setState(() {
+          final index = _items.indexWhere((it) => it.itemId == item.itemId);
+          if (index != -1) {
+            _items[index] = _items[index].copyWith(isAvailable: confirmedStatus);
+          }
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              "'${item.itemName}' is now ${newStatus ? 'Available' : 'Sold Out'}",
+              "'${item.itemName}' is now ${confirmedStatus ? 'Available' : 'Sold Out'}",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            backgroundColor: newStatus ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+            backgroundColor: confirmedStatus ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
           ),
         );
       } else {
-        // Revert on server error
-        setState(() => _items = originalItems);
-        String errDetail = "Failed to update availability (${response.statusCode})";
-        try {
-          final decoded = jsonDecode(response.body);
-          if (decoded is Map && decoded['error'] != null) errDetail = decoded['error'];
-        } catch (_) {}
+        String errDetail = isHtml
+            ? "Server error (${response.statusCode}): Received HTML error page"
+            : "Failed to update availability (${response.statusCode})";
+        if (!isHtml) {
+          try {
+            final decoded = jsonDecode(response.body);
+            if (decoded is Map && (decoded['error'] != null || decoded['message'] != null)) {
+              errDetail = (decoded['error'] ?? decoded['message']).toString();
+            }
+          } catch (_) {}
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errDetail), backgroundColor: Colors.redAccent),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _items = originalItems);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e"), backgroundColor: Colors.redAccent),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _togglingItemIds.remove(item.itemId);
+        });
+      }
     }
   }
 
@@ -636,9 +694,12 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
                 Transform.scale(
                   scale: 0.75,
                   child: Switch.adaptive(
+                    key: Key('item_switch_${item.itemId}'),
                     value: item.isAvailable,
-                    activeColor: const Color(0xFF10B981),
-                    onChanged: (val) => _toggleAvailability(item),
+                    activeTrackColor: const Color(0xFF10B981),
+                    onChanged: _togglingItemIds.contains(item.itemId)
+                        ? null
+                        : (val) => _toggleAvailability(item),
                   ),
                 ),
                 Row(

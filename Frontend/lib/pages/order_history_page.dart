@@ -198,9 +198,15 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.pop(sheetContext);
+                          final orderProvider = context.read<OrderProvider>();
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const CartPage()),
+                            MaterialPageRoute(
+                              builder: (context) => ChangeNotifierProvider.value(
+                                value: orderProvider,
+                                child: const CartPage(),
+                              ),
+                            ),
                           );
                         },
                         style: ElevatedButton.styleFrom(

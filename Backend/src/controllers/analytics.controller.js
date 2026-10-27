@@ -536,7 +536,7 @@ export async function getOrderPerformanceController(req, res) {
     });
 
     const rawAvgPrep = facet.prepTimes?.[0]?.avgMinutes;
-    const avgPrepTimeMinutes = rawAvgPrep != null ? Math.round(rawAvgPrep * 10) / 10 : null;
+    const averagePrepTimeMinutes = rawAvgPrep != null ? Math.round(rawAvgPrep * 10) / 10 : null;
 
     res.json({
       totalOrders,

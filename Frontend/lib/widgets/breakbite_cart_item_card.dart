@@ -79,6 +79,7 @@ class CartItemCard extends StatelessWidget {
               children: [
                 Text(
                   item.itemName,
+                  key: Key('cart_item_title_${item.itemId}'),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: primaryTextColor,
@@ -88,6 +89,7 @@ class CartItemCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   "₹${item.itemPrice * item.quantity}",
+                  key: Key('cart_item_subtotal_${item.itemId}'),
                   style: const TextStyle(
                     color: Color(0xFFD97706),
                     fontWeight: FontWeight.bold,
@@ -108,6 +110,7 @@ class CartItemCard extends StatelessWidget {
             child: Row(
               children: [
                 _buildIconButton(
+                  key: Key('cart_decrement_${item.itemId}'),
                   icon: Icons.remove,
                   onTap: () => orderProvider.decrementQuantity(item),
                 ),
@@ -115,6 +118,7 @@ class CartItemCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
                     "${item.quantity}",
+                    key: Key('cart_qty_${item.itemId}'),
                     style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
@@ -123,6 +127,7 @@ class CartItemCard extends StatelessWidget {
                   ),
                 ),
                 _buildIconButton(
+                  key: Key('cart_increment_${item.itemId}'),
                   icon: Icons.add,
                   onTap: () => orderProvider.addToCart(item, context),
                 ),
@@ -135,8 +140,9 @@ class CartItemCard extends StatelessWidget {
   }
 
   // Helper widget to keep the main tree clean
-  Widget _buildIconButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildIconButton({Key? key, required IconData icon, required VoidCallback onTap}) {
     return InkWell(
+      key: key,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.all(4.0),

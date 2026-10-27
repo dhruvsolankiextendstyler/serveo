@@ -281,6 +281,66 @@ void main() {
       // Expect validation error
       expect(find.text('Please enter an item name'), findsOneWidget);
     });
+
+    testWidgets('Bug 2 — Rejects non-JSON HTML error response without throwing FormatException and preserves form data', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ItemFormPage(
+              initialCategory: 'Snacks',
+              mockSubmitHandler: (request) async {
+                // Simulating Render 502 Bad Gateway / Express HTML error page
+                return http.Response(
+                  '<!DOCTYPE html>\n<html><head><title>502 Bad Gateway</title></head><body><h1>Bad Gateway</h1></body></html>',
+                  502,
+                  headers: {'content-type': 'text/html; charset=utf-8'},
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Fill form fields
+      await tester.enterText(find.widgetWithText(TextField, 'Item Name'), 'Gourmet Pasta');
+      await tester.enterText(find.widgetWithText(TextField, 'Item Price'), '250');
+
+      // Submit form
+      final submitButton = find.byKey(const Key('add_item_submit_button'));
+      await tester.ensureVisible(submitButton);
+      await tester.tap(submitButton);
+      await tester.pumpAndSettle();
+
+      // Form should NOT throw FormatException
+      // Friendly error message should be displayed
+      expect(find.textContaining('Server returned an unexpected response (502)'), findsOneWidget);
+
+      // Input fields must be preserved, NOT cleared
+      expect(find.text('Gourmet Pasta'), findsOneWidget);
+      expect(find.text('250'), findsOneWidget);
+    });
+
+    testWidgets('Validates item price is greater than 0', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: ItemFormPage(
+              initialCategory: 'Snacks',
+            ),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.widgetWithText(TextField, 'Item Name'), 'Free Fries');
+      await tester.enterText(find.widgetWithText(TextField, 'Item Price'), '0');
+
+      final submitButton = find.byKey(const Key('add_item_submit_button'));
+      await tester.ensureVisible(submitButton);
+      await tester.tap(submitButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Please enter a valid positive price in ₹'), findsOneWidget);
+    });
   });
 
   group('ServeoFoodCard Display Tests', () {

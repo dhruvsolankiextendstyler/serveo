@@ -232,8 +232,9 @@ class _ItemFormPageState extends State<ItemFormPage> {
       _showToast("Please enter an item name", isError: true);
       return;
     }
-    if (price.isEmpty) {
-      _showToast("Please enter an item price", isError: true);
+    final parsedPrice = int.tryParse(price);
+    if (parsedPrice == null || parsedPrice <= 0) {
+      _showToast("Please enter a valid positive price in ₹", isError: true);
       return;
     }
     if (cat.isEmpty) {
@@ -323,16 +324,41 @@ class _ItemFormPageState extends State<ItemFormPage> {
 
       if (!mounted) return;
 
+      final contentType = response.headers['content-type']?.toLowerCase() ?? '';
+      final bodyTrimmed = response.body.trim();
+      final isHtml = contentType.contains('text/html') ||
+          bodyTrimmed.startsWith('<!DOCTYPE') ||
+          bodyTrimmed.startsWith('<!doctype') ||
+          bodyTrimmed.startsWith('<html');
+
+      if (isHtml) {
+        _showToast(
+          "Server returned an unexpected response (${response.statusCode}). Please check your connection or try again shortly.",
+          isError: true,
+        );
+        return;
+      }
+
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final decoded = jsonDecode(response.body);
-        final message = decoded['message']?.toString() ?? (_isEditing ? "Item updated successfully" : "Item Created Succssfully");
+        Map<String, dynamic> decoded = {};
+        try {
+          final parsed = jsonDecode(response.body);
+          if (parsed is Map<String, dynamic>) {
+            decoded = parsed;
+          } else if (parsed is Map) {
+            decoded = Map<String, dynamic>.from(parsed);
+          }
+        } catch (_) {}
+
+        final message = decoded['message']?.toString() ??
+            (_isEditing ? "Item updated successfully" : "Item Created Succssfully");
 
         if (message == "Item Exists!") {
           _showToast("An item named '$name' already exists!", isError: true);
         } else {
           _showToast(_isEditing ? "Item Updated Successfully!" : "Item Added Successfully!", isError: false);
           if (!_isEditing) {
-            // Clear form fields on add
+            // Clear form fields on add only after confirmed server creation
             itemName.clear();
             itemPrice.clear();
             category.clear();
@@ -343,15 +369,18 @@ class _ItemFormPageState extends State<ItemFormPage> {
           }
         }
       } else {
-        final decoded = jsonDecode(response.body);
-        final errorMsg = decoded['error'] ??
-            decoded['message'] ??
-            "Failed to ${_isEditing ? 'update' : 'add'} item (${response.statusCode})";
-        _showToast(errorMsg.toString(), isError: true);
+        String errorMsg = "Failed to ${_isEditing ? 'update' : 'add'} item (${response.statusCode})";
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map && (decoded['error'] != null || decoded['message'] != null)) {
+            errorMsg = (decoded['error'] ?? decoded['message']).toString();
+          }
+        } catch (_) {}
+        _showToast(errorMsg, isError: true);
       }
     } catch (e) {
       if (mounted) {
-        _showToast("Failed to add item: $e", isError: true);
+        _showToast("Failed to ${_isEditing ? 'update' : 'add'} item: $e", isError: true);
       }
     } finally {
       if (mounted) {
@@ -419,7 +448,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
                       ),
                       const SizedBox(height: 10),
                       DropdownButtonFormField<String>(
-                        value: category.text.isNotEmpty ? category.text : null,
+                        initialValue: category.text.isNotEmpty ? category.text : null,
                         hint: Text(
                           "Select Category",
                           style: TextTheme.of(context)

@@ -462,6 +462,10 @@ class AdminAnalyticsProvider extends ChangeNotifier {
   PeakHoursData? _peakHours;
   PaymentAnalytics? _paymentAnalytics;
 
+  final http.Client? customClient;
+
+  AdminAnalyticsProvider({this.customClient});
+
   // Stale-request prevention ID
   int _activeRequestId = 0;
 
@@ -511,7 +515,7 @@ class AdminAnalyticsProvider extends ChangeNotifier {
     await loadAnalytics();
   }
 
-  Future<void> loadAnalytics() async {
+  Future<void> loadAnalytics([http.Client? client]) async {
     final key = _buildCacheKey(_selectedTimeframe, _customRange, _itemSortBy);
 
     // 1. Serve from in-memory cache if available and fresh
@@ -534,6 +538,7 @@ class AdminAnalyticsProvider extends ChangeNotifier {
     notifyListeners();
 
     final requestId = ++_activeRequestId;
+    final activeClient = client ?? customClient ?? http.Client();
 
     try {
       final token = await FirebaseAuth.instance.currentUser?.getIdToken();
@@ -555,24 +560,24 @@ class AdminAnalyticsProvider extends ChangeNotifier {
       // Try /order/analytics first; if 404, fallback to /admin/analytics
       String basePath = "$baseUrl/order/analytics";
       var results = await Future.wait([
-        http.get(Uri.parse("$basePath/overview?$queryParams"), headers: headers),
-        http.get(Uri.parse("$basePath/sales?$queryParams"), headers: headers),
-        http.get(Uri.parse("$basePath/orders?$queryParams"), headers: headers),
-        http.get(Uri.parse("$basePath/items?$queryParams"), headers: headers),
-        http.get(Uri.parse("$basePath/peak-hours?$queryParams"), headers: headers),
-        http.get(Uri.parse("$basePath/payments?$queryParams"), headers: headers),
+        activeClient.get(Uri.parse("$basePath/overview?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+        activeClient.get(Uri.parse("$basePath/sales?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+        activeClient.get(Uri.parse("$basePath/orders?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+        activeClient.get(Uri.parse("$basePath/items?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+        activeClient.get(Uri.parse("$basePath/peak-hours?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+        activeClient.get(Uri.parse("$basePath/payments?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
       ]);
 
       // If the primary path returns 404, check if mounted under /admin/analytics
       if (results[0].statusCode == 404) {
         final altBasePath = "$baseUrl/admin/analytics";
         final altResults = await Future.wait([
-          http.get(Uri.parse("$altBasePath/overview?$queryParams"), headers: headers),
-          http.get(Uri.parse("$altBasePath/sales?$queryParams"), headers: headers),
-          http.get(Uri.parse("$altBasePath/orders?$queryParams"), headers: headers),
-          http.get(Uri.parse("$altBasePath/items?$queryParams"), headers: headers),
-          http.get(Uri.parse("$altBasePath/peak-hours?$queryParams"), headers: headers),
-          http.get(Uri.parse("$altBasePath/payments?$queryParams"), headers: headers),
+          activeClient.get(Uri.parse("$altBasePath/overview?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+          activeClient.get(Uri.parse("$altBasePath/sales?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+          activeClient.get(Uri.parse("$altBasePath/orders?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+          activeClient.get(Uri.parse("$altBasePath/items?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+          activeClient.get(Uri.parse("$altBasePath/peak-hours?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+          activeClient.get(Uri.parse("$altBasePath/payments?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
         ]);
         if (altResults[0].statusCode != 404) {
           results = altResults;
@@ -639,16 +644,17 @@ class AdminAnalyticsProvider extends ChangeNotifier {
         queryParams += "&startDate=$s&endDate=$e";
       }
 
-      var res = await http.get(
+      final activeClient = customClient ?? http.Client();
+      var res = await activeClient.get(
         Uri.parse("${ApiConfig.baseUrl}/order/analytics/export?$queryParams"),
         headers: headers,
-      );
+      ).timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 404) {
-        final altRes = await http.get(
+        final altRes = await activeClient.get(
           Uri.parse("${ApiConfig.baseUrl}/admin/analytics/export?$queryParams"),
           headers: headers,
-        );
+        ).timeout(const Duration(seconds: 15));
         if (altRes.statusCode != 404) {
           res = altRes;
         }

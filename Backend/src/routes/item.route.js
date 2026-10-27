@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import multer from "multer";
 import { addItemController } from "../controllers/addItem.controller.js";
 import { getItemController } from "../controllers/getItem.controller.js";
@@ -127,11 +128,15 @@ itemRoute.post("/add", adminCheck, uploadMiddleware, async (req, res) => {
   }
 });
 
-// 🔹 5. EDIT ITEM (Admin Only - Supports safe image replacement and cleanup)
-itemRoute.put("/:id", adminCheck, uploadMiddleware, async (req, res) => {
+// 🔹 5. EDIT ITEM (Admin Only - Supports safe image replacement, cleanup, PUT and PATCH)
+const handleUpdateItem = async (req, res) => {
   let newUploadedFileId = null;
 
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
     const item = await Item.findById(req.params.id);
     if (!item) {
       return res.status(404).json({ error: "Item not found" });
@@ -158,6 +163,12 @@ itemRoute.put("/:id", adminCheck, uploadMiddleware, async (req, res) => {
     if (req.body.imageUrl !== undefined) {
       item.imageUrl = req.body.imageUrl;
     }
+    if (req.body.isVeg !== undefined) {
+      item.isVeg = req.body.isVeg === true || req.body.isVeg === "true";
+    }
+    if (req.body.dietary !== undefined) {
+      item.dietary = req.body.dietary;
+    }
 
     await item.save();
 
@@ -176,11 +187,18 @@ itemRoute.put("/:id", adminCheck, uploadMiddleware, async (req, res) => {
     }
     res.status(400).json({ error: error.message || "Failed to update item" });
   }
-});
+};
+
+itemRoute.put("/:id", adminCheck, uploadMiddleware, handleUpdateItem);
+itemRoute.patch("/:id", adminCheck, uploadMiddleware, handleUpdateItem);
 
 // 🔹 6. DELETE ITEM (Admin Only - Safely cleans up stored image if not shared)
 itemRoute.delete("/:id", adminCheck, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
     const item = await Item.findById(req.params.id);
     if (!item) {
       return res.status(404).json({ error: "Item not found" });

@@ -11,8 +11,31 @@ class CartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final orderProvider = context.watch<OrderProvider>();
-    final isDark = context.watch<ThemeProvider>().isDark;
+    final orderProvider = Provider.of<OrderProvider?>(context);
+    final themeProvider = Provider.of<ThemeProvider?>(context);
+    final isDark = themeProvider?.isDark ?? true;
+
+    if (orderProvider == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Tray")),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.shopping_basket_outlined, size: 72, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text("Unable to load tray state."),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Return to Menu"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final cartItems = orderProvider.orderItems;
 
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
@@ -79,7 +102,7 @@ class CartPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.shopping_basket_outlined, size: 84, color: iconColor),
+            Icon(Icons.shopping_basket_outlined, key: const Key('empty_tray_icon'), size: 84, color: iconColor),
             const SizedBox(height: 16),
             Text(
               "Your tray is empty!",
@@ -100,6 +123,7 @@ class CartPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
+              key: const Key('go_to_menu_button'),
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.yellow,

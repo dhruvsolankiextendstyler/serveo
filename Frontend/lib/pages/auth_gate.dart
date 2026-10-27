@@ -40,16 +40,24 @@ class AuthGate extends StatelessWidget {
           }
           final notificationService = NotificationService();
           notificationService.initNotifications();
-          return MultiProvider(
-            providers: [
-              // Initialize MenuProvider and trigger the fetch immediately
-              ChangeNotifierProvider(create: (_) => MenuProvider()..fetchMenu()),
-              // Initialize OrderProvider (Cart)
-              ChangeNotifierProvider(create: (_) => OrderProvider()),
-            ],
-            child: DashboardPage(uname: user.displayName ?? "User"),
-          );
+
+          final hasOrderProvider = Provider.of<OrderProvider?>(context, listen: false) != null;
+          final hasMenuProvider = Provider.of<MenuProvider?>(context, listen: false) != null;
+
+          Widget dashboard = DashboardPage(uname: user.displayName ?? "User");
+          if (!hasOrderProvider || !hasMenuProvider) {
+            dashboard = MultiProvider(
+              providers: [
+                if (!hasMenuProvider)
+                  ChangeNotifierProvider(create: (_) => MenuProvider()..fetchMenu()),
+                if (!hasOrderProvider)
+                  ChangeNotifierProvider(create: (_) => OrderProvider()),
+              ],
+              child: dashboard,
+            );
           }
+          return dashboard;
+        }
         // 4. No user found? Show the Login Page (Login/Signup)
         return LoginPage();
       },

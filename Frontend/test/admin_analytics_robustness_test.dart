@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/admin_utils/admin_analytics_provider.dart';
 import 'package:http/http.dart' as http;
@@ -43,10 +44,8 @@ void main() {
         headers: {'content-type': 'application/json'},
       );
 
-      final overview = AnalyticsOverview.fromJson({
-        'summary': {'grossSales': 1000, 'totalOrders': 5},
-        'selectedRange': {'timeframe': 'today'},
-      });
+      final decoded = jsonDecode(validJsonResponse.body);
+      final overview = AnalyticsOverview.fromJson(decoded);
 
       expect(overview.grossSales, 1000);
       expect(overview.totalOrders, 5);

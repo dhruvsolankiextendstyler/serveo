@@ -38,6 +38,16 @@ app.use((req, res) => {
   });
 });
 
+// Global error handler: ensure JSON is ALWAYS returned instead of Express default HTML error page
+app.use((err, req, res, next) => {
+  console.error("Unhandled server error:", err);
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({
+    error: err.message || "Internal server error",
+    status,
+  });
+});
+
 app.listen(process.env.PORT || 5000, () => {
   console.log("Server Started");
 });

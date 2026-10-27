@@ -101,11 +101,16 @@ function testRevenueFilterIntegrity() {
   console.log("  ✔ Explicitly requires paymentStatus == 'Verified' for UPI revenue");
 
   // Rule 2.4: COD and Card are included when uncancelled
-  const nonUpiRule = filter.$or.find(r => r.paymentMethod && r.paymentMethod.$in);
+  const nonUpiRule = filter.$or.find(r => r.paymentMethod && r.paymentMethod.$in && r.paymentMethod.$in.includes("COD"));
   assert.ok(nonUpiRule);
   assert.ok(nonUpiRule.paymentMethod.$in.includes("COD"));
   assert.ok(nonUpiRule.paymentMethod.$in.includes("Card"));
   console.log("  ✔ Accounts for COD and Card revenue without requiring UPI verification");
+
+  // Rule 2.5: Legacy orders without paymentMethod are included
+  const legacyRule = filter.$or.find(r => r.paymentMethod && r.paymentMethod.$exists === false);
+  assert.ok(legacyRule, "Must support legacy orders where paymentMethod is omitted");
+  console.log("  ✔ Accounts for legacy orders without explicit paymentMethod");
 }
 
 // --- TEST SUITE 3: In-Memory Order Simulation (Edge Cases & Revenue Accuracy) ---
@@ -157,6 +162,15 @@ function testRevenueCalculationSimulation() {
       paymentMethod: "COD",
       paymentStatus: "Pending",
       orderItems: [{ itemName: "Cold Coffee", itemPrice: 79, quantity: 2 }]
+    },
+    // 6. Legacy Completed Order (missing paymentMethod) -> Should be in revenue
+    {
+      _id: "6",
+      totalAmount: 99,
+      status: "Completed",
+      paymentMethod: undefined,
+      paymentStatus: undefined,
+      orderItems: [{ itemName: "Crispy French Fries", itemPrice: 99, quantity: 1 }]
     }
   ];
 
@@ -166,13 +180,13 @@ function testRevenueCalculationSimulation() {
     if (o.paymentMethod === "UPI") {
       return o.paymentStatus === "Verified";
     }
-    return ["COD", "Card"].includes(o.paymentMethod);
+    return ["COD", "Card"].includes(o.paymentMethod) || !o.paymentMethod;
   }
 
   const revenueOrders = mockOrders.filter(matchesRevenue);
-  assert.strictEqual(revenueOrders.length, 2, "Only orders #1 and #5 must be counted in revenue");
+  assert.strictEqual(revenueOrders.length, 3, "Orders #1, #5, and #6 (legacy) must be counted in revenue");
   const grossSales = revenueOrders.reduce((sum, o) => sum + o.totalAmount, 0);
-  assert.strictEqual(grossSales, 250 + 158, "Gross sales must equal 408");
+  assert.strictEqual(grossSales, 250 + 158 + 99, "Gross sales must equal 507");
 
   // Verify unverified UPI order (#2) is NOT in revenue
   assert.ok(!revenueOrders.some(o => o._id === "2"), "Unverified UPI claim was NOT counted");

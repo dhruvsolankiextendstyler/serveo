@@ -7,6 +7,7 @@ import {
   getPopularItemsController,
   getPeakHoursController,
   getPaymentAnalyticsController,
+  getAnalyticsDashboardController,
   getAnalyticsExportController
 } from "../controllers/analytics.controller.js";
 
@@ -14,6 +15,9 @@ export const analyticsRoute = express.Router();
 
 // Enforce adminCheck on all analytics endpoints
 analyticsRoute.use(adminCheck);
+
+// 0. Consolidated Dashboard (All sections in one optimized single-trip query)
+analyticsRoute.get("/dashboard", getAnalyticsDashboardController);
 
 // 1. Executive Summary & KPI Cards
 analyticsRoute.get("/overview", getAnalyticsOverviewController);

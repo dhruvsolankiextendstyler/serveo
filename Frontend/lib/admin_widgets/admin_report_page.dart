@@ -137,6 +137,39 @@ class _AdminReportPageState extends State<AdminReportPage> {
                       ),
                     ),
 
+                    if (provider.overview!.totalOrders == 0)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDark ? Colors.white12 : const Color(0xFFFDE68A),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    "No orders recorded for ${provider.overview!.selectedRange.label}. Select Yesterday, Last 7 Days, or This Month to view historical data.",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark ? Colors.white70 : const Color(0xFF92400E),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
                     const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                     // 5. Sales Overview Chart
@@ -193,6 +226,59 @@ class _AdminReportPageState extends State<AdminReportPage> {
                       ),
 
                     const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                  ] else ...[
+                    // Fallback state when overview is null and not loading (e.g. initial network error)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                provider.errorMessage != null
+                                    ? Icons.cloud_off_outlined
+                                    : Icons.bar_chart_outlined,
+                                size: 56,
+                                color: isDark ? Colors.white38 : Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                provider.errorMessage ?? "No analytics data available",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white70 : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Unable to load restaurant metrics for this timeframe. Tap Retry to reload.",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark ? Colors.white38 : Colors.black54,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              ElevatedButton.icon(
+                                onPressed: () => provider.refresh(),
+                                icon: const Icon(Icons.refresh, size: 18),
+                                label: const Text("Retry"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFD97706),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ],
               ),

@@ -469,8 +469,10 @@ class AdminAnalyticsProvider extends ChangeNotifier {
   // Stale-request prevention ID
   int _activeRequestId = 0;
 
-  // In-memory cache by query key
-  final Map<String, _CachedBundle> _cache = {};
+  // In-memory static cache by query key across widget rebuilds and screen transitions
+  static final Map<String, _CachedBundle> _staticCache = {};
+
+  static void clearCache() => _staticCache.clear();
 
   // Getters
   String get selectedTimeframe => _selectedTimeframe;
@@ -511,15 +513,15 @@ class AdminAnalyticsProvider extends ChangeNotifier {
 
   Future<void> refresh() async {
     final key = _buildCacheKey(_selectedTimeframe, _customRange, _itemSortBy);
-    _cache.remove(key);
+    _staticCache.remove(key);
     await loadAnalytics();
   }
 
   Future<void> loadAnalytics([http.Client? client]) async {
     final key = _buildCacheKey(_selectedTimeframe, _customRange, _itemSortBy);
 
-    // 1. Serve from in-memory cache if available and fresh
-    final cached = _cache[key];
+    // 1. Serve from in-memory static cache if available and fresh
+    final cached = _staticCache[key];
     if (cached != null && !cached.isExpired) {
       _overview = cached.overview;
       _salesTimeline = cached.salesTimeline;
@@ -554,10 +556,55 @@ class AdminAnalyticsProvider extends ChangeNotifier {
         queryParams += "&startDate=$s&endDate=$e";
       }
 
-      // Fetch overview, sales, orders, items, peak-hours, and payments concurrently
       final baseUrl = ApiConfig.baseUrl;
 
-      // Try /order/analytics first; if 404, fallback to /admin/analytics
+      // 1. Attempt single-trip consolidated /dashboard endpoint first (fast, single round-trip)
+      bool dashboardLoaded = false;
+      try {
+        final dashboardUri = Uri.parse("$baseUrl/order/analytics/dashboard?$queryParams");
+        final dashRes = await activeClient.get(dashboardUri, headers: headers).timeout(const Duration(seconds: 25));
+
+        if (dashRes.statusCode == 200) {
+          final data = _safeParseJsonResponse(dashRes, "dashboard");
+          if (data['overview'] is Map && data['sales'] is Map) {
+            final overviewData = AnalyticsOverview.fromJson(data['overview'] as Map<String, dynamic>);
+            final salesData = SalesTimeline.fromJson(data['sales'] as Map<String, dynamic>);
+            final ordersData = OrderPerformance.fromJson(data['orders'] is Map ? data['orders'] as Map<String, dynamic> : {});
+            final itemsData = ItemInsights.fromJson(data['items'] is Map ? data['items'] as Map<String, dynamic> : {});
+            final peakHoursData = PeakHoursData.fromJson(data['peakHours'] is Map ? data['peakHours'] as Map<String, dynamic> : {});
+            final paymentsData = PaymentAnalytics.fromJson(data['payments'] is Map ? data['payments'] as Map<String, dynamic> : {});
+
+            if (requestId != _activeRequestId) return;
+
+            _overview = overviewData;
+            _salesTimeline = salesData;
+            _orderPerformance = ordersData;
+            _itemInsights = itemsData;
+            _peakHours = peakHoursData;
+            _paymentAnalytics = paymentsData;
+            _errorMessage = null;
+
+            _staticCache[key] = _CachedBundle(
+              overview: overviewData,
+              salesTimeline: salesData,
+              orderPerformance: ordersData,
+              itemInsights: itemsData,
+              peakHours: peakHoursData,
+              paymentAnalytics: paymentsData,
+              cachedAt: DateTime.now(),
+            );
+
+            dashboardLoaded = true;
+          }
+        }
+      } catch (e) {
+        // Fallback to modular endpoints if /dashboard is unavailable or timed out
+        dashboardLoaded = false;
+      }
+
+      if (dashboardLoaded) return;
+
+      // 2. Fallback: Fetch modular endpoints concurrently
       String basePath = "$baseUrl/order/analytics";
       var results = await Future.wait([
         activeClient.get(Uri.parse("$basePath/overview?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
@@ -604,8 +651,8 @@ class AdminAnalyticsProvider extends ChangeNotifier {
       _paymentAnalytics = paymentsData;
       _errorMessage = null;
 
-      // Save to cache
-      _cache[key] = _CachedBundle(
+      // Save to static cache
+      _staticCache[key] = _CachedBundle(
         overview: overviewData,
         salesTimeline: salesData,
         orderPerformance: ordersData,

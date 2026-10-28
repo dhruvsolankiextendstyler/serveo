@@ -94,9 +94,11 @@ class AdminOrderCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
                             ),
-                            child: const Text(
-                              "VERIFY UPI",
-                              style: TextStyle(
+                            child: Text(
+                              order.isResubmitted
+                                  ? "VERIFY UPI (Attempt #${order.attemptCount})"
+                                  : "VERIFY UPI",
+                              style: const TextStyle(
                                 color: Color(0xFFD97706),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 9,
@@ -133,7 +135,7 @@ class AdminOrderCard extends StatelessWidget {
                   ),
                   child: Text(
                     order.isAwaitingVerification
-                        ? "AWAITING VERIFICATION"
+                        ? (order.isResubmitted ? "RESUBMITTED • AWAITING VERIFICATION" : "AWAITING VERIFICATION")
                         : order.status.toUpperCase(),
                     style: TextStyle(
                       color: statusColor,

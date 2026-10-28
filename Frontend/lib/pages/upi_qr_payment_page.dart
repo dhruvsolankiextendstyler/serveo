@@ -85,7 +85,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
               ),
               const SizedBox(height: 18),
               Text(
-                "Payment Claim Submitted",
+                widget.order.isPaymentRejected
+                    ? "Payment Re-verification Submitted"
+                    : "Payment Claim Submitted",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -101,9 +103,11 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
                 ),
-                child: const Text(
-                  "AWAITING ADMIN VERIFICATION",
-                  style: TextStyle(
+                child: Text(
+                  widget.order.isPaymentRejected
+                      ? "AWAITING ADMIN RE-VERIFICATION"
+                      : "AWAITING ADMIN VERIFICATION",
+                  style: const TextStyle(
                     color: Color(0xFFD97706),
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -215,6 +219,66 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // Rejection Alert Banner (if resubmitting)
+                    if (widget.order.isPaymentRejected) ...[
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.error_outline, color: Colors.redAccent, size: 22),
+                                SizedBox(width: 8),
+                                Text(
+                                  "Previous Verification Rejected",
+                                  style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (widget.order.paymentRejectionReason != null &&
+                                widget.order.paymentRejectionReason!.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  "Reason: ${widget.order.paymentRejectionReason}",
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 6),
+                            Text(
+                              "Please ensure the exact amount of ₹${widget.order.totalAmount} has been transferred to the merchant UPI ID below, then tap 'Submit Verification Again'.",
+                              style: TextStyle(
+                                color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                                fontSize: 12,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     // Notice Banner
                     Container(
                       padding: const EdgeInsets.all(14),
@@ -518,14 +582,19 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                                 ),
                               ],
                             )
-                          : const Row(
+                          : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.check_circle_outline, color: Colors.black),
-                                SizedBox(width: 8),
+                                Icon(
+                                  widget.order.isPaymentRejected ? Icons.replay_rounded : Icons.check_circle_outline,
+                                  color: Colors.black,
+                                ),
+                                const SizedBox(width: 8),
                                 Text(
-                                  "I've completed the payment",
-                                  style: TextStyle(
+                                  widget.order.isPaymentRejected
+                                      ? "Submit Verification Again"
+                                      : "I've completed the payment",
+                                  style: const TextStyle(
                                     color: Colors.black,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,

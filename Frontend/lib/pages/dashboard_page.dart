@@ -46,6 +46,11 @@ class _DashboardPageState extends State<DashboardPage> {
         _searchQuery = _searchController.text.trim();
       });
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<OrderProvider>().fetchNotifications();
+      }
+    });
   }
 
   @override

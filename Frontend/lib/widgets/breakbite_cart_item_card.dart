@@ -86,9 +86,23 @@ class CartItemCard extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
+                if (item.selectedCustomizations.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    item.selectedCustomizations
+                        .map((c) => c.price > 0 ? "${c.optionName} (+₹${c.price})" : c.optionName)
+                        .join(" • "),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
-                  "₹${item.itemPrice * item.quantity}",
+                  "₹${item.effectiveUnitPrice * item.quantity}",
                   key: Key('cart_item_subtotal_${item.itemId}'),
                   style: const TextStyle(
                     color: Color(0xFFD97706),

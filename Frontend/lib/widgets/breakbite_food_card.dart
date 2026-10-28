@@ -276,6 +276,28 @@ class ServeoFoodCard extends StatelessWidget {
                     ),
                   ),
                 ),
+              if (item.hasCustomizations && !isSoldOut)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.yellow.withValues(alpha: 0.7)),
+                    ),
+                    child: const Text(
+                      "CUSTOMIZABLE",
+                      style: TextStyle(
+                        color: Colors.yellow,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
 
@@ -360,11 +382,17 @@ class ServeoFoodCard extends StatelessWidget {
                       )
                     else if (currentQty == 0)
                       ElevatedButton.icon(
-                        onPressed: () => orderProvider.addToCart(item, context),
-                        icon: const Icon(Icons.add, size: 15, color: Colors.black),
-                        label: const Text(
-                          "ADD",
-                          style: TextStyle(
+                        onPressed: () => item.hasCustomizations
+                            ? _showCustomizationBottomSheet(context, item, orderProvider)
+                            : orderProvider.addToCart(item, context),
+                        icon: Icon(
+                          item.hasCustomizations ? Icons.tune : Icons.add,
+                          size: 15,
+                          color: Colors.black,
+                        ),
+                        label: Text(
+                          item.hasCustomizations ? "CUSTOMIZE" : "ADD",
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                             letterSpacing: 0.5,
@@ -410,7 +438,9 @@ class ServeoFoodCard extends StatelessWidget {
                               ),
                             ),
                             InkWell(
-                              onTap: () => orderProvider.addToCart(item, context),
+                              onTap: () => item.hasCustomizations
+                                  ? _showCustomizationBottomSheet(context, item, orderProvider)
+                                  : orderProvider.addToCart(item, context),
                               borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -436,6 +466,251 @@ class ServeoFoodCard extends StatelessWidget {
       );
     }
     return cardBody;
+  }
+
+  void _showCustomizationBottomSheet(
+    BuildContext context,
+    Item item,
+    OrderProvider orderProvider,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (modalCtx) {
+        final isDark = Theme.of(modalCtx).brightness == Brightness.dark;
+        final bg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+        final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+        final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+
+        final Map<String, List<SelectedCustomization>> selectedMap = {};
+
+        for (final group in item.customizations) {
+          if (group.required && group.isSingle && group.options.isNotEmpty) {
+            final firstOpt = group.options.first;
+            selectedMap[group.name] = [
+              SelectedCustomization(
+                customizationName: group.name,
+                optionName: firstOpt.name,
+                price: firstOpt.price,
+              )
+            ];
+          }
+        }
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            int extraPrice = 0;
+            final List<SelectedCustomization> flatList = [];
+            selectedMap.forEach((_, list) {
+              for (final c in list) {
+                extraPrice += c.price;
+                flatList.add(c);
+              }
+            });
+            final int unitPrice = item.itemPrice + extraPrice;
+
+            return Container(
+              color: bg,
+              padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(modalCtx).viewInsets.bottom + 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "Customize ${item.itemName}",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(modalCtx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Base Price: ₹${item.itemPrice}",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                      ),
+                    ),
+                    Divider(color: borderColor, height: 24),
+                    ...item.customizations.map((group) {
+                      final currentGroupSelected = selectedMap[group.name] ?? [];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                group.name,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                              if (group.required) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: Colors.redAccent.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    "REQUIRED",
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.redAccent,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ...group.options.map((opt) {
+                            final isSelected = currentGroupSelected.any((s) => s.optionName == opt.name);
+                            final priceText = opt.price > 0 ? " (+₹${opt.price})" : " (Free)";
+
+                            if (group.isSingle) {
+                              return RadioListTile<String>(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                activeColor: const Color(0xFFD97706),
+                                title: Text(
+                                  "${opt.name}$priceText",
+                                  style: TextStyle(fontSize: 13, color: textColor),
+                                ),
+                                value: opt.name,
+                                groupValue: currentGroupSelected.isNotEmpty
+                                    ? currentGroupSelected.first.optionName
+                                    : null,
+                                onChanged: (val) {
+                                  setModalState(() {
+                                    selectedMap[group.name] = [
+                                      SelectedCustomization(
+                                        customizationName: group.name,
+                                        optionName: opt.name,
+                                        price: opt.price,
+                                      )
+                                    ];
+                                  });
+                                },
+                              );
+                            } else {
+                              return CheckboxListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                activeColor: const Color(0xFFD97706),
+                                title: Text(
+                                  "${opt.name}$priceText",
+                                  style: TextStyle(fontSize: 13, color: textColor),
+                                ),
+                                value: isSelected,
+                                onChanged: (val) {
+                                  setModalState(() {
+                                    final list = List<SelectedCustomization>.from(selectedMap[group.name] ?? []);
+                                    if (val == true) {
+                                      list.add(SelectedCustomization(
+                                        customizationName: group.name,
+                                        optionName: opt.name,
+                                        price: opt.price,
+                                      ));
+                                    } else {
+                                      list.removeWhere((s) => s.optionName == opt.name);
+                                    }
+                                    selectedMap[group.name] = list;
+                                  });
+                                },
+                              );
+                            }
+                          }),
+                          const SizedBox(height: 12),
+                        ],
+                      );
+                    }),
+                    Divider(color: borderColor, height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Item Subtotal",
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                              ),
+                            ),
+                            Text(
+                              "₹$unitPrice",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFD97706),
+                              ),
+                            ),
+                          ],
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            for (final g in item.customizations) {
+                              if (g.required && (selectedMap[g.name] == null || selectedMap[g.name]!.isEmpty)) {
+                                ScaffoldMessenger.of(modalCtx).showSnackBar(
+                                  SnackBar(
+                                    content: Text("Please select an option for '${g.name}'"),
+                                    backgroundColor: Colors.redAccent,
+                                  ),
+                                );
+                                return;
+                              }
+                            }
+                            final customized = item.copyWith(selectedCustomizations: flatList);
+                            orderProvider.addToCart(customized, context);
+                            Navigator.pop(modalCtx);
+                          },
+                          icon: const Icon(Icons.add_shopping_cart, color: Colors.black, size: 18),
+                          label: const Text(
+                            "Add to Tray",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                              fontSize: 14,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.yellow,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }
 

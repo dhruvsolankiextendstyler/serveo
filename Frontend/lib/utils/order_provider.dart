@@ -14,12 +14,13 @@ class OrderProvider extends ChangeNotifier{
   List<Item> get orderItems => _orderItems;
 
   int getItemQuantity(String itemId) {
-    int index = _orderItems.indexWhere((it) => it.itemId == itemId);
-    return index != -1 ? _orderItems[index].quantity : 0;
+    return _orderItems
+        .where((it) => it.itemId == itemId)
+        .fold(0, (sum, it) => sum + it.quantity);
   }
 
   void addToCart(Item item, [BuildContext? context]){
-    int index = _orderItems.indexWhere((it) => it.itemId == item.itemId);
+    int index = _orderItems.indexWhere((it) => it.cartKey == item.cartKey);
     if (index != -1) {
       // 2. Check Quantity Limit (Max 3)
       if (_orderItems[index].quantity < 3) {
@@ -41,7 +42,7 @@ class OrderProvider extends ChangeNotifier{
   }
 
   void decrementQuantity(Item item) {
-    int index = _orderItems.indexWhere((it) => it.itemId == item.itemId);
+    int index = _orderItems.indexWhere((it) => it.cartKey == item.cartKey);
     if (index != -1) {
       if (_orderItems[index].quantity > 1) {
         _orderItems[index].quantity -= 1;
@@ -53,7 +54,7 @@ class OrderProvider extends ChangeNotifier{
   }
 
   void removeItem(Item item) {
-    _orderItems.removeWhere((it) => it.itemId == item.itemId);
+    _orderItems.removeWhere((it) => it.cartKey == item.cartKey);
     notifyListeners();
   }
 
@@ -63,7 +64,7 @@ class OrderProvider extends ChangeNotifier{
   }
 
   int getTotal(){
-    return _orderItems.fold(0, (total, item) => total + (item.itemPrice * item.quantity));
+    return _orderItems.fold(0, (total, item) => total + (item.effectiveUnitPrice * item.quantity));
   }
 
   String? _lastOrderError;
@@ -240,17 +241,147 @@ class OrderProvider extends ChangeNotifier{
         Uri.parse("${ApiConfig.baseUrl}/order/claim-payment"),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          if (token != null) 'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           "orderId": orderId,
         }),
       );
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        await trackOrder(orderId);
+        await fetchMyOrders();
+        return true;
+      }
+      return false;
     } catch (e) {
       debugPrint("claimPayment error: $e");
       return false;
     }
+  }
+
+  // Persistent In-App Notifications
+  List<Map<String, dynamic>> _notifications = [];
+  List<Map<String, dynamic>> get notifications => _notifications;
+  int _unreadNotificationCount = 0;
+  int get unreadNotificationCount => _unreadNotificationCount;
+
+  Future<void> fetchNotifications() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      final response = await http.get(
+        Uri.parse("${ApiConfig.baseUrl}/order/notifications/user"),
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
+      ).timeout(const Duration(seconds: 6));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) {
+          _notifications = List<Map<String, dynamic>>.from(decoded['notifications'] ?? []);
+          _unreadNotificationCount = int.tryParse(decoded['unreadCount']?.toString() ?? '0') ?? 0;
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      debugPrint("fetchNotifications error: $e");
+    }
+  }
+
+  Future<void> markNotificationAsRead(String id) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      final response = await http.patch(
+        Uri.parse("${ApiConfig.baseUrl}/order/notifications/$id/read"),
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
+      );
+      if (response.statusCode == 200) {
+        final idx = _notifications.indexWhere((n) => n['_id']?.toString() == id);
+        if (idx != -1 && _notifications[idx]['isRead'] != true) {
+          _notifications[idx]['isRead'] = true;
+          if (_unreadNotificationCount > 0) _unreadNotificationCount--;
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> markAllNotificationsAsRead() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      final response = await http.patch(
+        Uri.parse("${ApiConfig.baseUrl}/order/notifications/read-all"),
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
+      );
+      if (response.statusCode == 200) {
+        for (final n in _notifications) {
+          n['isRead'] = true;
+        }
+        _unreadNotificationCount = 0;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
+  // Customer Feedback
+  Future<bool> submitFeedback({
+    required String orderId,
+    required int rating,
+    required String comment,
+    List<String> tags = const [],
+  }) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      final response = await http.post(
+        Uri.parse("${ApiConfig.baseUrl}/order/feedback"),
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "orderId": orderId,
+          "rating": rating,
+          "comment": comment,
+          "tags": tags,
+        }),
+      );
+      return response.statusCode == 201;
+    } catch (e) {
+      debugPrint("submitFeedback error: $e");
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getOrderFeedback(String orderId) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      final response = await http.get(
+        Uri.parse("${ApiConfig.baseUrl}/order/feedback/order/$orderId"),
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
+      );
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['feedback'] != null) {
+          return Map<String, dynamic>.from(decoded['feedback']);
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 
   // Add these variables inside OrderProvider
@@ -453,6 +584,90 @@ class ReorderResult {
   bool get hasPriceChanges => priceChanges.isNotEmpty;
 }
 
+class CustomizationOption {
+  final String name;
+  final int price;
+
+  CustomizationOption({required this.name, this.price = 0});
+
+  factory CustomizationOption.fromJson(Map<String, dynamic> json) {
+    final rawPrice = json['price'];
+    final p = rawPrice != null ? (int.tryParse(rawPrice.toString()) ?? (double.tryParse(rawPrice.toString())?.round() ?? 0)) : 0;
+    return CustomizationOption(
+      name: (json['name'] ?? '').toString(),
+      price: p,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'price': price,
+  };
+}
+
+class CustomizationGroup {
+  final String name;
+  final String type; // 'single' | 'multiple'
+  final bool required;
+  final List<CustomizationOption> options;
+
+  CustomizationGroup({
+    required this.name,
+    this.type = 'single',
+    this.required = false,
+    required this.options,
+  });
+
+  bool get isSingle => type == 'single';
+
+  factory CustomizationGroup.fromJson(Map<String, dynamic> json) {
+    final opts = (json['options'] as List? ?? [])
+        .map((o) => CustomizationOption.fromJson(Map<String, dynamic>.from(o)))
+        .toList();
+    return CustomizationGroup(
+      name: (json['name'] ?? '').toString(),
+      type: (json['type'] ?? 'single').toString(),
+      required: json['required'] == true || json['required'] == 'true',
+      options: opts,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'type': type,
+    'required': required,
+    'options': options.map((o) => o.toJson()).toList(),
+  };
+}
+
+class SelectedCustomization {
+  final String customizationName;
+  final String optionName;
+  final int price;
+
+  SelectedCustomization({
+    required this.customizationName,
+    required this.optionName,
+    this.price = 0,
+  });
+
+  factory SelectedCustomization.fromJson(Map<String, dynamic> json) {
+    final rawPrice = json['price'];
+    final p = rawPrice != null ? (int.tryParse(rawPrice.toString()) ?? (double.tryParse(rawPrice.toString())?.round() ?? 0)) : 0;
+    return SelectedCustomization(
+      customizationName: (json['customizationName'] ?? '').toString(),
+      optionName: (json['optionName'] ?? '').toString(),
+      price: p,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'customizationName': customizationName,
+    'optionName': optionName,
+    'price': price,
+  };
+}
+
 class Order {
   final String id;
   final int totalAmount;
@@ -461,6 +676,10 @@ class Order {
   final List<dynamic> orderItems;
   final String paymentMethod;
   final String paymentStatus;
+  final String? paymentRejectionReason;
+  final List<Map<String, dynamic>> verificationAttempts;
+  final int? estimatedPrepTime;
+  final DateTime? estimatedReadyAt;
   final DateTime? paymentClaimedAt;
   final DateTime? paymentVerifiedAt;
   final DateTime? createdAt;
@@ -474,6 +693,10 @@ class Order {
     required this.orderItems,
     this.paymentMethod = 'COD',
     this.paymentStatus = 'Pending',
+    this.paymentRejectionReason,
+    this.verificationAttempts = const [],
+    this.estimatedPrepTime,
+    this.estimatedReadyAt,
     this.paymentClaimedAt,
     this.paymentVerifiedAt,
     this.createdAt,
@@ -481,14 +704,36 @@ class Order {
   });
 
   bool get isTerminal =>
-      ['Collected', 'Completed', 'Cancelled', 'Payment Rejected'].contains(status);
+      ['Collected', 'Completed', 'Cancelled'].contains(status);
 
   bool get isCancelled =>
       ['Cancelled', 'Payment Rejected'].contains(status);
 
+  bool get isPaymentRejected =>
+      paymentStatus == 'Rejected' || status == 'Payment Rejected';
+
+  bool get isAwaitingVerification =>
+      paymentStatus == 'Awaiting Verification' || status == 'Pending Verification';
+
+  bool get isPaid => paymentStatus == 'Verified';
+
+  int get attemptCount =>
+      verificationAttempts.isNotEmpty ? verificationAttempts.length : (isPaymentRejected || isAwaitingVerification ? 1 : 0);
+
   factory Order.fromJson(Map<String, dynamic> json) {
     final cAt = json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null;
     final uAt = json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null;
+    final eAt = json['estimatedReadyAt'] != null ? DateTime.tryParse(json['estimatedReadyAt'].toString()) : null;
+
+    final rawAttempts = json['verificationAttempts'];
+    final List<Map<String, dynamic>> parsedAttempts = [];
+    if (rawAttempts is List) {
+      for (final a in rawAttempts) {
+        if (a is Map) {
+          parsedAttempts.add(Map<String, dynamic>.from(a));
+        }
+      }
+    }
 
     return Order(
       id: (json['_id'] ?? json['id'] ?? json['orderId'] ?? '').toString(),
@@ -500,6 +745,10 @@ class Order {
       orderItems: json['orderItems'] ?? [],
       paymentMethod: json['paymentMethod'] ?? 'COD',
       paymentStatus: json['paymentStatus'] ?? 'Pending',
+      paymentRejectionReason: json['paymentRejectionReason']?.toString(),
+      verificationAttempts: parsedAttempts,
+      estimatedPrepTime: int.tryParse(json['estimatedPrepTime']?.toString() ?? ''),
+      estimatedReadyAt: eAt,
       paymentClaimedAt: json['paymentClaimedAt'] != null
           ? DateTime.tryParse(json['paymentClaimedAt'].toString())
           : null,
@@ -512,7 +761,7 @@ class Order {
   }
 }
 
-class Item{
+class Item {
   final String itemId, itemName, category;
   final int itemPrice;
   final String? description;
@@ -520,6 +769,8 @@ class Item{
   final String? imageUrl;
   final bool isVeg;
   final String dietary;
+  final List<CustomizationGroup> customizations;
+  final List<SelectedCustomization> selectedCustomizations;
   int quantity = 0;
 
   Item({
@@ -532,7 +783,14 @@ class Item{
     this.imageUrl,
     this.isVeg = true,
     this.dietary = 'Veg',
+    this.customizations = const [],
+    this.selectedCustomizations = const [],
   });
+
+  bool get hasCustomizations => customizations.isNotEmpty;
+  int get customizationsTotal => selectedCustomizations.fold(0, (sum, c) => sum + c.price);
+  int get effectiveUnitPrice => itemPrice + customizationsTotal;
+  String get cartKey => "$itemId:${selectedCustomizations.map((c) => "${c.customizationName}=${c.optionName}").join(';')}";
 
   Item copyWith({
     String? itemId,
@@ -545,6 +803,8 @@ class Item{
     bool? isVeg,
     String? dietary,
     int? quantity,
+    List<CustomizationGroup>? customizations,
+    List<SelectedCustomization>? selectedCustomizations,
   }) {
     final copy = Item(
       itemId: itemId ?? this.itemId,
@@ -556,12 +816,14 @@ class Item{
       imageUrl: imageUrl ?? this.imageUrl,
       isVeg: isVeg ?? this.isVeg,
       dietary: dietary ?? this.dietary,
+      customizations: customizations ?? this.customizations,
+      selectedCustomizations: selectedCustomizations ?? this.selectedCustomizations,
     );
     copy.quantity = quantity ?? this.quantity;
     return copy;
   }
 
-  factory Item.fromJson(Map<String,dynamic> json){
+  factory Item.fromJson(Map<String, dynamic> json){
     final dietaryStr = json['dietary']?.toString() ?? 'Veg';
     final bool vegVal = json['isVeg'] ?? (dietaryStr.toLowerCase() != 'non-veg');
 
@@ -570,6 +832,26 @@ class Item{
     if (rawPrice != null) {
       parsedPrice = int.tryParse(rawPrice.toString()) ??
           (double.tryParse(rawPrice.toString())?.round() ?? 0);
+    }
+
+    final rawCust = json['customizations'];
+    final List<CustomizationGroup> parsedGroups = [];
+    if (rawCust is List) {
+      for (final g in rawCust) {
+        if (g is Map) {
+          parsedGroups.add(CustomizationGroup.fromJson(Map<String, dynamic>.from(g)));
+        }
+      }
+    }
+
+    final rawSel = json['selectedCustomizations'];
+    final List<SelectedCustomization> parsedSel = [];
+    if (rawSel is List) {
+      for (final s in rawSel) {
+        if (s is Map) {
+          parsedSel.add(SelectedCustomization.fromJson(Map<String, dynamic>.from(s)));
+        }
+      }
     }
 
     return Item(
@@ -582,6 +864,8 @@ class Item{
       imageUrl: json['imageUrl']?.toString(),
       isVeg: vegVal,
       dietary: dietaryStr,
+      customizations: parsedGroups,
+      selectedCustomizations: parsedSel,
     );
   }
 
@@ -594,6 +878,10 @@ class Item{
       if (imageUrl != null && imageUrl!.isNotEmpty) 'imageUrl': imageUrl,
       'isVeg': isVeg,
       'dietary': dietary,
+      if (selectedCustomizations.isNotEmpty)
+        'selectedCustomizations': selectedCustomizations.map((s) => s.toJson()).toList(),
+      if (customizations.isNotEmpty)
+        'customizations': customizations.map((g) => g.toJson()).toList(),
     };
   }
 }

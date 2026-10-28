@@ -6,6 +6,7 @@ import '../utils/order_provider.dart';
 import 'cart_page.dart';
 import 'digital_receipt_page.dart';
 import 'order_tracking_page.dart';
+import 'upi_qr_payment_page.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -419,6 +420,38 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
           const SizedBox(height: 14),
 
+          // If payment was rejected, show direct Re-submit button
+          if (order.isPaymentRejected) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UpiQrPaymentPage(order: order),
+                    ),
+                  ).then((_) {
+                    if (context.mounted) {
+                      context.read<OrderProvider>().fetchMyOrders();
+                    }
+                  });
+                },
+                icon: const Icon(Icons.replay_rounded, color: Colors.white, size: 16),
+                label: const Text(
+                  "Re-submit Payment for Verification",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+
           // Action Buttons: Track Order & Reorder
           Row(
             children: [
@@ -465,9 +498,39 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+
+          // Digital Receipt Action Button (Always available for audit & records)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DigitalReceiptPage(
+                      orderId: order.id,
+                      items: order.orderItems,
+                      order: order,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.receipt_long, size: 16),
+              label: const Text(
+                "View Digital Receipt",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ),
 
           if (order.status == 'Completed' || order.status == 'Ready') ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -478,6 +541,8 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                       builder: (context) => DigitalReceiptPage(
                         orderId: order.id,
                         items: order.orderItems,
+                        order: order,
+                        initialShowPickupToken: true,
                       ),
                     ),
                   );
@@ -553,29 +618,47 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       icon = Icons.money_rounded;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: badgeColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: badgeColor),
-          const SizedBox(width: 5),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: badgeColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: badgeColor),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  color: badgeColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (order.isPaymentRejected &&
+            order.paymentRejectionReason != null &&
+            order.paymentRejectionReason!.isNotEmpty) ...[
+          const SizedBox(height: 4),
           Text(
-            label,
-            style: TextStyle(
-              color: badgeColor,
+            "Reason: ${order.paymentRejectionReason}",
+            style: const TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.3,
+              color: Colors.redAccent,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
-      ),
+      ],
     );
   }
 }

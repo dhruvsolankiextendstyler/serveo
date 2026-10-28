@@ -169,6 +169,16 @@ const handleUpdateItem = async (req, res) => {
     if (req.body.dietary !== undefined) {
       item.dietary = req.body.dietary;
     }
+    if (req.body.customizations !== undefined) {
+      try {
+        const parsed = typeof req.body.customizations === 'string'
+            ? JSON.parse(req.body.customizations)
+            : req.body.customizations;
+        if (Array.isArray(parsed)) {
+          item.customizations = parsed;
+        }
+      } catch (_) {}
+    }
 
     await item.save();
 

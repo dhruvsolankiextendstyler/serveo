@@ -7,6 +7,7 @@ import '../utils/theme_provider.dart';
 import '../widgets/breakbite_spinner.dart';
 import 'digital_receipt_page.dart';
 import 'order_history_page.dart';
+import 'upi_qr_payment_page.dart';
 
 class OrderTrackingPage extends StatefulWidget {
   final String orderId;
@@ -29,6 +30,13 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
   Timer? _pollingTimer;
   int _activeRequestId = 0;
   bool _isBackgrounded = false;
+
+  Map<String, dynamic>? _existingFeedback;
+  bool _isLoadingFeedback = false;
+  int _selectedRating = 5;
+  final TextEditingController _feedbackController = TextEditingController();
+  final Set<String> _selectedFeedbackTags = {};
+  bool _isSubmittingFeedback = false;
 
   @override
   void initState() {
@@ -103,6 +111,10 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
           _errorMessage = null;
         });
 
+        if (freshOrder.status == 'Completed' || freshOrder.status == 'Collected') {
+          _loadExistingFeedback(freshOrder.id);
+        }
+
         // Stop polling if order reached terminal state
         if (freshOrder.isTerminal) {
           _stopPolling();
@@ -173,9 +185,19 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                             _buildOrderHeaderCard(_order!, cardBg, borderColor, primaryTextColor, isDark),
                             const SizedBox(height: 16),
 
-                            // 2. Terminal State Banner (Cancelled / Payment Rejected)
-                            if (_order!.isCancelled) ...[
+                            // 2a. Payment Rejected Action Banner
+                            if (_order!.isPaymentRejected) ...[
+                              _buildPaymentRejectedBanner(_order!, isDark),
+                              const SizedBox(height: 16),
+                            ] else if (_order!.isCancelled) ...[
+                              // 2b. Cancelled State Banner
                               _buildTerminalBanner(_order!, isDark),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // 2c. Estimated Preparation Time Card (Feature 1)
+                            if (!_order!.isTerminal && !_order!.isPaymentRejected) ...[
+                              _buildEstimatedPrepTimeCard(_order!, cardBg, borderColor, isDark),
                               const SizedBox(height: 16),
                             ],
 
@@ -195,7 +217,13 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
 
                             // 6. Ordered Items Card
                             _buildOrderedItemsCard(_order!, cardBg, borderColor, isDark),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
+
+                            // 7. Customer Meal Feedback Card (Feature 4)
+                            if (_order!.status == 'Completed' || _order!.status == 'Collected') ...[
+                              _buildFeedbackCard(cardBg, borderColor, isDark),
+                              const SizedBox(height: 16),
+                            ],
 
                             // 7. Navigation Actions
                             _buildNavigationActions(context, isDark),
@@ -336,12 +364,115 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
     );
   }
 
-  Widget _buildTerminalBanner(Order order, bool isDark) {
-    final isRejected = order.status == "Payment Rejected";
-    final message = isRejected
-        ? "Payment claim was rejected by restaurant admin. Kitchen preparation has been halted. Please check your UPI transaction or pay at the counter."
-        : "This order has been cancelled. If you believe this was an error, please speak to counter staff.";
+  Widget _buildPaymentRejectedBanner(Order order, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.redAccent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 24),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  "Payment Verification Rejected",
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (order.paymentRejectionReason != null && order.paymentRejectionReason!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.black26 : Colors.white70,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Reason from Admin:",
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    order.paymentRejectionReason!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : const Color(0xFF1F2937),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            "If the money was not received or the amount was incorrect, please resolve the payment issue or transfer ₹${order.totalAmount} using the store QR code before requesting verification again.",
+            style: TextStyle(
+              color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UpiQrPaymentPage(order: order),
+                  ),
+                ).then((_) {
+                  _fetchLiveStatus();
+                });
+              },
+              icon: const Icon(Icons.replay_rounded, color: Colors.white, size: 18),
+              label: const Text(
+                "Request Verification Again",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildTerminalBanner(Order order, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -358,9 +489,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isRejected ? "Payment Rejected" : "Order Cancelled",
-                  style: const TextStyle(
+                const Text(
+                  "Order Cancelled",
+                  style: TextStyle(
                     color: Colors.redAccent,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -368,10 +499,103 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  message,
+                  "This order has been cancelled. If you believe this was an error, please speak to counter staff.",
                   style: TextStyle(
                     color: isDark ? Colors.white70 : const Color(0xFF374151),
                     fontSize: 12,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEstimatedPrepTimeCard(Order order, Color cardBg, Color borderColor, bool isDark) {
+    final prepMinutes = order.estimatedPrepTime ?? 15;
+    final readyAt = order.estimatedReadyAt;
+    String readyAtStr = "";
+    if (readyAt != null) {
+      final utc = readyAt.toUtc();
+      final kolkataTime = utc.add(const Duration(hours: 5, minutes: 30));
+      int hour = kolkataTime.hour;
+      final period = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12;
+      if (hour == 0) hour = 12;
+      final minute = kolkataTime.minute.toString().padLeft(2, '0');
+      readyAtStr = "by $hour:$minute $period (IST)";
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.timer_outlined, color: Color(0xFFD97706), size: 26),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Estimated Ready Time",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF111827),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                      ),
+                      child: const Text(
+                        "ESTIMATE",
+                        style: TextStyle(
+                          color: Color(0xFFD97706),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "~$prepMinutes mins ${readyAtStr.isNotEmpty ? readyAtStr : ''}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFFD97706),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Kitchen is preparing your order. Estimated time may vary depending on active kitchen queue.",
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.white60 : const Color(0xFF6B7280),
                     height: 1.3,
                   ),
                 ),
@@ -813,6 +1037,34 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        if (item['selectedCustomizations'] is List &&
+                            (item['selectedCustomizations'] as List).isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 2,
+                            children: (item['selectedCustomizations'] as List).map<Widget>((c) {
+                              final opt = c['optionName']?.toString() ?? '';
+                              final cPrice = int.tryParse(c['price']?.toString() ?? '0') ?? 0;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.white12 : const Color(0xFFE5E7EB),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  cPrice > 0 ? "$opt (+₹$cPrice)" : opt,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        const SizedBox(height: 2),
                         Text(
                           "₹$price × $quantity",
                           style: TextStyle(
@@ -856,6 +1108,223 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DigitalReceiptPage(
+                      orderId: order.id,
+                      items: order.orderItems,
+                      order: order,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.receipt_long, size: 16),
+              label: const Text("View Itemized Digital Receipt"),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _loadExistingFeedback(String orderId) async {
+    if (_existingFeedback != null || _isLoadingFeedback) return;
+    _isLoadingFeedback = true;
+    try {
+      final feedback = await context.read<OrderProvider>().getOrderFeedback(orderId);
+      if (mounted && feedback != null) {
+        setState(() => _existingFeedback = feedback);
+      }
+    } catch (_) {} finally {
+      _isLoadingFeedback = false;
+    }
+  }
+
+  Widget _buildFeedbackCard(Color cardBg, Color borderColor, bool isDark) {
+    if (_existingFeedback != null) {
+      final rating = int.tryParse(_existingFeedback!['rating']?.toString() ?? '5') ?? 5;
+      final comment = _existingFeedback!['comment']?.toString() ?? '';
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  "Your Feedback Submitted",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF111827),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: List.generate(
+                5,
+                (i) => Icon(
+                  i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: Colors.amber,
+                  size: 20,
+                ),
+              ),
+            ),
+            if (comment.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                "\"$comment\"",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.rate_review_outlined, color: Color(0xFFD97706), size: 20),
+              const SizedBox(width: 8),
+              Text(
+                "How was your meal?",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              final starNum = index + 1;
+              return IconButton(
+                onPressed: () {
+                  setState(() => _selectedRating = starNum);
+                },
+                icon: Icon(
+                  starNum <= _selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: Colors.amber,
+                  size: 32,
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: ["Delicious", "Fast Service", "Hot & Fresh", "Good Portion", "Clean Packaging"].map((tag) {
+              final isSelected = _selectedFeedbackTags.contains(tag);
+              return FilterChip(
+                label: Text(tag, style: TextStyle(fontSize: 11, color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87))),
+                selected: isSelected,
+                selectedColor: Colors.yellow,
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedFeedbackTags.add(tag);
+                    } else {
+                      _selectedFeedbackTags.remove(tag);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _feedbackController,
+            maxLines: 2,
+            decoration: InputDecoration(
+              hintText: "Add an optional comment...",
+              hintStyle: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : Colors.grey),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              contentPadding: const EdgeInsets.all(10),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 42,
+            child: ElevatedButton(
+              onPressed: _isSubmittingFeedback
+                  ? null
+                  : () async {
+                      if (_order == null) return;
+                      setState(() => _isSubmittingFeedback = true);
+                      final provider = context.read<OrderProvider>();
+                      final success = await provider.submitFeedback(
+                        orderId: _order!.id,
+                        rating: _selectedRating,
+                        comment: _feedbackController.text.trim(),
+                        tags: _selectedFeedbackTags.toList(),
+                      );
+                      if (mounted) {
+                        setState(() {
+                          _isSubmittingFeedback = false;
+                          if (success) {
+                            _existingFeedback = {
+                              "rating": _selectedRating,
+                              "comment": _feedbackController.text.trim(),
+                              "tags": _selectedFeedbackTags.toList(),
+                            };
+                          }
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(success ? "Thank you for your feedback!" : "Unable to submit feedback."),
+                            backgroundColor: success ? Colors.green : Colors.redAccent,
+                          ),
+                        );
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.yellow,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: _isSubmittingFeedback
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                  : const Text("Submit Feedback", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            ),
           ),
         ],
       ),

@@ -39,7 +39,23 @@ const orderSchema = new mongoose.Schema(
                 quantity: {
                     type: Number,
                     required: true
-                }
+                },
+                selectedCustomizations: [
+                    {
+                        customizationName: {
+                            type: String,
+                            default: ""
+                        },
+                        optionName: {
+                            type: String,
+                            default: ""
+                        },
+                        price: {
+                            type: Number,
+                            default: 0
+                        }
+                    }
+                ]
             }
         ],
         totalAmount: {
@@ -73,6 +89,47 @@ const orderSchema = new mongoose.Schema(
         verifiedBy: {
             type: String,
             default: null
+        },
+        paymentRejectionReason: {
+            type: String,
+            default: null
+        },
+        verificationAttempts: [
+            {
+                attemptNumber: {
+                    type: Number,
+                    required: true
+                },
+                submittedAt: {
+                    type: Date,
+                    required: true
+                },
+                status: {
+                    type: String,
+                    enum: ["Pending", "Verified", "Rejected"],
+                    default: "Pending"
+                },
+                reviewedAt: {
+                    type: Date,
+                    default: null
+                },
+                reviewedBy: {
+                    type: String,
+                    default: null
+                },
+                rejectionReason: {
+                    type: String,
+                    default: null
+                }
+            }
+        ],
+        estimatedPrepTime: {
+            type: Number,
+            default: null
+        },
+        estimatedReadyAt: {
+            type: Date,
+            default: null
         }
     },
     {timestamps:true}
@@ -81,7 +138,13 @@ const orderSchema = new mongoose.Schema(
 orderSchema.pre("save", function(){
     var total = 0
     this.orderItems.forEach(item => {
-        total += item.itemPrice * item.quantity
+        let itemUnitCost = Number(item.itemPrice) || 0;
+        if (Array.isArray(item.selectedCustomizations)) {
+            item.selectedCustomizations.forEach(c => {
+                itemUnitCost += (Number(c.price) || 0);
+            });
+        }
+        total += itemUnitCost * (Number(item.quantity) || 1);
     });
     this.totalAmount = total
 })

@@ -1,9 +1,10 @@
 import { Order } from "../models/order.models.js";
 import { User } from "../models/user.models.js";
+import { Notification } from "../models/notification.models.js";
 import { admin } from "../utils/firebase_app.js";
 
 export const updateStatusController = async (req) => {
-    const { id, newStatus } = req.body;
+    const { id, newStatus, estimatedPrepTime } = req.body;
     if (!id) {
         throw new Error("Order ID is required");
     }
@@ -39,22 +40,81 @@ export const updateStatusController = async (req) => {
     }
 
     order.status = newStatus;
+
+    if (estimatedPrepTime !== undefined && Number(estimatedPrepTime) > 0) {
+        order.estimatedPrepTime = Number(estimatedPrepTime);
+        order.estimatedReadyAt = new Date(Date.now() + Number(estimatedPrepTime) * 60 * 1000);
+    }
+
     await order.save();
 
-    if (newStatus === "Completed" || newStatus === "Ready") {
-        const user = await User.findById(order.userId);
-        if (user && user.fcmToken) {
-            const message = {
-                notification: {
-                    title: "Serveo: Food is Ready!",
-                    body: `Order #${order._id.toString().slice(-4)} is ready for pickup.`,
-                },
-                token: user.fcmToken,
-            };
-            admin.messaging().send(message)
-                .then(() => console.log("✅ FCM sent to:", user.email))
-                .catch((fcmError) => console.error("❌ FCM Error Details:", fcmError.message));
+    // Map status change to in-app customer notification
+    const shortId = order._id.toString().slice(-4);
+    let notifTitle = null;
+    let notifBody = null;
+    let notifType = "order_accepted";
+
+    switch (newStatus) {
+        case "Accepted":
+            notifTitle = "Serveo: Order Accepted!";
+            notifBody = `Order #${shortId} has been accepted by the kitchen. Preparation will begin shortly.`;
+            notifType = "order_accepted";
+            break;
+        case "Preparing":
+            notifTitle = "Serveo: Food Preparation Started!";
+            notifBody = `The kitchen has started preparing Order #${shortId}. ${order.estimatedPrepTime ? `Estimated time: ~${order.estimatedPrepTime} mins.` : ''}`;
+            notifType = "order_preparing";
+            break;
+        case "Ready":
+        case "Completed":
+            notifTitle = "Serveo: Food is Ready!";
+            notifBody = `Order #${shortId} is hot and ready for pickup at the counter!`;
+            notifType = "order_ready";
+            break;
+        case "Collected":
+            notifTitle = "Serveo: Order Collected";
+            notifBody = `Order #${shortId} was collected. Enjoy your meal! Please consider leaving feedback.`;
+            notifType = "order_collected";
+            break;
+        case "Cancelled":
+            notifTitle = "Serveo: Order Cancelled";
+            notifBody = `Order #${shortId} was cancelled by restaurant staff. Please contact the counter for assistance.`;
+            notifType = "order_cancelled";
+            break;
+    }
+
+    if (notifTitle) {
+        try {
+            await Notification.create({
+                userId: order.userId,
+                orderId: order._id,
+                title: notifTitle,
+                body: notifBody,
+                type: notifType,
+            });
+        } catch (err) {
+            console.error("In-app notification creation error:", err.message);
         }
     }
+
+    // FCM Push Notification dispatch
+    if (newStatus === "Completed" || newStatus === "Ready" || newStatus === "Preparing") {
+        try {
+            const user = await User.findById(order.userId);
+            if (user && user.fcmToken) {
+                const message = {
+                    notification: {
+                        title: notifTitle || "Serveo Order Update",
+                        body: notifBody || `Order #${shortId} status is now ${newStatus}.`,
+                    },
+                    token: user.fcmToken,
+                };
+                admin.messaging().send(message)
+                    .then(() => console.log("✅ FCM sent to:", user.email))
+                    .catch((fcmError) => console.error("❌ FCM Error Details:", fcmError.message));
+            }
+        } catch (_) {}
+    }
+
     return "Status Changed";
 };

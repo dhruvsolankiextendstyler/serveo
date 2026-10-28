@@ -17,6 +17,16 @@ export const addItemController = async (req) => {
     const itemExists = await Item.findOne({ itemName });
     if (itemExists) return "Item Exists!";
 
+    let customizations = [];
+    if (req.body.customizations) {
+        try {
+            customizations = typeof req.body.customizations === 'string'
+                ? JSON.parse(req.body.customizations)
+                : req.body.customizations;
+            if (!Array.isArray(customizations)) customizations = [];
+        } catch (_) {}
+    }
+
     const newItem = new Item({
         itemName,
         itemPrice,
@@ -26,6 +36,7 @@ export const addItemController = async (req) => {
         imageUrl: req.body.imageUrl || "",
         isVeg: req.body.isVeg !== undefined ? (req.body.isVeg === true || req.body.isVeg === 'true') : true,
         dietary: req.body.dietary || "Veg",
+        customizations,
     });
     await newItem.save();
     console.log("Item Created Successfully");

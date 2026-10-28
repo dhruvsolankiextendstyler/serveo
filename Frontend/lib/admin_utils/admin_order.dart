@@ -11,6 +11,10 @@ class AdminOrder {
 
   final String paymentMethod;
   String paymentStatus;
+  final String? paymentRejectionReason;
+  final List<Map<String, dynamic>> verificationAttempts;
+  final int? estimatedPrepTime;
+  final DateTime? estimatedReadyAt;
   final DateTime? paymentClaimedAt;
   DateTime? paymentVerifiedAt;
   String? verifiedBy;
@@ -28,6 +32,10 @@ class AdminOrder {
     this.customerEmail = 'N/A',
     this.paymentMethod = 'COD',
     this.paymentStatus = 'Pending',
+    this.paymentRejectionReason,
+    this.verificationAttempts = const [],
+    this.estimatedPrepTime,
+    this.estimatedReadyAt,
     this.paymentClaimedAt,
     this.paymentVerifiedAt,
     this.verifiedBy,
@@ -65,6 +73,20 @@ class AdminOrder {
         ? DateTime.tryParse(json['paymentVerifiedAt'].toString())
         : null;
 
+    final eReady = json['estimatedReadyAt'] != null
+        ? DateTime.tryParse(json['estimatedReadyAt'].toString())
+        : null;
+
+    final rawAttempts = json['verificationAttempts'];
+    final List<Map<String, dynamic>> parsedAttempts = [];
+    if (rawAttempts is List) {
+      for (final a in rawAttempts) {
+        if (a is Map) {
+          parsedAttempts.add(Map<String, dynamic>.from(a));
+        }
+      }
+    }
+
     return AdminOrder(
       id: json['_id'] ?? '',
       uid: userIdString,
@@ -78,6 +100,10 @@ class AdminOrder {
       customerEmail: cEmail,
       paymentMethod: json['paymentMethod']?.toString() ?? 'COD',
       paymentStatus: json['paymentStatus']?.toString() ?? 'Pending',
+      paymentRejectionReason: json['paymentRejectionReason']?.toString(),
+      verificationAttempts: parsedAttempts,
+      estimatedPrepTime: int.tryParse(json['estimatedPrepTime']?.toString() ?? ''),
+      estimatedReadyAt: eReady,
       paymentClaimedAt: pClaimed,
       paymentVerifiedAt: pVerified,
       verifiedBy: json['verifiedBy']?.toString(),
@@ -86,9 +112,12 @@ class AdminOrder {
 
   bool get isUpi => paymentMethod.toUpperCase() == 'UPI';
   bool get isCod => paymentMethod.toUpperCase() == 'COD';
-  bool get isAwaitingVerification => paymentStatus == 'Awaiting Verification';
+  bool get isAwaitingVerification => paymentStatus == 'Awaiting Verification' || status == 'Pending Verification';
   bool get isVerified => paymentStatus == 'Verified';
-  bool get isRejected => paymentStatus == 'Rejected';
+  bool get isRejected => paymentStatus == 'Rejected' || status == 'Payment Rejected';
+  int get attemptCount => verificationAttempts.isNotEmpty ? verificationAttempts.length : (isAwaitingVerification || isRejected ? 1 : 0);
+  bool get isResubmitted => attemptCount > 1;
+  Map<String, dynamic>? get latestAttempt => verificationAttempts.isNotEmpty ? verificationAttempts.last : null;
 
   /// Formats order placement time in Asia/Kolkata timezone (UTC+5:30)
   /// e.g. "7:42 PM" for today's orders or "21 Oct, 7:42 PM" for older dates.

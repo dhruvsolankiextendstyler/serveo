@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "seed": "node src/seed.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node src/test_payment_reverification.js && node src/test_phase3_features.js && node src/test_order_security.js && node src/test_analytics.js && node src/test_item_and_menu.js"
   },
   "keywords": [],
   "author": "",

@@ -13,6 +13,10 @@ import { verifyPaymentController } from '../controllers/verifyPayment.controller
 import { analyticsRoute } from './analytics.route.js'
 import { trackOrderController } from '../controllers/trackOrder.controller.js'
 
+import { getUserNotificationsController, markNotificationReadController, markAllNotificationsReadController } from '../controllers/notification.controller.js'
+import { submitFeedbackController, getOrderFeedbackController, getAdminFeedbackController } from '../controllers/feedback.controller.js'
+import { Order } from '../models/order.models.js'
+
 export const orderRoute = express.Router()
 
 // 🔹 Analytics Endpoints (Admin Only, protected)
@@ -60,6 +64,62 @@ orderRoute.get("/detail/:id", authCheck, async (req, res) => {
     }
 })
 
+// 🔹 2d. NOTIFICATIONS (Customer, in-app persistent notifications)
+orderRoute.get("/notifications/user", authCheck, async (req, res) => {
+    try {
+        const data = await getUserNotificationsController(req);
+        res.json(data);
+    } catch (error) {
+        res.status(error.status || 500).json({ error: error.message });
+    }
+})
+
+orderRoute.patch("/notifications/read-all", authCheck, async (req, res) => {
+    try {
+        const result = await markAllNotificationsReadController(req);
+        res.json(result);
+    } catch (error) {
+        res.status(error.status || 500).json({ error: error.message });
+    }
+})
+
+orderRoute.patch("/notifications/:id/read", authCheck, async (req, res) => {
+    try {
+        const result = await markNotificationReadController(req);
+        res.json(result);
+    } catch (error) {
+        res.status(error.status || 500).json({ error: error.message });
+    }
+})
+
+// 🔹 2e. FEEDBACK (Customer rating & reviews, Admin overview)
+orderRoute.post("/feedback", authCheck, async (req, res) => {
+    try {
+        const result = await submitFeedbackController(req);
+        res.status(201).json(result);
+    } catch (error) {
+        res.status(error.status || 400).json({ error: error.message });
+    }
+})
+
+orderRoute.get("/feedback/admin/all", adminCheck, async (req, res) => {
+    try {
+        const result = await getAdminFeedbackController();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+})
+
+orderRoute.get("/feedback/order/:orderId", authCheck, async (req, res) => {
+    try {
+        const feedback = await getOrderFeedbackController(req);
+        res.json({ feedback });
+    } catch (error) {
+        res.status(error.status || 400).json({ error: error.message });
+    }
+})
+
 // 🔹 3. CREATE ORDER (Customer, protected)
 orderRoute.post("/add", authCheck, async (req,res) => {
     try {
@@ -83,7 +143,7 @@ orderRoute.patch("/claim-payment", authCheck, async (req,res) => {
         console.log("Payment Claimed:", req.body.orderId)
     } catch (error) {
         console.error("Claim Payment Error:", error.message)
-        res.status(400).json({"error": error.message})
+        res.status(error.status || 400).json({"error": error.message})
     }
 })
 
@@ -95,7 +155,28 @@ orderRoute.patch("/verify-payment", adminCheck, async (req,res) => {
         console.log("Payment Verification Processed:", req.body.orderId)
     } catch (error) {
         console.error("Verify Payment Error:", error.message)
-        res.status(400).json({"error": error.message})
+        res.status(error.status || 400).json({"error": error.message})
+    }
+})
+
+// 🔹 5b. UPDATE ESTIMATED PREPARATION TIME (Admin Only, protected)
+orderRoute.patch("/estimated-time", adminCheck, async (req, res) => {
+    try {
+        const { orderId, estimatedPrepTime } = req.body;
+        if (!orderId || !estimatedPrepTime) {
+            return res.status(400).json({ error: "orderId and estimatedPrepTime (in minutes) are required" });
+        }
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ error: "Order not found" });
+        }
+        const mins = Math.max(1, Math.min(Number(estimatedPrepTime) || 15, 120));
+        order.estimatedPrepTime = mins;
+        order.estimatedReadyAt = new Date(Date.now() + mins * 60 * 1000);
+        await order.save();
+        res.json({ message: "Estimated preparation time updated", order });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 })
 

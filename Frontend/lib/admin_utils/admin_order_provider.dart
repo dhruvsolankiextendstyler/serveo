@@ -47,7 +47,8 @@ class AdminOrderProvider extends ChangeNotifier {
 
   void dismissAlert(String orderId) {
     _dismissedOrderIds.add(orderId);
-    if (_pendingAlertOrder?.id == orderId) {
+    if (_pendingAlertOrder != null && _pendingAlertOrder!.id == orderId) {
+      _dismissedOrderIds.add("${orderId}_att_${_pendingAlertOrder!.attemptCount}");
       _pendingAlertOrder = null;
     }
     notifyListeners();
@@ -72,7 +73,14 @@ class AdminOrderProvider extends ChangeNotifier {
     // Look for new unnotified pending verification order
     if (_pendingAlertOrder == null) {
       for (final o in pending) {
-        if (!_notifiedOrderIds.contains(o.id) && !_dismissedOrderIds.contains(o.id)) {
+        final alertKey = "${o.id}_att_${o.attemptCount}";
+        final isAttemptDismissed = _dismissedOrderIds.contains(alertKey) ||
+            (o.attemptCount <= 1 && _dismissedOrderIds.contains(o.id));
+        final isAttemptNotified = _notifiedOrderIds.contains(alertKey) ||
+            (o.attemptCount <= 1 && _notifiedOrderIds.contains(o.id));
+
+        if (!isAttemptNotified && !isAttemptDismissed) {
+          _notifiedOrderIds.add(alertKey);
           _notifiedOrderIds.add(o.id);
           _pendingAlertOrder = o;
           break;
@@ -143,7 +151,7 @@ class AdminOrderProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> verifyPayment(String orderId, bool verified) async {
+  Future<bool> verifyPayment(String orderId, bool verified, {String? rejectionReason}) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       final token = await user?.getIdToken();
@@ -152,11 +160,13 @@ class AdminOrderProvider extends ChangeNotifier {
         Uri.parse("${ApiConfig.baseUrl}/order/verify-payment"),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          if (token != null) 'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           "orderId": orderId,
           "verified": verified,
+          if (rejectionReason != null && rejectionReason.isNotEmpty)
+            "rejectionReason": rejectionReason,
         }),
       );
 
@@ -184,6 +194,30 @@ class AdminOrderProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint("verifyPayment error: $e");
     }
+    return false;
+  }
+
+  Future<bool> updateEstimatedPrepTime(String orderId, int minutes) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+
+      final response = await patch(
+        Uri.parse("${ApiConfig.baseUrl}/order/estimated-time"),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "orderId": orderId,
+          "estimatedPrepTime": minutes,
+        }),
+      );
+      if (response.statusCode == 200) {
+        fetchOrdersSilent();
+        return true;
+      }
+    } catch (_) {}
     return false;
   }
 

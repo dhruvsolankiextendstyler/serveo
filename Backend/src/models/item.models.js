@@ -38,7 +38,36 @@ const itemSchema = new mongoose.Schema(
             type: String,
             enum: ["Veg", "Non-Veg", "Vegan", ""],
             default: "Veg"
-        }
+        },
+        customizations: [
+            {
+                name: {
+                    type: String,
+                    required: true
+                },
+                type: {
+                    type: String,
+                    enum: ["single", "multiple"],
+                    default: "single"
+                },
+                required: {
+                    type: Boolean,
+                    default: false
+                },
+                options: [
+                    {
+                        name: {
+                            type: String,
+                            required: true
+                        },
+                        price: {
+                            type: Number,
+                            default: 0
+                        }
+                    }
+                ]
+            }
+        ]
     },
     {timestamps: true}
 )

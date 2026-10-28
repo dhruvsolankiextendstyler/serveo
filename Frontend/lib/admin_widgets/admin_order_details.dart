@@ -15,14 +15,18 @@ class AdminOrderDetailsPage extends StatefulWidget {
 class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
   bool _isProcessingAction = false;
 
-  Future<void> _handleVerifyPayment(bool confirm) async {
+  Future<void> _handleVerifyPayment(bool confirm, {String? rejectionReason}) async {
     if (_isProcessingAction) return;
 
     setState(() => _isProcessingAction = true);
     final provider = context.read<AdminOrderProvider>();
 
     try {
-      final success = await provider.verifyPayment(widget.order.id, confirm);
+      final success = await provider.verifyPayment(
+        widget.order.id,
+        confirm,
+        rejectionReason: rejectionReason,
+      );
       if (!mounted) return;
 
       if (success) {
@@ -55,6 +59,101 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
       if (mounted) {
         setState(() => _isProcessingAction = false);
       }
+    }
+  }
+
+  Future<void> _showRejectionDialog() async {
+    String selectedReason = "Payment not received in bank account";
+    final customController = TextEditingController();
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogCtx) {
+        String currentSelection = selectedReason;
+        final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
+        final dialogBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: dialogBg,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text(
+                "Reject Payment Verification",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Select or provide a reason so the customer can correct the payment:",
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 12),
+                    ...[
+                      "Payment not received in bank account",
+                      "Incorrect amount transferred",
+                      "UTR / Reference ID mismatch",
+                      "Other reason",
+                    ].map((reason) => RadioListTile<String>(
+                          value: reason,
+                          groupValue: currentSelection,
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(reason, style: const TextStyle(fontSize: 13)),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setDialogState(() => currentSelection = val);
+                            }
+                          },
+                        )),
+                    if (currentSelection == "Other reason") ...[
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: customController,
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          hintText: "Enter specific rejection reason...",
+                          hintStyle: const TextStyle(fontSize: 12),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.all(10),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    final finalReason = currentSelection == "Other reason"
+                        ? (customController.text.trim().isNotEmpty
+                            ? customController.text.trim()
+                            : "Payment verification rejected by admin")
+                        : currentSelection;
+                    Navigator.pop(dialogCtx, finalReason);
+                  },
+                  child: const Text("Confirm Rejection"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null && mounted) {
+      await _handleVerifyPayment(false, rejectionReason: result);
     }
   }
 
@@ -298,6 +397,30 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                             textColor: primaryTextColor,
                             secondaryTextColor: secondaryTextColor,
                           ),
+                          if (currentOrder.attemptCount > 1) ...[
+                            const SizedBox(height: 10),
+                            _buildDetailRow(
+                              icon: Icons.history,
+                              label: "Verification Attempt",
+                              value: "Attempt #${currentOrder.attemptCount} (Resubmitted)",
+                              badgeColor: Colors.amber,
+                              textColor: primaryTextColor,
+                              secondaryTextColor: secondaryTextColor,
+                            ),
+                          ],
+                          if (currentOrder.isRejected &&
+                              currentOrder.paymentRejectionReason != null &&
+                              currentOrder.paymentRejectionReason!.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            _buildDetailRow(
+                              icon: Icons.cancel_outlined,
+                              label: "Rejection Reason",
+                              value: currentOrder.paymentRejectionReason!,
+                              badgeColor: Colors.redAccent,
+                              textColor: primaryTextColor,
+                              secondaryTextColor: secondaryTextColor,
+                            ),
+                          ],
                           if (currentOrder.isUpi && currentOrder.paymentClaimedAt != null) ...[
                             const SizedBox(height: 10),
                             _buildDetailRow(
@@ -328,6 +451,225 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                               secondaryTextColor: secondaryTextColor,
                             ),
                           ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 3b. Payment Verification History (Auditable Trail)
+                    if (currentOrder.verificationAttempts.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.history_edu_rounded, color: Color(0xFFD97706), size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "PAYMENT VERIFICATION HISTORY (${currentOrder.verificationAttempts.length})",
+                                  style: TextStyle(
+                                    color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            ...currentOrder.verificationAttempts.map((attempt) {
+                              final num = attempt['attemptNumber'] ?? '?';
+                              final status = attempt['status'] ?? 'Pending';
+                              final isCurrent = attempt == currentOrder.latestAttempt;
+                              final reason = attempt['rejectionReason']?.toString();
+                              final subTime = attempt['submittedAt'] != null
+                                  ? attempt['submittedAt'].toString().replaceFirst('T', ' ').substring(0, 16)
+                                  : 'N/A';
+                              final revBy = attempt['reviewedBy']?.toString();
+
+                              Color statusColor = Colors.amber;
+                              if (status == 'Approved') statusColor = Colors.green;
+                              if (status == 'Rejected') statusColor = Colors.redAccent;
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF9FAFB),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isCurrent
+                                        ? statusColor.withValues(alpha: 0.5)
+                                        : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+                                    width: isCurrent ? 1.5 : 1.0,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "Attempt #$num ${isCurrent ? '(Latest)' : ''}",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                            color: primaryTextColor,
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: statusColor.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                                          ),
+                                          child: Text(
+                                            status.toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: statusColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "Submitted: $subTime",
+                                      style: TextStyle(fontSize: 11, color: secondaryTextColor),
+                                    ),
+                                    if (revBy != null && revBy.isNotEmpty)
+                                      Text(
+                                        "Reviewed By: $revBy",
+                                        style: TextStyle(fontSize: 11, color: secondaryTextColor),
+                                      ),
+                                    if (reason != null && reason.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Reason: $reason",
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.redAccent,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // 3c. Kitchen Preparation Time Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.timer_outlined, color: Color(0xFFD97706), size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "ESTIMATED PREP TIME",
+                                    style: TextStyle(
+                                      color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (currentOrder.estimatedPrepTime != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Text(
+                                    "~${currentOrder.estimatedPrepTime} mins",
+                                    style: const TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Adjust estimated kitchen preparation time displayed to customer:",
+                            style: TextStyle(color: secondaryTextColor, fontSize: 12),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [10, 15, 20, 25, 30, 45].map((mins) {
+                              final isSelected = currentOrder.estimatedPrepTime == mins;
+                              return OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: isSelected
+                                      ? (isDark ? Colors.yellow.withValues(alpha: 0.2) : const Color(0xFFFEF3C7))
+                                      : Colors.transparent,
+                                  side: BorderSide(
+                                    color: isSelected ? const Color(0xFFD97706) : borderColor,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                onPressed: () async {
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  final success = await orderProvider.updateEstimatedPrepTime(currentOrder.id, mins);
+                                  if (mounted && success) {
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text("Estimated prep time set to $mins mins"),
+                                        backgroundColor: Colors.green,
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: Text(
+                                  "$mins mins",
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? (isDark ? Colors.yellow : const Color(0xFFD97706))
+                                        : primaryTextColor,
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
                         ],
                       ),
                     ),
@@ -389,6 +731,33 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
+                                        if (item['selectedCustomizations'] is List &&
+                                            (item['selectedCustomizations'] as List).isNotEmpty) ...[
+                                          const SizedBox(height: 3),
+                                          Wrap(
+                                            spacing: 6,
+                                            runSpacing: 2,
+                                            children: (item['selectedCustomizations'] as List).map((c) {
+                                              final opt = c['optionName']?.toString() ?? '';
+                                              final cPrice = int.tryParse(c['price']?.toString() ?? '0') ?? 0;
+                                              return Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: isDark ? Colors.white12 : const Color(0xFFE5E7EB),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  cPrice > 0 ? "$opt (+₹$cPrice)" : opt,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: secondaryTextColor,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ],
                                         const SizedBox(height: 2),
                                         Text(
                                           "$quantity × ₹$price",
@@ -566,7 +935,7 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
             width: double.infinity,
             height: 44,
             child: OutlinedButton.icon(
-              onPressed: () => _handleVerifyPayment(false),
+              onPressed: _showRejectionDialog,
               icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 18),
               label: const Text(
                 "Payment Not Received / Reject Claim",

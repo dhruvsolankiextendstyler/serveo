@@ -8,8 +8,12 @@ import { Order } from "./models/order.models.js";
 import { User } from "./models/user.models.js";
 import { Notification } from "./models/notification.models.js";
 import { Feedback } from "./models/feedback.models.js";
+import { Restaurant } from "./models/restaurant.models.js";
 
 console.log("=== Running Serveo Phase 3 Features Backend Tests ===");
+
+Restaurant.findOne = async () => null;
+Restaurant.findById = async () => null;
 
 // Mock customer
 const testUser = {

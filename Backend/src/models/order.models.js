@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
     {
+        restaurantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Restaurant',
+            index: true,
+            required: false // Optional in schema for backward compatibility, backfilled automatically
+        },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -153,7 +159,10 @@ orderSchema.pre("save", function(){
 orderSchema.index({ userId: 1 })
 orderSchema.index({ createdAt: 1 })
 orderSchema.index({ paymentStatus: 1 })
+orderSchema.index({ restaurantId: 1, createdAt: 1 })
+orderSchema.index({ restaurantId: 1, status: 1, paymentStatus: 1 })
 // Analytics aggregation index for high performance date-range and revenue-status matching
+orderSchema.index({ restaurantId: 1, createdAt: 1, status: 1, paymentStatus: 1, paymentMethod: 1 })
 orderSchema.index({ createdAt: 1, status: 1, paymentStatus: 1, paymentMethod: 1 })
 
 export const Order = mongoose.model("Order", orderSchema)

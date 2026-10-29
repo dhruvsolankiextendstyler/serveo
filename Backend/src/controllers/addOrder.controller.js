@@ -1,7 +1,10 @@
 import { Order } from '../models/order.models.js';
 import { User } from '../models/user.models.js';
 import { Item } from '../models/item.models.js';
+import { Restaurant } from '../models/restaurant.models.js';
 import { Notification } from '../models/notification.models.js';
+import { checkRestaurantAvailability } from '../utils/restaurant_availability.js';
+import mongoose from 'mongoose';
 
 export const addOrderController = async (req) => {
     const uid = req.user.uid;
@@ -35,13 +38,39 @@ export const addOrderController = async (req) => {
         throw new Error("Unable to associate user account with order");
     }
 
-    const { orderItems, paymentMethod = "COD" } = req.body;
+    const { orderItems, paymentMethod = "COD", restaurantId, restaurantSlug } = req.body;
 
     if (!Array.isArray(orderItems) || orderItems.length === 0) {
         throw new Error("Order tray cannot be empty");
     }
 
-    // Server-side validation of item prices against Item catalog to ensure source of truth
+    // 1. Resolve Target Restaurant
+    let restaurant = null;
+    try {
+        if (restaurantId && mongoose.Types.ObjectId.isValid(restaurantId)) {
+            restaurant = await Restaurant.findById(restaurantId);
+        } else if (restaurantSlug) {
+            restaurant = await Restaurant.findOne({ slug: restaurantSlug.toLowerCase().trim() });
+        }
+
+        if (!restaurant && (mongoose.connection.readyState === 1 || Restaurant.findOne !== mongoose.Model.findOne)) {
+            restaurant = await Restaurant.findOne({ slug: "default" }) || await Restaurant.findOne({});
+        }
+    } catch (_) {}
+
+    // 2. Business-Hours & Order Availability Enforcement
+    if (restaurant) {
+        const availability = checkRestaurantAvailability(restaurant);
+        if (!availability.canOrder) {
+            const err = new Error(availability.reason);
+            err.status = 400;
+            throw err;
+        }
+    }
+
+    const resolvedRestaurantId = restaurant ? restaurant._id : null;
+
+    // 3. Server-side validation of item prices against authoritative catalog
     const validatedOrderItems = [];
     let serverTotal = 0;
 
@@ -49,11 +78,27 @@ export const addOrderController = async (req) => {
         let dbItem = null;
         if (item.itemId) {
             try {
-                dbItem = await Item.findById(item.itemId);
+                const itemQuery = { _id: item.itemId };
+                if (resolvedRestaurantId) {
+                    itemQuery.$or = [
+                        { restaurantId: resolvedRestaurantId },
+                        { restaurantId: { $exists: false } },
+                        { restaurantId: null }
+                    ];
+                }
+                dbItem = await Item.findOne(itemQuery);
             } catch (_) {}
         }
         if (!dbItem && item.itemName) {
-            dbItem = await Item.findOne({ itemName: item.itemName });
+            const nameQuery = { itemName: item.itemName };
+            if (resolvedRestaurantId) {
+                nameQuery.$or = [
+                    { restaurantId: resolvedRestaurantId },
+                    { restaurantId: { $exists: false } },
+                    { restaurantId: null }
+                ];
+            }
+            dbItem = await Item.findOne(nameQuery);
         }
 
         if (dbItem && dbItem.isAvailable === false) {
@@ -119,10 +164,12 @@ export const addOrderController = async (req) => {
 
     // Dynamic initial estimated preparation time
     const totalItemsCount = validatedOrderItems.reduce((sum, it) => sum + it.quantity, 0);
-    const estimatedMinutes = Math.min(45, Math.max(15, 10 + totalItemsCount * 3));
+    const basePrep = restaurant?.defaultEstimatedPrepTime || 15;
+    const estimatedMinutes = Math.min(60, Math.max(basePrep, 10 + totalItemsCount * 3));
     const estimatedReadyAt = new Date(Date.now() + estimatedMinutes * 60 * 1000);
 
     const newOrder = new Order({
+        restaurantId: resolvedRestaurantId,
         userId: user._id,
         customerDetails: {
             fullName: user.fullName || "Customer",
@@ -143,6 +190,7 @@ export const addOrderController = async (req) => {
     // Persist in-app notification for the customer
     try {
         await Notification.create({
+            restaurantId: resolvedRestaurantId,
             userId: user._id,
             orderId: newOrder._id,
             title: "Order Placed Successfully",

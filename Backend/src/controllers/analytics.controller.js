@@ -5,6 +5,17 @@ import { Item } from "../models/item.models.js";
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 const IST_TZ_STRING = "+05:30";
 
+function getRestaurantFilter(restaurantId) {
+  if (!restaurantId) return {};
+  return {
+    $or: [
+      { restaurantId: restaurantId },
+      { restaurantId: { $exists: false } },
+      { restaurantId: null }
+    ]
+  };
+}
+
 /**
  * Calculates start and end timestamps in UTC aligned to Asia/Kolkata (IST) midnight boundaries.
  * Also computes the equivalent previous historical period for comparative analytics.
@@ -28,10 +39,8 @@ export function getISTDateRanges(timeframe = "today", customStart = null, custom
     case "yesterday": {
       isSingleDay = true;
       label = "Yesterday";
-      // Yesterday IST: 00:00:00 to 23:59:59.999
       startUtc = new Date(Date.UTC(istYear, istMonth, istDate - 1, 0, 0, 0, 0) - IST_OFFSET_MS);
       endUtc = new Date(Date.UTC(istYear, istMonth, istDate - 1, 23, 59, 59, 999) - IST_OFFSET_MS);
-      // Previous equivalent: 2 days ago
       prevStartUtc = new Date(Date.UTC(istYear, istMonth, istDate - 2, 0, 0, 0, 0) - IST_OFFSET_MS);
       prevEndUtc = new Date(Date.UTC(istYear, istMonth, istDate - 2, 23, 59, 59, 999) - IST_OFFSET_MS);
       break;
@@ -40,10 +49,8 @@ export function getISTDateRanges(timeframe = "today", customStart = null, custom
     case "7d":
     case "last7days": {
       label = "Last 7 Days";
-      // Past 6 days + today = 7 days
       startUtc = new Date(Date.UTC(istYear, istMonth, istDate - 6, 0, 0, 0, 0) - IST_OFFSET_MS);
       endUtc = new Date(Date.UTC(istYear, istMonth, istDate, 23, 59, 59, 999) - IST_OFFSET_MS);
-      // Previous 7 days
       prevStartUtc = new Date(Date.UTC(istYear, istMonth, istDate - 13, 0, 0, 0, 0) - IST_OFFSET_MS);
       prevEndUtc = new Date(Date.UTC(istYear, istMonth, istDate - 7, 23, 59, 59, 999) - IST_OFFSET_MS);
       break;
@@ -54,7 +61,6 @@ export function getISTDateRanges(timeframe = "today", customStart = null, custom
       label = "Last 30 Days";
       startUtc = new Date(Date.UTC(istYear, istMonth, istDate - 29, 0, 0, 0, 0) - IST_OFFSET_MS);
       endUtc = new Date(Date.UTC(istYear, istMonth, istDate, 23, 59, 59, 999) - IST_OFFSET_MS);
-      // Previous 30 days
       prevStartUtc = new Date(Date.UTC(istYear, istMonth, istDate - 59, 0, 0, 0, 0) - IST_OFFSET_MS);
       prevEndUtc = new Date(Date.UTC(istYear, istMonth, istDate - 30, 23, 59, 59, 999) - IST_OFFSET_MS);
       break;
@@ -63,10 +69,8 @@ export function getISTDateRanges(timeframe = "today", customStart = null, custom
     case "this_month":
     case "thismonth": {
       label = "This Month";
-      // 1st of current month to end of today
       startUtc = new Date(Date.UTC(istYear, istMonth, 1, 0, 0, 0, 0) - IST_OFFSET_MS);
       endUtc = new Date(Date.UTC(istYear, istMonth, istDate, 23, 59, 59, 999) - IST_OFFSET_MS);
-      // Previous month same day span
       prevStartUtc = new Date(Date.UTC(istYear, istMonth - 1, 1, 0, 0, 0, 0) - IST_OFFSET_MS);
       prevEndUtc = new Date(Date.UTC(istYear, istMonth - 1, Math.min(istDate, new Date(istYear, istMonth, 0).getDate()), 23, 59, 59, 999) - IST_OFFSET_MS);
       break;
@@ -75,12 +79,9 @@ export function getISTDateRanges(timeframe = "today", customStart = null, custom
     case "prev_month":
     case "previousmonth": {
       label = "Previous Month";
-      // 1st of previous month to last day of previous month
       startUtc = new Date(Date.UTC(istYear, istMonth - 1, 1, 0, 0, 0, 0) - IST_OFFSET_MS);
-      // Day 0 of istMonth gives the last date of istMonth - 1
       const lastDayPrevMonth = new Date(Date.UTC(istYear, istMonth, 0)).getUTCDate();
       endUtc = new Date(Date.UTC(istYear, istMonth - 1, lastDayPrevMonth, 23, 59, 59, 999) - IST_OFFSET_MS);
-      // Two months prior
       const lastDayTwoMonthsPrior = new Date(Date.UTC(istYear, istMonth - 1, 0)).getUTCDate();
       prevStartUtc = new Date(Date.UTC(istYear, istMonth - 2, 1, 0, 0, 0, 0) - IST_OFFSET_MS);
       prevEndUtc = new Date(Date.UTC(istYear, istMonth - 2, lastDayTwoMonthsPrior, 23, 59, 59, 999) - IST_OFFSET_MS);
@@ -115,7 +116,6 @@ export function getISTDateRanges(timeframe = "today", customStart = null, custom
       label = "Today";
       startUtc = new Date(Date.UTC(istYear, istMonth, istDate, 0, 0, 0, 0) - IST_OFFSET_MS);
       endUtc = new Date(Date.UTC(istYear, istMonth, istDate, 23, 59, 59, 999) - IST_OFFSET_MS);
-      // Previous equivalent: yesterday
       prevStartUtc = new Date(Date.UTC(istYear, istMonth, istDate - 1, 0, 0, 0, 0) - IST_OFFSET_MS);
       prevEndUtc = new Date(Date.UTC(istYear, istMonth, istDate - 1, 23, 59, 59, 999) - IST_OFFSET_MS);
       break;
@@ -131,12 +131,6 @@ export function getISTDateRanges(timeframe = "today", customStart = null, custom
 
 /**
  * MongoDB Match condition for successful, verified revenue.
- * Rules:
- * - Excludes Cancelled and Payment Rejected orders.
- * - Excludes orders where paymentStatus is Rejected.
- * - For UPI: paymentStatus must be explicitly "Verified" (unverified claims are NEVER revenue).
- * - For COD and Card: order is counted if non-cancelled and payment not rejected.
- * - For Legacy orders: missing or null paymentMethod is counted as cash/counter revenue if completed/collected.
  */
 export function getSuccessfulRevenueFilter() {
   return {
@@ -151,10 +145,6 @@ export function getSuccessfulRevenueFilter() {
   };
 }
 
-/**
- * Safe percentage change calculation.
- * Returns null if previous value is 0 (to avoid division by zero or misleading infinite percentages).
- */
 function calcPctChange(current, previous) {
   if (previous === 0) {
     return current === 0 ? 0.0 : null;
@@ -164,16 +154,18 @@ function calcPctChange(current, previous) {
 }
 
 /**
- * Computes high-level overview metrics & comparisons.
+ * Computes high-level overview metrics & comparisons scoped to restaurant.
  */
-export async function computeOverviewData(timeframe = "today", startDate = null, endDate = null) {
+export async function computeOverviewData(timeframe = "today", startDate = null, endDate = null, restaurantId = null) {
   const { current, previous, timezone } = getISTDateRanges(timeframe, startDate, endDate);
+  const restFilter = getRestaurantFilter(restaurantId);
 
   async function fetchRangeSummary(rangeStart, rangeEnd) {
     const results = await Order.aggregate([
       {
         $match: {
-          createdAt: { $gte: rangeStart, $lte: rangeEnd }
+          createdAt: { $gte: rangeStart, $lte: rangeEnd },
+          ...restFilter
         }
       },
       {
@@ -232,7 +224,7 @@ export async function computeOverviewData(timeframe = "today", startDate = null,
 
     return {
       grossSales,
-      netSales: grossSales, // Documented limitation: no discounts/refunds recorded in schema
+      netSales: grossSales,
       totalOrders,
       completedOrders,
       pendingOrders,
@@ -273,13 +265,11 @@ export async function computeOverviewData(timeframe = "today", startDate = null,
   };
 }
 
-/**
- * 1. GET /order/analytics/overview
- */
 export async function getAnalyticsOverviewController(req, res) {
   try {
     const { timeframe = "today", startDate, endDate } = req.query;
-    const data = await computeOverviewData(timeframe, startDate, endDate);
+    const restaurantId = req.restaurantId || req.query.restaurantId;
+    const data = await computeOverviewData(timeframe, startDate, endDate, restaurantId);
     res.json(data);
   } catch (error) {
     console.error("Analytics Overview Error:", error);
@@ -288,11 +278,12 @@ export async function getAnalyticsOverviewController(req, res) {
 }
 
 /**
- * Computes sales timeline chart points (hourly or daily).
+ * Computes sales timeline chart points (hourly or daily) scoped to restaurant.
  */
-export async function computeSalesChartData(timeframe = "today", startDate = null, endDate = null) {
+export async function computeSalesChartData(timeframe = "today", startDate = null, endDate = null, restaurantId = null) {
   const { current } = getISTDateRanges(timeframe, startDate, endDate);
   const grouping = current.isSingleDay ? "hourly" : "daily";
+  const restFilter = getRestaurantFilter(restaurantId);
 
   const isRevenueExpression = {
     $and: [
@@ -313,7 +304,8 @@ export async function computeSalesChartData(timeframe = "today", startDate = nul
     const agg = await Order.aggregate([
       {
         $match: {
-          createdAt: { $gte: current.start, $lte: current.end }
+          createdAt: { $gte: current.start, $lte: current.end },
+          ...restFilter
         }
       },
       {
@@ -365,7 +357,8 @@ export async function computeSalesChartData(timeframe = "today", startDate = nul
     const agg = await Order.aggregate([
       {
         $match: {
-          createdAt: { $gte: current.start, $lte: current.end }
+          createdAt: { $gte: current.start, $lte: current.end },
+          ...restFilter
         }
       },
       {
@@ -432,13 +425,11 @@ export async function computeSalesChartData(timeframe = "today", startDate = nul
   }
 }
 
-/**
- * 2. GET /order/analytics/sales
- */
 export async function getSalesChartController(req, res) {
   try {
     const { timeframe = "today", startDate, endDate } = req.query;
-    const data = await computeSalesChartData(timeframe, startDate, endDate);
+    const restaurantId = req.restaurantId || req.query.restaurantId;
+    const data = await computeSalesChartData(timeframe, startDate, endDate, restaurantId);
     res.json(data);
   } catch (error) {
     console.error("Sales Chart Error:", error);
@@ -447,15 +438,17 @@ export async function getSalesChartController(req, res) {
 }
 
 /**
- * Computes order performance, statuses, and completion rates.
+ * Computes order performance, statuses, and completion rates scoped to restaurant.
  */
-export async function computeOrderPerformanceData(timeframe = "today", startDate = null, endDate = null) {
+export async function computeOrderPerformanceData(timeframe = "today", startDate = null, endDate = null, restaurantId = null) {
   const { current } = getISTDateRanges(timeframe, startDate, endDate);
+  const restFilter = getRestaurantFilter(restaurantId);
 
   const results = await Order.aggregate([
     {
       $match: {
-        createdAt: { $gte: current.start, $lte: current.end }
+        createdAt: { $gte: current.start, $lte: current.end },
+        ...restFilter
       }
     },
     {
@@ -480,7 +473,7 @@ export async function computeOrderPerformanceData(timeframe = "today", startDate
             }
           },
           {
-            $match: { durationMinutes: { $gte: 0, $lte: 300 } } // Exclude unreasonable outliers (>5h)
+            $match: { durationMinutes: { $gte: 0, $lte: 300 } }
           },
           {
             $group: {
@@ -532,7 +525,7 @@ export async function computeOrderPerformanceData(timeframe = "today", startDate
   facet.paymentMethodCounts?.forEach(p => {
     if (p._id === "UPI") upiCount = p.count;
     else if (p._id === "Card") cardCount = p.count;
-    else codCount += p.count; // Default null/undefined/COD to COD
+    else codCount += p.count;
   });
 
   const rawAvgPrep = facet.prepTimes?.[0]?.avgMinutes;
@@ -554,13 +547,11 @@ export async function computeOrderPerformanceData(timeframe = "today", startDate
   };
 }
 
-/**
- * 3. GET /order/analytics/orders
- */
 export async function getOrderPerformanceController(req, res) {
   try {
     const { timeframe = "today", startDate, endDate } = req.query;
-    const data = await computeOrderPerformanceData(timeframe, startDate, endDate);
+    const restaurantId = req.restaurantId || req.query.restaurantId;
+    const data = await computeOrderPerformanceData(timeframe, startDate, endDate, restaurantId);
     res.json(data);
   } catch (error) {
     console.error("Order Performance Error:", error);
@@ -569,17 +560,19 @@ export async function getOrderPerformanceController(req, res) {
 }
 
 /**
- * Computes popular (best-selling) and underperforming menu items.
+ * Computes popular (best-selling) and underperforming menu items scoped to restaurant.
  */
-export async function computePopularItemsData(timeframe = "today", startDate = null, endDate = null, sortBy = "quantity") {
+export async function computePopularItemsData(timeframe = "today", startDate = null, endDate = null, sortBy = "quantity", restaurantId = null) {
   const { current } = getISTDateRanges(timeframe, startDate, endDate);
+  const restFilter = getRestaurantFilter(restaurantId);
 
   const revenueFilter = getSuccessfulRevenueFilter();
   const soldItemsAgg = await Order.aggregate([
     {
       $match: {
         createdAt: { $gte: current.start, $lte: current.end },
-        ...revenueFilter
+        ...revenueFilter,
+        ...restFilter
       }
     },
     { $unwind: "$orderItems" },
@@ -603,7 +596,15 @@ export async function computePopularItemsData(timeframe = "today", startDate = n
     }
   ]);
 
-  const menuItems = await Item.find({}).lean();
+  const itemQuery = restaurantId ? {
+    $or: [
+      { restaurantId: restaurantId },
+      { restaurantId: { $exists: false } },
+      { restaurantId: null }
+    ]
+  } : {};
+
+  const menuItems = await Item.find(itemQuery).lean();
   const itemMetaMap = new Map();
   menuItems.forEach(item => {
     itemMetaMap.set(item.itemName.toLowerCase(), {
@@ -660,13 +661,11 @@ export async function computePopularItemsData(timeframe = "today", startDate = n
   };
 }
 
-/**
- * 4. GET /order/analytics/items
- */
 export async function getPopularItemsController(req, res) {
   try {
     const { timeframe = "today", startDate, endDate, sortBy = "quantity" } = req.query;
-    const data = await computePopularItemsData(timeframe, startDate, endDate, sortBy);
+    const restaurantId = req.restaurantId || req.query.restaurantId;
+    const data = await computePopularItemsData(timeframe, startDate, endDate, sortBy, restaurantId);
     res.json(data);
   } catch (error) {
     console.error("Popular Items Error:", error);
@@ -675,15 +674,17 @@ export async function getPopularItemsController(req, res) {
 }
 
 /**
- * Computes peak ordering hours & days of week.
+ * Computes peak ordering hours & days of week scoped to restaurant.
  */
-export async function computePeakHoursData(timeframe = "7d", startDate = null, endDate = null) {
+export async function computePeakHoursData(timeframe = "7d", startDate = null, endDate = null, restaurantId = null) {
   const { current } = getISTDateRanges(timeframe, startDate, endDate);
+  const restFilter = getRestaurantFilter(restaurantId);
 
   const agg = await Order.aggregate([
     {
       $match: {
-        createdAt: { $gte: current.start, $lte: current.end }
+        createdAt: { $gte: current.start, $lte: current.end },
+        ...restFilter
       }
     },
     {
@@ -706,7 +707,7 @@ export async function computePeakHoursData(timeframe = "7d", startDate = null, e
         byDayOfWeek: [
           {
             $project: {
-              dayOfWeek: { $dayOfWeek: { date: "$createdAt", timezone: IST_TZ_STRING } }, // 1 = Sun, 7 = Sat
+              dayOfWeek: { $dayOfWeek: { date: "$createdAt", timezone: IST_TZ_STRING } },
               totalAmount: "$totalAmount"
             }
           },
@@ -773,13 +774,11 @@ export async function computePeakHoursData(timeframe = "7d", startDate = null, e
   };
 }
 
-/**
- * 5. GET /order/analytics/peak-hours
- */
 export async function getPeakHoursController(req, res) {
   try {
     const { timeframe = "7d", startDate, endDate } = req.query;
-    const data = await computePeakHoursData(timeframe, startDate, endDate);
+    const restaurantId = req.restaurantId || req.query.restaurantId;
+    const data = await computePeakHoursData(timeframe, startDate, endDate, restaurantId);
     res.json(data);
   } catch (error) {
     console.error("Peak Hours Error:", error);
@@ -788,15 +787,17 @@ export async function getPeakHoursController(req, res) {
 }
 
 /**
- * Computes payment methods and verification stats.
+ * Computes payment methods and verification stats scoped to restaurant.
  */
-export async function computePaymentAnalyticsData(timeframe = "today", startDate = null, endDate = null) {
+export async function computePaymentAnalyticsData(timeframe = "today", startDate = null, endDate = null, restaurantId = null) {
   const { current } = getISTDateRanges(timeframe, startDate, endDate);
+  const restFilter = getRestaurantFilter(restaurantId);
 
   const agg = await Order.aggregate([
     {
       $match: {
-        createdAt: { $gte: current.start, $lte: current.end }
+        createdAt: { $gte: current.start, $lte: current.end },
+        ...restFilter
       }
     },
     {
@@ -853,7 +854,6 @@ export async function computePaymentAnalyticsData(timeframe = "today", startDate
       stats.card.totalOrders += row.count;
       stats.card.totalAmount += row.amount;
     } else {
-      // COD and legacy orders
       stats.cod.totalOrders += row.count;
       stats.cod.totalAmount += row.amount;
     }
@@ -878,13 +878,11 @@ export async function computePaymentAnalyticsData(timeframe = "today", startDate
   };
 }
 
-/**
- * 6. GET /order/analytics/payments
- */
 export async function getPaymentAnalyticsController(req, res) {
   try {
     const { timeframe = "today", startDate, endDate } = req.query;
-    const data = await computePaymentAnalyticsData(timeframe, startDate, endDate);
+    const restaurantId = req.restaurantId || req.query.restaurantId;
+    const data = await computePaymentAnalyticsData(timeframe, startDate, endDate, restaurantId);
     res.json(data);
   } catch (error) {
     console.error("Payment Analytics Error:", error);
@@ -892,22 +890,18 @@ export async function getPaymentAnalyticsController(req, res) {
   }
 }
 
-/**
- * Consolidated Single-Trip Analytics Dashboard API:
- * GET /order/analytics/dashboard
- * Delivers all 6 analytics domains in a single optimized database call.
- */
 export async function getAnalyticsDashboardController(req, res) {
   try {
     const { timeframe = "today", startDate, endDate, sortBy = "quantity" } = req.query;
+    const restaurantId = req.restaurantId || req.query.restaurantId;
 
     const [overview, sales, orders, items, peakHours, payments] = await Promise.all([
-      computeOverviewData(timeframe, startDate, endDate),
-      computeSalesChartData(timeframe, startDate, endDate),
-      computeOrderPerformanceData(timeframe, startDate, endDate),
-      computePopularItemsData(timeframe, startDate, endDate, sortBy),
-      computePeakHoursData(timeframe, startDate, endDate),
-      computePaymentAnalyticsData(timeframe, startDate, endDate)
+      computeOverviewData(timeframe, startDate, endDate, restaurantId),
+      computeSalesChartData(timeframe, startDate, endDate, restaurantId),
+      computeOrderPerformanceData(timeframe, startDate, endDate, restaurantId),
+      computePopularItemsData(timeframe, startDate, endDate, sortBy, restaurantId),
+      computePeakHoursData(timeframe, startDate, endDate, restaurantId),
+      computePaymentAnalyticsData(timeframe, startDate, endDate, restaurantId)
     ]);
 
     res.json({
@@ -924,35 +918,30 @@ export async function getAnalyticsDashboardController(req, res) {
   }
 }
 
-/**
- * Sanitizes a cell for CSV export to prevent spreadsheet formula injection.
- */
 function sanitizeCsvCell(value) {
   if (value === null || value === undefined) return '""';
   let str = String(value);
 
-  // Formula injection prevention
   if (/^[=+\-@\t\r]/.test(str)) {
     str = "'" + str;
   }
 
-  // Quote and escape inner quotes
   if (str.includes('"') || str.includes(",") || str.includes("\n") || str.includes("\r")) {
     str = `"${str.replace(/"/g, '""')}"`;
   }
   return str;
 }
 
-/**
- * 7. GET /order/analytics/export
- */
 export async function getAnalyticsExportController(req, res) {
   try {
     const { timeframe = "today", startDate, endDate } = req.query;
+    const restaurantId = req.restaurantId || req.query.restaurantId;
     const { current } = getISTDateRanges(timeframe, startDate, endDate);
+    const restFilter = getRestaurantFilter(restaurantId);
 
     const orders = await Order.find({
-      createdAt: { $gte: current.start, $lte: current.end }
+      createdAt: { $gte: current.start, $lte: current.end },
+      ...restFilter
     }).lean();
 
     let grossSales = 0;
@@ -998,7 +987,6 @@ export async function getAnalyticsExportController(req, res) {
           methodAmounts.COD += order.totalAmount || 0;
         }
 
-        // Tally items from successful orders
         (order.orderItems || []).forEach(item => {
           if (!itemSoldMap[item.itemName]) {
             itemSoldMap[item.itemName] = { quantity: 0, salesValue: 0, orders: 0 };
@@ -1015,7 +1003,6 @@ export async function getAnalyticsExportController(req, res) {
 
     const lines = [];
 
-    // Section 1: Executive KPI Summary
     lines.push(`"SERVEO RESTAURANT ANALYTICS REPORT"`);
     lines.push(`"Timeframe","${current.label}"`);
     lines.push(`"Start (IST)","${new Date(current.start.getTime() + IST_OFFSET_MS).toISOString().replace("T", " ").substring(0, 19)}"`);
@@ -1035,7 +1022,6 @@ export async function getAnalyticsExportController(req, res) {
     lines.push(`"Pending UPI Verifications",${pendingUpiCount}`);
     lines.push("");
 
-    // Section 2: Payment Breakdown
     lines.push(`"PAYMENT SUMMARY"`);
     lines.push(`"Payment Method","Order Count","Verified Revenue (INR)"`);
     lines.push(`"UPI",${methodCounts.UPI},${methodAmounts.UPI}`);
@@ -1043,7 +1029,6 @@ export async function getAnalyticsExportController(req, res) {
     lines.push(`"Card",${methodCounts.Card},${methodAmounts.Card}`);
     lines.push("");
 
-    // Section 3: Menu Item Performance
     lines.push(`"MENU ITEM PERFORMANCE"`);
     lines.push(`"Item Name","Quantity Sold","Sales Value (INR)","Order Appearances"`);
 

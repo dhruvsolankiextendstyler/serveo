@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/order_provider.dart';
+import '../utils/restaurant_provider.dart';
 import '../utils/theme_provider.dart';
 import '../widgets/breakbite_bill_details_card.dart';
 import '../widgets/breakbite_cart_item_card.dart';
@@ -147,6 +148,13 @@ class CartPage extends StatelessWidget {
     OrderProvider provider,
     bool isDark,
   ) {
+    RestaurantProvider? restProvider;
+    try {
+      restProvider = context.watch<RestaurantProvider>();
+    } catch (_) {}
+    final restConfig = restProvider?.config ?? RestaurantConfig();
+    final bool canOrder = restConfig.canOrder;
+
     final total = provider.getTotal();
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
@@ -166,41 +174,102 @@ class CartPage extends StatelessWidget {
         ],
       ),
       child: SafeArea(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChangeNotifierProvider.value(
-                  value: provider,
-                  child: const PaymentPage(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!canOrder) ...[
+              Container(
+                key: const Key('cart_restaurant_closed_banner'),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: restConfig.isPaused
+                      ? const Color(0xFFD97706).withValues(alpha: 0.15)
+                      : Colors.redAccent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: restConfig.isPaused
+                        ? const Color(0xFFD97706).withValues(alpha: 0.4)
+                        : Colors.redAccent.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      restConfig.isPaused ? Icons.pause_circle_outline : Icons.schedule,
+                      color: restConfig.isPaused ? const Color(0xFFD97706) : Colors.redAccent,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        restConfig.isPaused
+                            ? (restConfig.pauseReason.isNotEmpty ? restConfig.pauseReason : "Ordering temporarily paused.")
+                            : "Restaurant is closed (${restConfig.operatingHoursFormatted}).",
+                        style: TextStyle(
+                          color: restConfig.isPaused ? const Color(0xFFD97706) : Colors.redAccent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.yellow,
-            foregroundColor: Colors.black,
-            minimumSize: const Size(double.infinity, 54),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Proceed to Pay • ₹$total",
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 20),
             ],
-          ),
+            ElevatedButton(
+              key: const Key('proceed_to_pay_button'),
+              onPressed: canOrder
+                  ? () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChangeNotifierProvider.value(
+                            value: provider,
+                            child: const PaymentPage(),
+                          ),
+                        ),
+                      );
+                    }
+                  : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            restConfig.isPaused
+                                ? "Orders are temporarily paused. Please check back shortly."
+                                : "Restaurant is closed. Operating hours: ${restConfig.operatingHoursFormatted}",
+                          ),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: canOrder ? Colors.yellow : Colors.grey.shade400,
+                foregroundColor: Colors.black,
+                minimumSize: const Size(double.infinity, 54),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    canOrder ? "Proceed to Pay • ₹$total" : "Ordering Currently Unavailable",
+                    style: TextStyle(
+                      color: canOrder ? Colors.black : Colors.black54,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  if (canOrder) ...[
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 20),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema(
     {
+        restaurantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Restaurant',
+            index: true,
+            required: false
+        },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -46,5 +52,6 @@ const notificationSchema = new mongoose.Schema(
 );
 
 notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ restaurantId: 1, createdAt: -1 });
 
 export const Notification = mongoose.model("Notification", notificationSchema);

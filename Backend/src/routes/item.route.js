@@ -142,6 +142,11 @@ const handleUpdateItem = async (req, res) => {
       return res.status(404).json({ error: "Item not found" });
     }
 
+    // Tenant isolation verification: Admin cannot update items from another restaurant
+    if (item.restaurantId && req.restaurantId && item.restaurantId.toString() !== req.restaurantId.toString()) {
+      return res.status(403).json({ error: "Access denied. Item belongs to another restaurant." });
+    }
+
     const oldImageUrl = item.imageUrl;
 
     if (req.file) {
@@ -212,6 +217,11 @@ itemRoute.delete("/:id", adminCheck, async (req, res) => {
     const item = await Item.findById(req.params.id);
     if (!item) {
       return res.status(404).json({ error: "Item not found" });
+    }
+
+    // Tenant isolation verification: Admin cannot delete items from another restaurant
+    if (item.restaurantId && req.restaurantId && item.restaurantId.toString() !== req.restaurantId.toString()) {
+      return res.status(403).json({ error: "Access denied. Item belongs to another restaurant." });
     }
 
     const oldImageUrl = item.imageUrl;

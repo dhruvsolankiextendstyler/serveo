@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../utils/menu_provider.dart';
 import '../utils/order_provider.dart';
+import '../utils/restaurant_provider.dart';
 import '../utils/theme_provider.dart';
 import '../widgets/breakbite_appbar.dart';
 import '../widgets/breakbite_drawer.dart';
@@ -344,6 +345,11 @@ class _DashboardPageState extends State<DashboardPage> {
     final menuProvider = context.watch<MenuProvider>();
     final orderProvider = context.watch<OrderProvider>();
     final isDark = context.watch<ThemeProvider>().isDark;
+    RestaurantProvider? restProvider;
+    try {
+      restProvider = context.watch<RestaurantProvider>();
+    } catch (_) {}
+    final restConfig = restProvider?.config ?? RestaurantConfig();
 
     final categories = _getCategories(menuProvider.menuItems);
 
@@ -393,7 +399,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "Serveo",
+                                      restConfig.name.isNotEmpty ? restConfig.name : "Serveo",
                                       style: TextStyle(
                                         color: primaryTextColor,
                                         fontSize: 22,
@@ -404,8 +410,10 @@ class _DashboardPageState extends State<DashboardPage> {
                                     const SizedBox(height: 2),
                                     Text(
                                       widget.uname.isNotEmpty
-                                          ? "Welcome, ${widget.uname}! Fresh meals & fast service."
-                                          : "Fresh meals & quick snacks ready for counter pickup",
+                                          ? "Welcome, ${widget.uname}! ${restConfig.description.isNotEmpty ? restConfig.description : 'Fresh meals & fast service.'}"
+                                          : (restConfig.description.isNotEmpty
+                                              ? restConfig.description
+                                              : "Fresh meals & quick snacks ready for counter pickup"),
                                       style: TextStyle(
                                         color: secondaryTextColor,
                                         fontSize: 12,
@@ -417,6 +425,91 @@ class _DashboardPageState extends State<DashboardPage> {
                             ],
                           ),
                           const SizedBox(height: 12),
+
+                          // 🔹 RESTAURANT AVAILABILITY ALERT (Closed / Paused Banner)
+                          if (!restConfig.canOrder) ...[
+                            Container(
+                              key: const Key('dashboard_restaurant_status_banner'),
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: restConfig.isPaused
+                                    ? const Color(0xFFD97706).withValues(alpha: 0.15)
+                                    : Colors.redAccent.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: restConfig.isPaused
+                                      ? const Color(0xFFD97706).withValues(alpha: 0.5)
+                                      : Colors.redAccent.withValues(alpha: 0.4),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    restConfig.isPaused ? Icons.pause_circle_outline : Icons.schedule,
+                                    color: restConfig.isPaused ? const Color(0xFFD97706) : Colors.redAccent,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          restConfig.isPaused ? "Ordering Paused" : "Currently Closed for Orders",
+                                          style: TextStyle(
+                                            color: restConfig.isPaused ? const Color(0xFFD97706) : Colors.redAccent,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        Text(
+                                          restConfig.availabilityReason.isNotEmpty
+                                              ? restConfig.availabilityReason
+                                              : "Browsing is available, but checkout is disabled until opening hours (${restConfig.operatingHoursFormatted}).",
+                                          style: TextStyle(
+                                            color: isDark ? Colors.white70 : const Color(0xFF374151),
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+
+                          // 🔹 ANNOUNCEMENT BANNER
+                          if (restConfig.announcement.isNotEmpty) ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.yellow.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.yellow.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.campaign_outlined, color: Color(0xFFD97706), size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      restConfig.announcement,
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white : const Color(0xFF1F2937),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
 
                           // 🔹 SEARCH INPUT FIELD
                           Container(

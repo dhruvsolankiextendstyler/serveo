@@ -89,6 +89,7 @@ export const submitFeedbackController = async (req) => {
         : [];
 
     const feedback = new Feedback({
+        restaurantId: order.restaurantId,
         orderId: order._id,
         userId: user._id,
         customerName: user.fullName || "Customer",
@@ -124,8 +125,17 @@ export const getOrderFeedbackController = async (req) => {
     return feedback;
 };
 
-export const getAdminFeedbackController = async () => {
-    const feedbackList = await Feedback.find()
+export const getAdminFeedbackController = async (req = {}) => {
+    const query = {};
+    if (req.restaurantId) {
+        query.$or = [
+            { restaurantId: req.restaurantId },
+            { restaurantId: { $exists: false } },
+            { restaurantId: null }
+        ];
+    }
+
+    const feedbackList = await Feedback.find(query)
         .populate("orderId", "totalAmount orderItems status createdAt customerDetails")
         .sort({ createdAt: -1 })
         .limit(100)

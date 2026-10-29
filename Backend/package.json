@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "seed": "node src/seed.js",
-    "test": "node src/test_payment_reverification.js && node src/test_phase3_features.js && node src/test_order_security.js && node src/test_analytics.js && node src/test_item_and_menu.js"
+    "test": "node src/test_payment_reverification.js && node src/test_phase3_features.js && node src/test_order_security.js && node src/test_analytics.js && node src/test_item_and_menu.js && node src/test_phase4_restaurant_onboarding.js"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
     "heic-convert": "^2.1.0",
     "mongoose": "^9.1.2",
     "multer": "^2.5.0",
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.11",
+    "qrcode": "^1.5.4"
   }
 }

@@ -1,4 +1,5 @@
 import { Item } from "../models/item.models.js";
+import { Restaurant } from "../models/restaurant.models.js";
 
 export const addItemController = async (req) => {
     const itemName = req.body.itemName?.trim();
@@ -14,7 +15,23 @@ export const addItemController = async (req) => {
         throw new Error("Category is required");
     }
 
-    const itemExists = await Item.findOne({ itemName });
+    // Resolve tenant restaurantId from admin auth context, or fallback to default
+    let targetRestaurantId = req.restaurantId;
+    if (!targetRestaurantId) {
+        try {
+            if (mongoose.connection.readyState === 1 || Restaurant.findOne !== mongoose.Model.findOne) {
+                const defaultRest = await Restaurant.findOne({ slug: "default" }) || await Restaurant.findOne({});
+                targetRestaurantId = defaultRest ? defaultRest._id : null;
+            }
+        } catch (_) {}
+    }
+
+    const itemQuery = { itemName };
+    if (targetRestaurantId) {
+        itemQuery.restaurantId = targetRestaurantId;
+    }
+
+    const itemExists = await Item.findOne(itemQuery);
     if (itemExists) return "Item Exists!";
 
     let customizations = [];
@@ -28,6 +45,7 @@ export const addItemController = async (req) => {
     }
 
     const newItem = new Item({
+        restaurantId: targetRestaurantId,
         itemName,
         itemPrice,
         category,
@@ -39,6 +57,6 @@ export const addItemController = async (req) => {
         customizations,
     });
     await newItem.save();
-    console.log("Item Created Successfully");
+    console.log("Item Created Successfully for restaurant:", targetRestaurantId);
     return "Item Created Succssfully";
 };

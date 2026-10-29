@@ -7,12 +7,21 @@ import { DBConnect } from "./utils/db_connect.js";
 import { itemRoute } from "./routes/item.route.js";
 import { orderRoute } from "./routes/order.route.js";
 import { analyticsRoute } from "./routes/analytics.route.js";
+import { restaurantRoute } from "./routes/restaurant.route.js";
+import { renderPublicWebMenuController } from "./controllers/restaurant.controller.js";
+import { initDefaultRestaurant } from "./utils/init_default_restaurant.js";
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-DBConnect();
+
+// Connect database and run safe, idempotent default restaurant migration
+DBConnect().then(async () => {
+  await initDefaultRestaurant();
+}).catch(err => {
+  console.error("DB Connection / Init Error:", err.message);
+});
 
 // Health check endpoint for uptime monitors, Render pingers, and cold-start diagnostics
 app.get("/health", (req, res) => {
@@ -24,6 +33,14 @@ app.get("/health", (req, res) => {
   });
 });
 
+// 🔹 Public Web Menu for browser QR scan (mobile & desktop)
+app.get("/menu/:identifier", renderPublicWebMenuController);
+app.get("/menu", (req, res) => {
+  renderPublicWebMenuController({ params: { identifier: "default" }, get: req.get.bind(req), protocol: req.protocol }, res);
+});
+
+// 🔹 API Routes
+app.use('/restaurant', restaurantRoute);
 app.use('/user', userRoute);
 app.use('/item', itemRoute);
 app.use('/order', orderRoute);

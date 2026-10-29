@@ -2,10 +2,16 @@ import mongoose from "mongoose";
 
 const itemSchema = new mongoose.Schema(
     {
+        restaurantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Restaurant',
+            index: true,
+            required: false // Optional in schema for backward compatibility, backfilled automatically
+        },
         itemName: {
             type: String,
             required: true,
-            unique: true
+            trim: true
         },
         itemPrice: {
             type: Number,
@@ -71,5 +77,9 @@ const itemSchema = new mongoose.Schema(
     },
     {timestamps: true}
 )
+
+// Multi-tenant scoped unique index: Item names are unique within each restaurant
+itemSchema.index({ restaurantId: 1, itemName: 1 });
+itemSchema.index({ restaurantId: 1, category: 1 });
 
 export const Item = mongoose.model("Item", itemSchema)

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/order_provider.dart';
+import '../utils/restaurant_provider.dart';
 import '../utils/theme_provider.dart';
 import 'login_page.dart';
 import 'order_history_page.dart';
@@ -78,11 +79,20 @@ class _PaymentPageState extends State<PaymentPage> {
 
     setState(() => _isProcessing = true);
 
+    RestaurantProvider? restProvider;
+    try {
+      restProvider = context.read<RestaurantProvider>();
+    } catch (_) {}
+    final restId = restProvider?.config.id;
+
     try {
       if (_selectedMethod == 'upi') {
         // Option A: Online / UPI Payment flow
         // 1. Create order on backend with paymentMethod = "UPI"
-        final createdOrder = await orderProvider.placeOrder(paymentMethod: "UPI");
+        final createdOrder = await orderProvider.placeOrder(
+          paymentMethod: "UPI",
+          restaurantId: restId,
+        );
 
         if (!mounted) return;
 
@@ -125,7 +135,10 @@ class _PaymentPageState extends State<PaymentPage> {
       } else if (_selectedMethod == 'cash') {
         // Option B: Cash on Delivery / Pay at Counter flow
         final total = orderProvider.getTotal();
-        final createdOrder = await orderProvider.placeOrder(paymentMethod: "COD");
+        final createdOrder = await orderProvider.placeOrder(
+          paymentMethod: "COD",
+          restaurantId: restId,
+        );
 
         if (!mounted) return;
 
@@ -283,7 +296,10 @@ class _PaymentPageState extends State<PaymentPage> {
       } else {
         // Preserved Option: Simulated Card Transaction Demo
         await Future.delayed(const Duration(milliseconds: 1200));
-        await orderProvider.placeOrder(paymentMethod: "Card");
+        await orderProvider.placeOrder(
+          paymentMethod: "Card",
+          restaurantId: restId,
+        );
 
         if (!mounted) return;
 

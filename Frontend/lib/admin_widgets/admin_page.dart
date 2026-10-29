@@ -11,6 +11,7 @@ import 'admin_menu_list_page.dart';
 import 'admin_notification_overlay.dart';
 import 'admin_order_details.dart';
 import 'admin_report_page.dart';
+import 'admin_settings_page.dart';
 import '../utils/theme_provider.dart';
 
 class AdminPage extends StatefulWidget {
@@ -102,6 +103,7 @@ class _AdminPageState extends State<AdminPage> {
       const HistoryPage(),
       const AdminMenuListPage(),
       const AdminReportPage(),
+      const AdminSettingsPage(),
     ];
 
     final pendingVerifications = orderProvider.pendingVerificationOrders;
@@ -202,6 +204,7 @@ class _AdminPageState extends State<AdminPage> {
           const BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
           const BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: "Menu List"),
           const BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: "Analytics"),
+          const BottomNavigationBarItem(icon: Icon(Icons.storefront_outlined), label: "Settings"),
         ],
       ),
     );

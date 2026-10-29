@@ -4,6 +4,7 @@ import "package:firebase_messaging/firebase_messaging.dart";
 import "package:frontend/pages/auth_gate.dart";
 import "package:frontend/utils/menu_provider.dart";
 import "package:frontend/utils/order_provider.dart";
+import "package:frontend/utils/restaurant_provider.dart";
 import "package:frontend/utils/theme_provider.dart";
 import "package:provider/provider.dart";
 import "firebase_options.dart";
@@ -27,6 +28,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
+        ChangeNotifierProvider<RestaurantProvider>(create: (_) => RestaurantProvider()..fetchPublicInfo()),
         ChangeNotifierProvider<OrderProvider>(create: (_) => OrderProvider()),
         ChangeNotifierProvider<MenuProvider>(create: (_) => MenuProvider()..fetchMenu()),
       ],

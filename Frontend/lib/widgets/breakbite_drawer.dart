@@ -5,6 +5,7 @@ import 'package:frontend/pages/order_history_page.dart';
 import 'package:frontend/pages/login_page.dart';
 import 'package:frontend/pages/report_page.dart';
 import 'package:frontend/utils/order_provider.dart';
+import 'package:frontend/utils/restaurant_provider.dart';
 import 'package:frontend/utils/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart';
@@ -186,7 +187,22 @@ class ServeoDrawer extends StatelessWidget {
               }
             },
           ),
-          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Builder(builder: (ctx) {
+              RestaurantProvider? restProvider;
+              try {
+                restProvider = ctx.watch<RestaurantProvider>();
+              } catch (_) {}
+              final rest = restProvider?.config ?? RestaurantConfig();
+              return Text(
+                "${rest.name} • Hours: ${rest.openingTime} - ${rest.closingTime}",
+                style: TextStyle(color: subtextColor, fontSize: 11),
+                textAlign: TextAlign.center,
+              );
+            }),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );

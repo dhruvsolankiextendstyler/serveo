@@ -34,6 +34,13 @@ export const updateStatusController = async (req) => {
         throw new Error("Order not found");
     }
 
+    // Tenant isolation verification: Admin cannot update orders belonging to another restaurant
+    if (req.restaurantId && order.restaurantId && order.restaurantId.toString() !== req.restaurantId.toString()) {
+        const error = new Error("Unauthorized to update status of an order from another restaurant");
+        error.status = 403;
+        throw error;
+    }
+
     // Do not allow transitioning a rejected payment order into kitchen preparation
     if (order.paymentStatus === "Rejected" && (newStatus === "Preparing" || newStatus === "Completed" || newStatus === "Ready")) {
         throw new Error("Cannot transition order with rejected payment to preparation");
@@ -86,6 +93,7 @@ export const updateStatusController = async (req) => {
     if (notifTitle) {
         try {
             await Notification.create({
+                restaurantId: order.restaurantId,
                 userId: order.userId,
                 orderId: order._id,
                 title: notifTitle,

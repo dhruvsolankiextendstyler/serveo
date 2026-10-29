@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../pages/order_tracking_page.dart';
 import '../utils/order_provider.dart';
+import '../utils/restaurant_provider.dart';
 import '../utils/theme_provider.dart';
 
 class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -308,6 +309,13 @@ class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget {
       headerActions.add(const SizedBox(width: 8));
     }
 
+    RestaurantProvider? restProvider;
+    try {
+      restProvider = context.watch<RestaurantProvider>();
+    } catch (_) {}
+    final displayTitle = (title != "Serveo") ? title : (restProvider?.config.name ?? "Serveo");
+    final customLogoUrl = restProvider?.config.logoUrl;
+
     return AppBar(
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -320,11 +328,22 @@ class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget {
               color: Colors.yellow.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.fastfood_outlined, color: Colors.yellow, size: 20),
+            child: customLogoUrl != null && customLogoUrl.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Image.network(
+                      customLogoUrl,
+                      width: 20,
+                      height: 20,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.fastfood_outlined, color: Colors.yellow, size: 20),
+                    ),
+                  )
+                : const Icon(Icons.fastfood_outlined, color: Colors.yellow, size: 20),
           ),
           const SizedBox(width: 10),
           Text(
-            title,
+            displayTitle,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               letterSpacing: 0.3,

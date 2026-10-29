@@ -74,6 +74,7 @@ class OrderProvider extends ChangeNotifier{
     String paymentMethod = "COD",
     http.Client? client,
     String? overrideToken,
+    String? restaurantId,
   }) async {
     _lastOrderError = null;
 
@@ -126,6 +127,7 @@ class OrderProvider extends ChangeNotifier{
         body: jsonEncode({
           "orderItems": cartItemsSnapshot,
           "paymentMethod": paymentMethod,
+          if (restaurantId != null && restaurantId.isNotEmpty) "restaurantId": restaurantId,
         }),
       ).timeout(const Duration(seconds: 25));
 

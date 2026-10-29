@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const feedbackSchema = new mongoose.Schema(
     {
+        restaurantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Restaurant',
+            index: true,
+            required: false
+        },
         orderId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Order',
@@ -39,5 +45,6 @@ const feedbackSchema = new mongoose.Schema(
 );
 
 feedbackSchema.index({ createdAt: -1 });
+feedbackSchema.index({ restaurantId: 1, createdAt: -1 });
 
 export const Feedback = mongoose.model("Feedback", feedbackSchema);

@@ -22,12 +22,12 @@ export const orderRoute = express.Router()
 // 🔹 Analytics Endpoints (Admin Only, protected)
 orderRoute.use("/analytics", analyticsRoute)
 
-// 🔹 1. GET ALL ORDERS (Admin Only, protected)
+// 🔹 1. GET ALL ORDERS (Admin Only, scoped to authorized restaurant)
 orderRoute.get("/", adminCheck, async (req,res) => {
     try {
-        const msg = await getOrderController()
+        const msg = await getOrderController(req)
         res.json({"message": msg})
-        console.log("All Orders sent")
+        console.log("Restaurant Orders sent for:", req.restaurant?.name)
     } catch (error) {
         res.status(500).json({"error": error.message})
     }
@@ -104,7 +104,7 @@ orderRoute.post("/feedback", authCheck, async (req, res) => {
 
 orderRoute.get("/feedback/admin/all", adminCheck, async (req, res) => {
     try {
-        const result = await getAdminFeedbackController();
+        const result = await getAdminFeedbackController(req);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -131,7 +131,7 @@ orderRoute.post("/add", authCheck, async (req,res) => {
         console.log("Order added")
     } catch (error) {
         console.error("Add Order Error:", error.message)
-        res.status(400).json({"error": error.message})
+        res.status(error.status || 400).json({"error": error.message})
     }
 })
 
@@ -170,6 +170,10 @@ orderRoute.patch("/estimated-time", adminCheck, async (req, res) => {
         if (!order) {
             return res.status(404).json({ error: "Order not found" });
         }
+        // Tenant check
+        if (req.restaurantId && order.restaurantId && order.restaurantId.toString() !== req.restaurantId.toString()) {
+            return res.status(403).json({ error: "Unauthorized to update order from another restaurant" });
+        }
         const mins = Math.max(1, Math.min(Number(estimatedPrepTime) || 15, 120));
         order.estimatedPrepTime = mins;
         order.estimatedReadyAt = new Date(Date.now() + mins * 60 * 1000);
@@ -187,7 +191,7 @@ orderRoute.patch("/updatestatus", adminCheck, async (req,res) => {
         res.json({"message": msg})
         console.log("Status Updated")
     } catch (error) {
-        res.status(400).json({"error": error.message})
+        res.status(error.status || 400).json({"error": error.message})
     }
 })
 

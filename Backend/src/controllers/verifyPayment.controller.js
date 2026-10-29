@@ -18,6 +18,13 @@ export const verifyPaymentController = async (req) => {
         throw error;
     }
 
+    // Cross-tenant verification protection: Admin cannot verify another restaurant's orders
+    if (req.restaurantId && order.restaurantId && order.restaurantId.toString() !== req.restaurantId.toString()) {
+        const error = new Error("Unauthorized to verify payment for an order from another restaurant");
+        error.status = 403;
+        throw error;
+    }
+
     const adminEmail = req.user?.email || "admin123@ad.in";
     const now = new Date();
     const isConfirmed = verified === true || verified === "true";
@@ -92,6 +99,7 @@ export const verifyPaymentController = async (req) => {
         const customerId = updatedOrder.userId?._id || updatedOrder.userId;
         if (customerId) {
             await Notification.create({
+                restaurantId: order.restaurantId,
                 userId: customerId,
                 orderId: updatedOrder._id,
                 title: isConfirmed ? "Serveo: Payment Verified!" : "Serveo: Payment Not Confirmed",

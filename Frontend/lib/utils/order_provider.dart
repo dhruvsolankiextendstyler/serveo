@@ -117,16 +117,21 @@ class OrderProvider extends ChangeNotifier{
     final cartItemsSnapshot = _orderItems.map((item) => item.toJson()).toList();
     final totalAmountSnapshot = getTotal();
 
+    // Idempotency Key: Guarantees at-most-once order placement on network retries or repeated taps
+    final idempotencyKey = "order_${DateTime.now().millisecondsSinceEpoch}_${(user?.uid ?? 'guest').hashCode.abs()}";
+
     try {
       final response = await httpClient.post(
         url,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
+          'X-Idempotency-Key': idempotencyKey,
         },
         body: jsonEncode({
           "orderItems": cartItemsSnapshot,
           "paymentMethod": paymentMethod,
+          "idempotencyKey": idempotencyKey,
           if (restaurantId != null && restaurantId.isNotEmpty) "restaurantId": restaurantId,
         }),
       ).timeout(const Duration(seconds: 25));

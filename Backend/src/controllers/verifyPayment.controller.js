@@ -2,12 +2,21 @@ import { Order } from "../models/order.models.js";
 import { User } from "../models/user.models.js";
 import { Notification } from "../models/notification.models.js";
 import { admin } from "../utils/firebase_app.js";
+import { logger } from "../utils/logger.js";
 
 export const verifyPaymentController = async (req) => {
     const { orderId, verified, rejectionReason } = req.body;
     if (!orderId) {
         const error = new Error("Order ID is required");
         error.status = 400;
+        throw error;
+    }
+
+    // Role check: Cashier, Manager, and Owner are authorized to verify payments
+    if (req.staffRole && !["owner", "manager", "cashier"].includes(req.staffRole)) {
+        const error = new Error(`Role '${req.staffRole}' is not authorized to verify payments. Required: Cashier, Manager, or Owner.`);
+        error.status = 403;
+        error.code = "FORBIDDEN_ROLE";
         throw error;
     }
 

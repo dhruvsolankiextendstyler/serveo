@@ -4,6 +4,7 @@ import { Item } from '../models/item.models.js';
 import { Restaurant } from '../models/restaurant.models.js';
 import { Notification } from '../models/notification.models.js';
 import { checkRestaurantAvailability } from '../utils/restaurant_availability.js';
+import { logger } from '../utils/logger.js';
 import mongoose from 'mongoose';
 
 export const addOrderController = async (req) => {
@@ -38,7 +39,27 @@ export const addOrderController = async (req) => {
         throw new Error("Unable to associate user account with order");
     }
 
-    const { orderItems, paymentMethod = "COD", restaurantId, restaurantSlug } = req.body;
+    const { orderItems, paymentMethod = "COD", restaurantId, restaurantSlug, idempotencyKey: bodyIdempKey } = req.body;
+
+    // Idempotency Guard: Prevent duplicate orders from network retries or repeated button taps
+    const idempotencyKey = (bodyIdempKey || req.headers?.["x-idempotency-key"] || req.headers?.["idempotency-key"] || "").trim();
+    if (idempotencyKey) {
+        try {
+            const existingOrder = await Order.findOne({ userId: user._id, idempotencyKey });
+            if (existingOrder) {
+                logger.info("order", "Duplicate order submission safely prevented via idempotency key", {
+                    orderId: existingOrder._id,
+                    userId: user._id,
+                    idempotencyKey,
+                });
+                return {
+                    message: "Order Placed !!",
+                    order: existingOrder,
+                    isDuplicate: true,
+                };
+            }
+        } catch (_) {}
+    }
 
     if (!Array.isArray(orderItems) || orderItems.length === 0) {
         throw new Error("Order tray cannot be empty");
@@ -171,6 +192,7 @@ export const addOrderController = async (req) => {
     const newOrder = new Order({
         restaurantId: resolvedRestaurantId,
         userId: user._id,
+        idempotencyKey: idempotencyKey || undefined,
         customerDetails: {
             fullName: user.fullName || "Customer",
             phoneNumber: user.phoneNumber || "",

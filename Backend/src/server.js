@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import crypto from "crypto";
 import mongoose from "mongoose";
 import { userRoute } from "./routes/user.route.js";
 import { DBConnect } from "./utils/db_connect.js";
@@ -10,26 +11,50 @@ import { analyticsRoute } from "./routes/analytics.route.js";
 import { restaurantRoute } from "./routes/restaurant.route.js";
 import { renderPublicWebMenuController } from "./controllers/restaurant.controller.js";
 import { initDefaultRestaurant } from "./utils/init_default_restaurant.js";
+import { logger } from "./utils/logger.js";
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 
+// Correlation / Request ID Middleware for production diagnostics
+app.use((req, res, next) => {
+  const requestId = req.headers["x-request-id"] || crypto.randomUUID();
+  req.id = requestId;
+  res.setHeader("X-Request-Id", requestId);
+  next();
+});
+
 // Connect database and run safe, idempotent default restaurant migration
 DBConnect().then(async () => {
   await initDefaultRestaurant();
 }).catch(err => {
-  console.error("DB Connection / Init Error:", err.message);
+  logger.error("system", "DB Connection / Init Error", err);
 });
 
-// Health check endpoint for uptime monitors, Render pingers, and cold-start diagnostics
+// 🔹 Liveness check endpoint
 app.get("/health", (req, res) => {
   res.json({
-    status: "ok",
+    status: "alive",
     service: "serveo-backend",
+    uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
     database: mongoose.connection.readyState === 1 ? "connected" : "connecting"
+  });
+});
+
+// 🔹 Readiness check endpoint (checks database readiness without exposing secrets)
+app.get("/health/ready", (req, res) => {
+  const isDbReady = mongoose.connection.readyState === 1;
+  const status = isDbReady ? 200 : 503;
+  res.status(status).json({
+    status: isDbReady ? "ready" : "not_ready",
+    service: "serveo-backend",
+    database: isDbReady ? "connected" : "disconnected",
+    memoryUsageMb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -57,11 +82,16 @@ app.use((req, res) => {
 
 // Global error handler: ensure JSON is ALWAYS returned instead of Express default HTML error page
 app.use((err, req, res, next) => {
-  console.error("Unhandled server error:", err);
+  logger.error("api", "Unhandled server error", err, {
+    requestId: req.id,
+    method: req.method,
+    url: req.originalUrl,
+  });
   const status = err.status || err.statusCode || 500;
   res.status(status).json({
     error: err.message || "Internal server error",
     status,
+    requestId: req.id,
   });
 });
 

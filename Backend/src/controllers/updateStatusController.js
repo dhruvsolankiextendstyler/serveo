@@ -41,6 +41,31 @@ export const updateStatusController = async (req) => {
         throw error;
     }
 
+    // Role-based status transition enforcement
+    if (req.staffRole) {
+        if (req.staffRole === "viewer") {
+            const error = new Error("Read-only viewer account cannot update order status");
+            error.status = 403;
+            error.code = "FORBIDDEN_ROLE";
+            throw error;
+        }
+        if (req.staffRole === "cashier") {
+            const error = new Error("Cashier accounts are restricted to payment verification and collection");
+            error.status = 403;
+            error.code = "FORBIDDEN_ROLE";
+            throw error;
+        }
+        if (req.staffRole === "kitchen") {
+            const kitchenAllowed = ["Accepted", "Preparing", "Ready", "Completed"];
+            if (!kitchenAllowed.includes(newStatus)) {
+                const error = new Error(`Kitchen staff may only transition orders to: ${kitchenAllowed.join(', ')}`);
+                error.status = 403;
+                error.code = "FORBIDDEN_ROLE";
+                throw error;
+            }
+        }
+    }
+
     // Do not allow transitioning a rejected payment order into kitchen preparation
     if (order.paymentStatus === "Rejected" && (newStatus === "Preparing" || newStatus === "Completed" || newStatus === "Ready")) {
         throw new Error("Cannot transition order with rejected payment to preparation");

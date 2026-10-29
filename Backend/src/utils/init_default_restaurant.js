@@ -102,6 +102,47 @@ export async function initDefaultRestaurant() {
       console.log(`✅ Backfilled ${feedbackUpdateResult.modifiedCount} legacy feedbacks with default restaurantId.`);
     }
 
+    // 5. Ensure default restaurant has initial staff and subscription
+    let changed = false;
+    if (!defaultRestaurant.staff || defaultRestaurant.staff.length === 0) {
+      defaultRestaurant.staff = [
+        {
+          uid: "",
+          email: "admin123@ad.in",
+          name: "Default Admin Owner",
+          role: "owner",
+          invitedBy: "system",
+          addedAt: new Date(),
+          isActive: true,
+        },
+      ];
+      changed = true;
+    }
+
+    if (!defaultRestaurant.subscription || !defaultRestaurant.subscription.planId) {
+      defaultRestaurant.subscription = {
+        planId: "growth",
+        status: "active",
+        startDate: new Date(),
+        adminOverride: true,
+        history: [
+          {
+            action: "DEFAULT_INIT",
+            fromPlan: "",
+            toPlan: "growth",
+            actor: "system",
+            reason: "Default demo restaurant initialization",
+            timestamp: new Date(),
+          },
+        ],
+      };
+      changed = true;
+    }
+
+    if (changed) {
+      await defaultRestaurant.save();
+    }
+
     return defaultRestaurant;
   } catch (error) {
     console.error("⚠️ Error initializing default restaurant:", error.message);

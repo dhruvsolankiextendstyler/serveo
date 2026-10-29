@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import multer from "multer";
 import { addItemController } from "../controllers/addItem.controller.js";
 import { getItemController } from "../controllers/getItem.controller.js";
-import { adminCheck } from "../middlewares/adminCheck.js";
+import { adminCheck, requireRoles, requireActiveSubscription } from "../middlewares/adminCheck.js";
 import { Item } from "../models/item.models.js";
 import {
   storeImageInGridFS,
@@ -73,7 +73,7 @@ itemRoute.get("/image/:id", async (req, res) => {
 });
 
 // 🔹 3. STANDALONE IMAGE UPLOAD ENDPOINT (Admin Only)
-itemRoute.post("/upload-image", adminCheck, uploadMiddleware, async (req, res) => {
+itemRoute.post("/upload-image", adminCheck, requireRoles(["owner", "manager"]), uploadMiddleware, async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No image file provided." });
   }
@@ -97,7 +97,7 @@ itemRoute.post("/upload-image", adminCheck, uploadMiddleware, async (req, res) =
 });
 
 // 🔹 4. CREATE ITEM (Supports JSON or Multipart with Optional Image, Admin Only)
-itemRoute.post("/add", adminCheck, uploadMiddleware, async (req, res) => {
+itemRoute.post("/add", adminCheck, requireRoles(["owner", "manager"]), requireActiveSubscription, uploadMiddleware, async (req, res) => {
   let uploadedFileId = null;
 
   try {
@@ -145,6 +145,18 @@ const handleUpdateItem = async (req, res) => {
     // Tenant isolation verification: Admin cannot update items from another restaurant
     if (item.restaurantId && req.restaurantId && item.restaurantId.toString() !== req.restaurantId.toString()) {
       return res.status(403).json({ error: "Access denied. Item belongs to another restaurant." });
+    }
+
+    // Role check: kitchen staff may only toggle availability; other changes require owner/manager
+    const isAvailabilityOnly = Object.keys(req.body).length === 1 && req.body.isAvailable !== undefined && !req.file;
+    if (isAvailabilityOnly) {
+      if (!["owner", "manager", "kitchen"].includes(req.staffRole)) {
+        return res.status(403).json({ error: "FORBIDDEN_ROLE", message: "Kitchen, Manager, or Owner role required" });
+      }
+    } else {
+      if (!["owner", "manager"].includes(req.staffRole)) {
+        return res.status(403).json({ error: "FORBIDDEN_ROLE", message: "Manager or Owner role required to edit menu items" });
+      }
     }
 
     const oldImageUrl = item.imageUrl;
@@ -208,7 +220,7 @@ itemRoute.put("/:id", adminCheck, uploadMiddleware, handleUpdateItem);
 itemRoute.patch("/:id", adminCheck, uploadMiddleware, handleUpdateItem);
 
 // 🔹 6. DELETE ITEM (Admin Only - Safely cleans up stored image if not shared)
-itemRoute.delete("/:id", adminCheck, async (req, res) => {
+itemRoute.delete("/:id", adminCheck, requireRoles(["owner", "manager"]), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(404).json({ error: "Item not found" });

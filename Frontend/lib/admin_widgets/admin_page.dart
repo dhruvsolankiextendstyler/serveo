@@ -13,6 +13,7 @@ import 'admin_order_details.dart';
 import 'admin_report_page.dart';
 import 'admin_settings_page.dart';
 import '../utils/theme_provider.dart';
+import '../utils/restaurant_provider.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -98,19 +99,96 @@ class _AdminPageState extends State<AdminPage> {
       );
     }
 
-    final screens = [
-      const LivePage(),
-      const HistoryPage(),
-      const AdminMenuListPage(),
-      const AdminReportPage(),
-      const AdminSettingsPage(),
-    ];
-
     final pendingVerifications = orderProvider.pendingVerificationOrders;
+    final restaurantProvider = context.watch<RestaurantProvider>();
+    final role = restaurantProvider.currentRole;
+
+    final List<Widget> screens = [];
+    final List<BottomNavigationBarItem> navItems = [];
+
+    // 1. Live Orders (Available to all authorized roles)
+    screens.add(const LivePage());
+    navItems.add(
+      BottomNavigationBarItem(
+        icon: Badge(
+          isLabelVisible: pendingVerifications.isNotEmpty,
+          backgroundColor: const Color(0xFFD97706),
+          label: Text(
+            "${pendingVerifications.length}",
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+          ),
+          child: const Icon(Icons.dashboard),
+        ),
+        label: "Live Orders",
+      ),
+    );
+
+    // 2. Order History (Owner, Manager, Cashier, Viewer)
+    if (role != 'kitchen') {
+      screens.add(const HistoryPage());
+      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"));
+    }
+
+    // 3. Menu Management (Owner, Manager)
+    if (role == 'owner' || role == 'manager') {
+      screens.add(const AdminMenuListPage());
+      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: "Menu List"));
+    }
+
+    // 4. Analytics & Reports (Owner, Manager)
+    if (role == 'owner' || role == 'manager') {
+      screens.add(const AdminReportPage());
+      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: "Analytics"));
+    }
+
+    // 5. Business Settings, Staff & Subscription (Owner only)
+    if (role == 'owner') {
+      screens.add(const AdminSettingsPage());
+      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.storefront_outlined), label: "Settings"));
+    }
+
+    final activeIndex = _selectedIndex >= screens.length ? 0 : _selectedIndex;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Admin Panel", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Admin Panel", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: role == 'owner'
+                    ? Colors.amber.withValues(alpha: 0.2)
+                    : role == 'kitchen'
+                        ? Colors.deepOrange.withValues(alpha: 0.2)
+                        : Colors.blue.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: role == 'owner'
+                      ? Colors.amber
+                      : role == 'kitchen'
+                          ? Colors.deepOrange
+                          : Colors.blue,
+                  width: 0.8,
+                ),
+              ),
+              child: Text(
+                role.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: role == 'owner'
+                      ? Colors.amber
+                      : role == 'kitchen'
+                          ? Colors.deepOrange
+                          : Colors.blue,
+                ),
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: Icon(
@@ -178,35 +256,20 @@ class _AdminPageState extends State<AdminPage> {
                 ],
               ),
             ),
-          Expanded(child: screens[_selectedIndex]),
+          Expanded(child: screens[activeIndex]),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: isDark ? const Color(0xFF181818) : Colors.white,
-        selectedItemColor: isDark ? Colors.yellow : const Color(0xFFD97706),
-        unselectedItemColor: isDark ? Colors.white60 : const Color(0xFF6B7280),
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: [
-          BottomNavigationBarItem(
-            icon: Badge(
-              isLabelVisible: pendingVerifications.isNotEmpty,
-              backgroundColor: const Color(0xFFD97706),
-              label: Text(
-                "${pendingVerifications.length}",
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-              ),
-              child: const Icon(Icons.dashboard),
-            ),
-            label: "Live Orders",
-          ),
-          const BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
-          const BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: "Menu List"),
-          const BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: "Analytics"),
-          const BottomNavigationBarItem(icon: Icon(Icons.storefront_outlined), label: "Settings"),
-        ],
-      ),
+      bottomNavigationBar: navItems.length > 1
+          ? BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: isDark ? const Color(0xFF181818) : Colors.white,
+              selectedItemColor: isDark ? Colors.yellow : const Color(0xFFD97706),
+              unselectedItemColor: isDark ? Colors.white60 : const Color(0xFF6B7280),
+              currentIndex: activeIndex,
+              onTap: (index) => setState(() => _selectedIndex = index),
+              items: navItems,
+            )
+          : null,
     );
   }
 }

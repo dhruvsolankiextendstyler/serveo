@@ -245,6 +245,14 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
                 _buildLiveStatusCard(cfg, cardBg, borderColor, primaryTextColor, secondaryTextColor, isDark),
                 const SizedBox(height: 16),
 
+                // 🔹 SECTION 1B: SUBSCRIPTION & OPERATIONAL USAGE CARD
+                _buildSubscriptionCard(provider, cardBg, borderColor, primaryTextColor, secondaryTextColor, isDark),
+                const SizedBox(height: 16),
+
+                // 🔹 SECTION 1C: STAFF ACCOUNTS & ROLES (RBAC) CARD
+                _buildStaffManagementCard(provider, cardBg, borderColor, primaryTextColor, secondaryTextColor, isDark),
+                const SizedBox(height: 16),
+
                 // 🔹 SECTION 2: QR CODE MENU CARD
                 _buildQrMenuCard(provider, cardBg, borderColor, primaryTextColor, secondaryTextColor, isDark),
                 const SizedBox(height: 16),
@@ -815,6 +823,356 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionCard(
+    RestaurantProvider provider,
+    Color bg,
+    Color border,
+    Color textColor,
+    Color subtextColor,
+    bool isDark,
+  ) {
+    final sub = provider.subscription;
+    final planName = sub?.planName ?? "Starter";
+    final planStatus = (sub?.status ?? "ACTIVE").toUpperCase();
+    final itemsCurrent = sub?.activeItemsCurrent ?? 0;
+    final itemsMax = sub?.activeItemsMax ?? 20;
+    final staffCurrent = sub?.staffCurrent ?? 1;
+    final staffMax = sub?.staffMax ?? 2;
+
+    final itemsRatio = itemsMax > 0 ? (itemsCurrent / itemsMax).clamp(0.0, 1.0) : 0.0;
+    final staffRatio = staffMax > 0 ? (staffCurrent / staffMax).clamp(0.0, 1.0) : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.card_membership_rounded, color: Colors.amber, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Commercial Subscription",
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber, width: 0.8),
+                ),
+                child: Text(
+                  "$planName • $planStatus",
+                  style: const TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Active Menu Items Usage
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Active Menu Items", style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.w600)),
+              Text("$itemsCurrent / $itemsMax items", style: TextStyle(color: subtextColor, fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: itemsRatio,
+              backgroundColor: isDark ? Colors.white12 : Colors.black12,
+              valueColor: AlwaysStoppedAnimation<Color>(itemsRatio >= 1.0 ? Colors.redAccent : Colors.amber),
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Staff Accounts Usage
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Staff Accounts Capacity", style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.w600)),
+              Text("$staffCurrent / $staffMax accounts", style: TextStyle(color: subtextColor, fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: staffRatio,
+              backgroundColor: isDark ? Colors.white12 : Colors.black12,
+              valueColor: AlwaysStoppedAnimation<Color>(staffRatio >= 1.0 ? Colors.redAccent : Colors.amber),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStaffManagementCard(
+    RestaurantProvider provider,
+    Color bg,
+    Color border,
+    Color textColor,
+    Color subtextColor,
+    bool isDark,
+  ) {
+    final staffList = provider.staff;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.badge_outlined, color: Colors.blueAccent, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Staff Accounts & Roles (RBAC)",
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ],
+              ),
+              TextButton.icon(
+                key: const Key('admin_add_staff_btn'),
+                onPressed: () => _showAddStaffDialog(context, provider),
+                icon: const Icon(Icons.person_add_alt_1, size: 16),
+                label: const Text("Add Staff", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (staffList.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                "No additional staff accounts configured. Add managers, kitchen, or cashier staff above.",
+                style: TextStyle(color: subtextColor, fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: staffList.length,
+              separatorBuilder: (_, __) => const Divider(height: 12),
+              itemBuilder: (context, index) {
+                final member = staffList[index];
+                Color roleColor = Colors.blue;
+                if (member.role == 'owner') roleColor = Colors.amber;
+                if (member.role == 'kitchen') roleColor = Colors.deepOrange;
+                if (member.role == 'cashier') roleColor = Colors.green;
+                if (member.role == 'viewer') roleColor = Colors.grey;
+
+                return Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: roleColor.withValues(alpha: 0.15),
+                      child: Text(
+                        member.name.isNotEmpty ? member.name[0].toUpperCase() : 'S',
+                        style: TextStyle(color: roleColor, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            member.name.isNotEmpty ? member.name : member.email,
+                            style: TextStyle(color: textColor, fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                          Text(
+                            member.email,
+                            style: TextStyle(color: subtextColor, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: roleColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: roleColor, width: 0.8),
+                      ),
+                      child: Text(
+                        member.role.toUpperCase(),
+                        style: TextStyle(color: roleColor, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, size: 18, color: subtextColor),
+                      onSelected: (value) async {
+                        if (value == 'edit') {
+                          _showEditRoleDialog(context, provider, member);
+                        } else if (value == 'delete') {
+                          final success = await provider.removeStaff(member.id);
+                          if (!success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(provider.errorMessage ?? "Failed to remove staff"),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'edit', child: Text("Change Role")),
+                        const PopupMenuItem(value: 'delete', child: Text("Remove", style: TextStyle(color: Colors.redAccent))),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddStaffDialog(BuildContext context, RestaurantProvider provider) {
+    final emailController = TextEditingController();
+    final nameController = TextEditingController();
+    String selectedRole = 'manager';
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Add Staff Account"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: "Staff Email", hintText: "staff@restaurant.com"),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: "Full Name", hintText: "e.g. John Doe"),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: selectedRole,
+                decoration: const InputDecoration(labelText: "Staff Role"),
+                items: const [
+                  DropdownMenuItem(value: 'owner', child: Text("Owner (Full Access)")),
+                  DropdownMenuItem(value: 'manager', child: Text("Manager (Operations)")),
+                  DropdownMenuItem(value: 'kitchen', child: Text("Kitchen (Cooking & Orders)")),
+                  DropdownMenuItem(value: 'cashier', child: Text("Cashier (Payment Verifier)")),
+                  DropdownMenuItem(value: 'viewer', child: Text("Viewer (Read Only)")),
+                ],
+                onChanged: (val) {
+                  if (val != null) setDialogState(() => selectedRole = val);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text("Cancel")),
+            ElevatedButton(
+              onPressed: () async {
+                final email = emailController.text.trim();
+                if (email.isEmpty || !email.contains('@')) return;
+                Navigator.pop(dialogCtx);
+                final success = await provider.addStaff(email, name: nameController.text.trim(), role: selectedRole);
+                if (!success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(provider.errorMessage ?? "Failed to add staff"),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditRoleDialog(BuildContext context, RestaurantProvider provider, StaffMember member) {
+    String selectedRole = member.role;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text("Change Role: ${member.name}"),
+          content: DropdownButtonFormField<String>(
+            initialValue: selectedRole,
+            decoration: const InputDecoration(labelText: "New Role"),
+            items: const [
+              DropdownMenuItem(value: 'owner', child: Text("Owner (Full Access)")),
+              DropdownMenuItem(value: 'manager', child: Text("Manager (Operations)")),
+              DropdownMenuItem(value: 'kitchen', child: Text("Kitchen (Cooking & Orders)")),
+              DropdownMenuItem(value: 'cashier', child: Text("Cashier (Payment Verifier)")),
+              DropdownMenuItem(value: 'viewer', child: Text("Viewer (Read Only)")),
+            ],
+            onChanged: (val) {
+              if (val != null) setDialogState(() => selectedRole = val);
+            },
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text("Cancel")),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(dialogCtx);
+                final success = await provider.updateStaffRole(member.id, selectedRole);
+                if (!success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(provider.errorMessage ?? "Failed to update role"),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              },
+              child: const Text("Update"),
+            ),
+          ],
+        ),
       ),
     );
   }

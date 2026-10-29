@@ -1,5 +1,5 @@
 import express from "express";
-import { adminCheck } from "../middlewares/adminCheck.js";
+import { adminCheck, requireRoles, requirePlanFeature } from "../middlewares/adminCheck.js";
 import {
   getAnalyticsOverviewController,
   getSalesChartController,
@@ -13,8 +13,9 @@ import {
 
 export const analyticsRoute = express.Router();
 
-// Enforce adminCheck on all analytics endpoints
+// Enforce adminCheck and role check (Owner & Manager only) on all analytics endpoints
 analyticsRoute.use(adminCheck);
+analyticsRoute.use(requireRoles(["owner", "manager"]));
 
 // 0. Consolidated Dashboard (All sections in one optimized single-trip query)
 analyticsRoute.get("/dashboard", getAnalyticsDashboardController);
@@ -37,5 +38,5 @@ analyticsRoute.get("/peak-hours", getPeakHoursController);
 // 6. Payment Analytics & UPI Verification Claims
 analyticsRoute.get("/payments", getPaymentAnalyticsController);
 
-// 7. CSV Report Export
-analyticsRoute.get("/export", getAnalyticsExportController);
+// 7. CSV Report Export (Requires plan exportData entitlement)
+analyticsRoute.get("/export", requirePlanFeature("exportData"), getAnalyticsExportController);

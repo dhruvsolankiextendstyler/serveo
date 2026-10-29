@@ -1,6 +1,10 @@
 import express from "express";
 import multer from "multer";
-import { adminCheck } from "../middlewares/adminCheck.js";
+import {
+  adminCheck,
+  requireRoles,
+  requireActiveSubscription,
+} from "../middlewares/adminCheck.js";
 import {
   getPublicRestaurantInfoController,
   getPublicRestaurantMenuController,
@@ -10,6 +14,17 @@ import {
   uploadRestaurantLogoController,
   generateRestaurantQrController,
 } from "../controllers/restaurant.controller.js";
+import {
+  getStaffController,
+  addStaffController,
+  updateStaffRoleController,
+  removeStaffController,
+  getAuditLogsController,
+} from "../controllers/staff.controller.js";
+import {
+  getSubscriptionStatusController,
+  assignPlanController,
+} from "../controllers/subscription.controller.js";
 import { MAX_IMAGE_SIZE } from "../utils/image_storage.js";
 
 export const restaurantRoute = express.Router();
@@ -43,11 +58,25 @@ restaurantRoute.get("/public/info/:identifier", getPublicRestaurantInfoControlle
 restaurantRoute.get("/public/:identifier/menu", getPublicRestaurantMenuController);
 restaurantRoute.get("/qr/:identifier", generateRestaurantQrController);
 
-// 🔹 ADMIN-SCOPED CONFIGURATION (Strictly authenticated & scoped)
-restaurantRoute.get("/admin/settings", adminCheck, getAdminRestaurantSettingsController);
-restaurantRoute.put("/admin/settings", adminCheck, updateAdminRestaurantSettingsController);
-restaurantRoute.patch("/admin/settings", adminCheck, updateAdminRestaurantSettingsController);
-restaurantRoute.patch("/admin/pause-status", adminCheck, updatePauseStatusController);
-restaurantRoute.post("/admin/upload-logo", adminCheck, uploadMiddleware, uploadRestaurantLogoController);
-restaurantRoute.get("/admin/qr", adminCheck, generateRestaurantQrController);
+// 🔹 ADMIN-SCOPED CONFIGURATION & BUSINESS PROFILE (Owner only)
+restaurantRoute.get("/admin/settings", adminCheck, requireRoles(["owner", "manager"]), getAdminRestaurantSettingsController);
+restaurantRoute.put("/admin/settings", adminCheck, requireRoles(["owner"]), updateAdminRestaurantSettingsController);
+restaurantRoute.patch("/admin/settings", adminCheck, requireRoles(["owner"]), updateAdminRestaurantSettingsController);
+restaurantRoute.post("/admin/upload-logo", adminCheck, requireRoles(["owner"]), uploadMiddleware, uploadRestaurantLogoController);
+restaurantRoute.get("/admin/qr", adminCheck, requireRoles(["owner", "manager"]), generateRestaurantQrController);
 
+// 🔹 OPERATIONAL CONTROLS: Emergency Pause (Owner & Manager)
+restaurantRoute.patch("/admin/pause-status", adminCheck, requireRoles(["owner", "manager"]), updatePauseStatusController);
+
+// 🔹 STAFF MANAGEMENT & RBAC (Owner only)
+restaurantRoute.get("/admin/staff", adminCheck, requireRoles(["owner", "manager"]), getStaffController);
+restaurantRoute.post("/admin/staff", adminCheck, requireRoles(["owner"]), requireActiveSubscription, addStaffController);
+restaurantRoute.patch("/admin/staff/:staffId/role", adminCheck, requireRoles(["owner"]), updateStaffRoleController);
+restaurantRoute.delete("/admin/staff/:staffId", adminCheck, requireRoles(["owner"]), removeStaffController);
+
+// 🔹 SUBSCRIPTION & USAGE LIMITS
+restaurantRoute.get("/admin/subscription", adminCheck, requireRoles(["owner", "manager"]), getSubscriptionStatusController);
+restaurantRoute.post("/admin/subscription/assign", adminCheck, requireRoles(["owner"]), assignPlanController);
+
+// 🔹 AUDIT LOGS (Owner only)
+restaurantRoute.get("/admin/audit-logs", adminCheck, requireRoles(["owner"]), getAuditLogsController);

@@ -101,18 +101,18 @@ class RestaurantConfig {
     final closeT = (json['closingTime'] ?? '22:00').toString();
 
     return RestaurantConfig(
-      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       name: (json['name'] ?? 'Serveo').toString(),
       slug: (json['slug'] ?? 'default').toString(),
-      description: (json['description'] ?? '').toString(),
+      description: (json['description'] ?? 'Fresh meals & quick snacks ready for counter pickup').toString(),
       logoUrl: (json['logoUrl'] ?? '').toString(),
       bannerUrl: (json['bannerUrl'] ?? '').toString(),
-      addressStreet: (addr['street'] ?? '').toString(),
-      addressCity: (addr['city'] ?? '').toString(),
-      addressState: (addr['state'] ?? '').toString(),
-      addressPostalCode: (addr['postalCode'] ?? '').toString(),
-      contactPhone: (contact['phone'] ?? '').toString(),
-      contactEmail: (contact['email'] ?? '').toString(),
+      addressStreet: (addr['street'] ?? json['addressStreet'] ?? 'Central Food Court').toString(),
+      addressCity: (addr['city'] ?? json['addressCity'] ?? 'Bengaluru').toString(),
+      addressState: (addr['state'] ?? json['addressState'] ?? 'Karnataka').toString(),
+      addressPostalCode: (addr['postalCode'] ?? json['addressPostalCode'] ?? '560001').toString(),
+      contactPhone: (contact['phone'] ?? json['contactPhone'] ?? '+91 98765 43210').toString(),
+      contactEmail: (contact['email'] ?? json['contactEmail'] ?? 'support@serveo.app').toString(),
       currency: (json['currency'] ?? 'INR').toString(),
       currencySymbol: (json['currencySymbol'] ?? '₹').toString(),
       timezone: (json['timezone'] ?? 'Asia/Kolkata').toString(),
@@ -122,25 +122,28 @@ class RestaurantConfig {
       isOrderAcceptancePaused: json['isOrderAcceptancePaused'] == true,
       pauseReason: (json['pauseReason'] ?? '').toString(),
       defaultEstimatedPrepTime: int.tryParse(json['defaultEstimatedPrepTime']?.toString() ?? '20') ?? 20,
-      announcement: (disp['announcement'] ?? '').toString(),
+      announcement: (disp['announcement'] ?? json['announcement'] ?? '').toString(),
       showPrepTime: disp['showPrepTime'] != false,
       showDietaryBadges: disp['showDietaryBadges'] != false,
       isOpen: avail['isOpen'] != false,
       availabilityStatus: (avail['status'] ?? (json['isOrderAcceptancePaused'] == true ? 'PAUSED' : 'OPEN')).toString(),
       availabilityReason: (avail['reason'] ?? '').toString(),
-      operatingHoursFormatted: (avail['operatingHours'] ?? '$openT - $closeT').toString(),
+      operatingHoursFormatted: (avail['hoursFormatted'] ?? '$openT - $closeT').toString(),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'name': name,
+    'slug': slug,
     'description': description,
     'logoUrl': logoUrl,
+    'bannerUrl': bannerUrl,
     'address': {
       'street': addressStreet,
       'city': addressCity,
       'state': addressState,
       'postalCode': addressPostalCode,
+      'country': 'India',
     },
     'contact': {
       'phone': contactPhone,
@@ -163,6 +166,101 @@ class RestaurantConfig {
   };
 }
 
+class StaffMember {
+  final String id;
+  final String uid;
+  final String email;
+  final String name;
+  final String role; // "owner" | "manager" | "kitchen" | "cashier" | "viewer"
+  final bool isActive;
+  final DateTime? addedAt;
+
+  StaffMember({
+    required this.id,
+    this.uid = '',
+    required this.email,
+    required this.name,
+    required this.role,
+    this.isActive = true,
+    this.addedAt,
+  });
+
+  factory StaffMember.fromJson(Map<String, dynamic> json) {
+    return StaffMember(
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
+      uid: json['uid']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      role: json['role']?.toString() ?? 'manager',
+      isActive: json['isActive'] != false,
+      addedAt: json['addedAt'] != null ? DateTime.tryParse(json['addedAt'].toString()) : null,
+    );
+  }
+}
+
+class SubscriptionInfo {
+  final String planId;
+  final String planName;
+  final String planDescription;
+  final String status;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final DateTime? trialEndsAt;
+  final bool isExpired;
+  final bool inGracePeriod;
+  final int activeItemsCurrent;
+  final int activeItemsMax;
+  final int staffCurrent;
+  final int staffMax;
+  final bool allowAdvancedAnalytics;
+  final bool allowExport;
+
+  SubscriptionInfo({
+    required this.planId,
+    required this.planName,
+    required this.planDescription,
+    required this.status,
+    this.startDate,
+    this.endDate,
+    this.trialEndsAt,
+    this.isExpired = false,
+    this.inGracePeriod = false,
+    required this.activeItemsCurrent,
+    required this.activeItemsMax,
+    required this.staffCurrent,
+    required this.staffMax,
+    this.allowAdvancedAnalytics = false,
+    this.allowExport = false,
+  });
+
+  factory SubscriptionInfo.fromJson(Map<String, dynamic> json) {
+    final plan = json['plan'] is Map ? json['plan'] as Map : {};
+    final sub = json['subscription'] is Map ? json['subscription'] as Map : {};
+    final usage = json['usage'] is Map ? json['usage'] as Map : {};
+    final activeItems = usage['activeMenuItems'] is Map ? usage['activeMenuItems'] as Map : {};
+    final staff = usage['staffAccounts'] is Map ? usage['staffAccounts'] as Map : {};
+    final features = plan['features'] is Map ? plan['features'] as Map : {};
+
+    return SubscriptionInfo(
+      planId: (plan['id'] ?? 'starter').toString(),
+      planName: (plan['name'] ?? 'Starter').toString(),
+      planDescription: (plan['description'] ?? '').toString(),
+      status: (sub['status'] ?? 'active').toString(),
+      startDate: sub['startDate'] != null ? DateTime.tryParse(sub['startDate'].toString()) : null,
+      endDate: sub['endDate'] != null ? DateTime.tryParse(sub['endDate'].toString()) : null,
+      trialEndsAt: sub['trialEndsAt'] != null ? DateTime.tryParse(sub['trialEndsAt'].toString()) : null,
+      isExpired: sub['isExpired'] == true,
+      inGracePeriod: sub['inGracePeriod'] == true,
+      activeItemsCurrent: int.tryParse(activeItems['current']?.toString() ?? '0') ?? 0,
+      activeItemsMax: int.tryParse(activeItems['max']?.toString() ?? '20') ?? 20,
+      staffCurrent: int.tryParse(staff['current']?.toString() ?? '1') ?? 1,
+      staffMax: int.tryParse(staff['max']?.toString() ?? '2') ?? 2,
+      allowAdvancedAnalytics: features['advancedAnalytics'] == true,
+      allowExport: features['exportData'] == true,
+    );
+  }
+}
+
 class RestaurantProvider extends ChangeNotifier {
   RestaurantConfig _config = RestaurantConfig();
   bool _isLoading = false;
@@ -171,12 +269,27 @@ class RestaurantProvider extends ChangeNotifier {
   String? _qrDataUrl;
   String? _publicMenuUrl;
 
+  List<StaffMember> _staff = [];
+  String _currentRole = 'owner';
+  SubscriptionInfo? _subscription;
+  final List<Map<String, dynamic>> _auditLogs = [];
+
   RestaurantConfig get config => _config;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   String? get errorMessage => _errorMessage;
   String? get qrDataUrl => _qrDataUrl;
   String? get publicMenuUrl => _publicMenuUrl;
+
+  List<StaffMember> get staff => _staff;
+  String get currentRole => _currentRole;
+  bool get isOwner => _currentRole == 'owner';
+  bool get isManager => _currentRole == 'manager' || _currentRole == 'owner';
+  bool get isKitchen => _currentRole == 'kitchen';
+  bool get isCashier => _currentRole == 'cashier';
+  bool get isViewer => _currentRole == 'viewer';
+  SubscriptionInfo? get subscription => _subscription;
+  List<Map<String, dynamic>> get auditLogs => _auditLogs;
 
   /// Loads public restaurant information and availability for the customer app.
   Future<void> fetchPublicInfo({String identifier = 'default', http.Client? client}) async {
@@ -194,8 +307,6 @@ class RestaurantProvider extends ChangeNotifier {
         if (decoded is Map && decoded['restaurant'] != null) {
           _config = RestaurantConfig.fromJson(Map<String, dynamic>.from(decoded['restaurant']));
         }
-      } else {
-        debugPrint("[Serveo Restaurant] Server returned ${response.statusCode} for public info");
       }
     } catch (e) {
       debugPrint("[Serveo Restaurant] Error fetching public info: $e");
@@ -234,6 +345,8 @@ class RestaurantProvider extends ChangeNotifier {
         if (decoded is Map && decoded['restaurant'] != null) {
           _config = RestaurantConfig.fromJson(Map<String, dynamic>.from(decoded['restaurant']));
           await fetchQrCode(client: httpClient, overrideToken: token);
+          await fetchStaff(client: httpClient, overrideToken: token);
+          await fetchSubscription(client: httpClient, overrideToken: token);
           _isLoading = false;
           notifyListeners();
           return true;
@@ -248,6 +361,207 @@ class RestaurantProvider extends ChangeNotifier {
       _isLoading = false;
       if (client == null) httpClient.close();
       notifyListeners();
+    }
+    return false;
+  }
+
+  /// Loads staff members and resolved user role
+  Future<bool> fetchStaff({http.Client? client, String? overrideToken}) async {
+    final httpClient = client ?? http.Client();
+    try {
+      String? token = overrideToken;
+      if (token == null) {
+        final user = FirebaseAuth.instance.currentUser;
+        token = await user?.getIdToken();
+      }
+
+      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/staff");
+      final response = await httpClient.get(
+        url,
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['staff'] is List) {
+          _staff = (decoded['staff'] as List)
+              .map((s) => StaffMember.fromJson(Map<String, dynamic>.from(s)))
+              .toList();
+          _currentRole = (decoded['currentRole'] ?? 'owner').toString();
+          notifyListeners();
+          return true;
+        }
+      }
+    } catch (e) {
+      debugPrint("[Serveo Restaurant] fetchStaff error: $e");
+    } finally {
+      if (client == null) httpClient.close();
+    }
+    return false;
+  }
+
+  /// Adds a new staff member with subscription capacity validation
+  Future<bool> addStaff(String email, {String name = '', String role = 'manager', http.Client? client, String? overrideToken}) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final httpClient = client ?? http.Client();
+    try {
+      String? token = overrideToken;
+      if (token == null) {
+        final user = FirebaseAuth.instance.currentUser;
+        token = await user?.getIdToken();
+      }
+
+      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/staff");
+      final response = await httpClient.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'email': email,
+          'name': name,
+          'role': role,
+        }),
+      ).timeout(const Duration(seconds: 12));
+
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        await fetchStaff(client: httpClient, overrideToken: token);
+        await fetchSubscription(client: httpClient, overrideToken: token);
+        return true;
+      } else {
+        _errorMessage = decoded is Map ? (decoded['message'] ?? decoded['error'] ?? "Failed to add staff") : "Failed to add staff";
+      }
+    } catch (e) {
+      _errorMessage = "Network error adding staff: $e";
+    } finally {
+      _isSaving = false;
+      if (client == null) httpClient.close();
+      notifyListeners();
+    }
+    return false;
+  }
+
+  /// Updates an existing staff member's role (enforcing last-owner guard on backend)
+  Future<bool> updateStaffRole(String staffId, String role, {bool? isActive, http.Client? client, String? overrideToken}) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final httpClient = client ?? http.Client();
+    try {
+      String? token = overrideToken;
+      if (token == null) {
+        final user = FirebaseAuth.instance.currentUser;
+        token = await user?.getIdToken();
+      }
+
+      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/staff/$staffId/role");
+      final response = await httpClient.patch(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'role': role,
+          if (isActive != null) 'isActive': isActive,
+        }),
+      ).timeout(const Duration(seconds: 12));
+
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        await fetchStaff(client: httpClient, overrideToken: token);
+        return true;
+      } else {
+        _errorMessage = decoded is Map ? (decoded['message'] ?? decoded['error'] ?? "Failed to update role") : "Failed to update role";
+      }
+    } catch (e) {
+      _errorMessage = "Network error updating staff role: $e";
+    } finally {
+      _isSaving = false;
+      if (client == null) httpClient.close();
+      notifyListeners();
+    }
+    return false;
+  }
+
+  /// Removes a staff member (with last-owner guard)
+  Future<bool> removeStaff(String staffId, {http.Client? client, String? overrideToken}) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final httpClient = client ?? http.Client();
+    try {
+      String? token = overrideToken;
+      if (token == null) {
+        final user = FirebaseAuth.instance.currentUser;
+        token = await user?.getIdToken();
+      }
+
+      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/staff/$staffId");
+      final response = await httpClient.delete(
+        url,
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 12));
+
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        await fetchStaff(client: httpClient, overrideToken: token);
+        await fetchSubscription(client: httpClient, overrideToken: token);
+        return true;
+      } else {
+        _errorMessage = decoded is Map ? (decoded['message'] ?? decoded['error'] ?? "Failed to remove staff") : "Failed to remove staff";
+      }
+    } catch (e) {
+      _errorMessage = "Network error removing staff: $e";
+    } finally {
+      _isSaving = false;
+      if (client == null) httpClient.close();
+      notifyListeners();
+    }
+    return false;
+  }
+
+  /// Fetches subscription plan information, limits, and usage
+  Future<bool> fetchSubscription({http.Client? client, String? overrideToken}) async {
+    final httpClient = client ?? http.Client();
+    try {
+      String? token = overrideToken;
+      if (token == null) {
+        final user = FirebaseAuth.instance.currentUser;
+        token = await user?.getIdToken();
+      }
+
+      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/subscription");
+      final response = await httpClient.get(
+        url,
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) {
+          _subscription = SubscriptionInfo.fromJson(Map<String, dynamic>.from(decoded));
+          notifyListeners();
+          return true;
+        }
+      }
+    } catch (e) {
+      debugPrint("[Serveo Restaurant] fetchSubscription error: $e");
+    } finally {
+      if (client == null) httpClient.close();
     }
     return false;
   }
@@ -325,7 +639,6 @@ class RestaurantProvider extends ChangeNotifier {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        // Refresh full settings
         await fetchAdminSettings(client: httpClient, overrideToken: token);
         return true;
       }
@@ -378,5 +691,22 @@ class RestaurantProvider extends ChangeNotifier {
     _config = config;
     notifyListeners();
   }
-}
 
+  /// Sets role directly for unit/widget testing
+  void setRoleForTest(String role) {
+    _currentRole = role;
+    notifyListeners();
+  }
+
+  /// Sets subscription directly for testing
+  void setSubscriptionForTest(SubscriptionInfo sub) {
+    _subscription = sub;
+    notifyListeners();
+  }
+
+  /// Sets staff list directly for testing
+  void setStaffForTest(List<StaffMember> staffList) {
+    _staff = staffList;
+    notifyListeners();
+  }
+}

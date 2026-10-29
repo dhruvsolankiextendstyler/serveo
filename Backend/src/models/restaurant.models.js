@@ -23,6 +23,110 @@ const operatingHourSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const staffMemberSchema = new mongoose.Schema(
+  {
+    uid: {
+      type: String,
+      default: "",
+    },
+    email: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
+    name: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    role: {
+      type: String,
+      enum: ["owner", "manager", "kitchen", "cashier", "viewer"],
+      default: "manager",
+    },
+    invitedBy: {
+      type: String,
+      default: "system",
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { _id: true }
+);
+
+const subscriptionHistorySchema = new mongoose.Schema(
+  {
+    action: { type: String, required: true },
+    fromPlan: { type: String, default: "" },
+    toPlan: { type: String, default: "" },
+    actor: { type: String, default: "system" },
+    reason: { type: String, default: "" },
+    timestamp: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const subscriptionSchema = new mongoose.Schema(
+  {
+    planId: {
+      type: String,
+      enum: ["starter", "growth", "premium"],
+      default: "starter",
+    },
+    status: {
+      type: String,
+      enum: ["trial", "active", "past_due", "canceled", "expired"],
+      default: "active",
+    },
+    startDate: {
+      type: Date,
+      default: Date.now,
+    },
+    endDate: {
+      type: Date,
+      default: null,
+    },
+    trialEndsAt: {
+      type: Date,
+      default: null,
+    },
+    gracePeriodDays: {
+      type: Number,
+      default: 7,
+    },
+    adminOverride: {
+      type: Boolean,
+      default: false,
+    },
+    customLimits: {
+      maxActiveMenuItems: { type: Number, default: null },
+      maxStaffAccounts: { type: Number, default: null },
+      allowAdvancedAnalytics: { type: Boolean, default: null },
+    },
+    history: {
+      type: [subscriptionHistorySchema],
+      default: () => [
+        {
+          action: "INITIAL_PROVISION",
+          fromPlan: "",
+          toPlan: "starter",
+          actor: "system",
+          reason: "Initial restaurant onboarding",
+          timestamp: new Date(),
+        },
+      ],
+    },
+  },
+  { _id: false }
+);
+
 const restaurantSchema = new mongoose.Schema(
   {
     name: {
@@ -128,6 +232,41 @@ const restaurantSchema = new mongoose.Schema(
       type: [String],
       default: ["admin123@ad.in"],
     },
+    staff: {
+      type: [staffMemberSchema],
+      default: () => [
+        {
+          uid: "",
+          email: "admin123@ad.in",
+          name: "Primary Owner",
+          role: "owner",
+          invitedBy: "system",
+          addedAt: new Date(),
+          isActive: true,
+        },
+      ],
+    },
+    subscription: {
+      type: subscriptionSchema,
+      default: () => ({
+        planId: "starter",
+        status: "active",
+        startDate: new Date(),
+        endDate: null,
+        gracePeriodDays: 7,
+        adminOverride: false,
+        history: [
+          {
+            action: "INITIAL_PROVISION",
+            fromPlan: "",
+            toPlan: "starter",
+            actor: "system",
+            reason: "Initial restaurant onboarding",
+            timestamp: new Date(),
+          },
+        ],
+      }),
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -138,5 +277,7 @@ const restaurantSchema = new mongoose.Schema(
 
 restaurantSchema.index({ adminEmails: 1 });
 restaurantSchema.index({ adminUids: 1 });
+restaurantSchema.index({ "staff.email": 1 });
+restaurantSchema.index({ "staff.uid": 1 });
 
 export const Restaurant = mongoose.model("Restaurant", restaurantSchema);

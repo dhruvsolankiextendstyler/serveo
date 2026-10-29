@@ -8,6 +8,12 @@ const orderSchema = new mongoose.Schema(
             index: true,
             required: false // Optional in schema for backward compatibility, backfilled automatically
         },
+        idempotencyKey: {
+            type: String,
+            sparse: true,
+            index: true,
+            trim: true,
+        },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

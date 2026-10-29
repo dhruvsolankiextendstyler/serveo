@@ -5,7 +5,7 @@ import { updateStatusController } from '../controllers/updateStatusController.js
 import { authCheck } from '../middlewares/authCheck.js'
 import { getUserOrderController } from '../controllers/getUserOrder.controller.js'
 import { updateCollectedController } from '../controllers/updateCollected.controller.js'
-import { adminCheck } from '../middlewares/adminCheck.js'
+import { adminCheck, requireRoles } from '../middlewares/adminCheck.js'
 import { getReportController } from '../controllers/getReport.controller.js'
 import { getUserReportController } from '../controllers/getUserReport.controller.js'
 import { claimPaymentController } from '../controllers/claimPayment.controller.js'
@@ -102,7 +102,7 @@ orderRoute.post("/feedback", authCheck, async (req, res) => {
     }
 })
 
-orderRoute.get("/feedback/admin/all", adminCheck, async (req, res) => {
+orderRoute.get("/feedback/admin/all", adminCheck, requireRoles(["owner", "manager"]), async (req, res) => {
     try {
         const result = await getAdminFeedbackController(req);
         res.json(result);
@@ -147,8 +147,8 @@ orderRoute.patch("/claim-payment", authCheck, async (req,res) => {
     }
 })
 
-// 🔹 5. VERIFY UPI PAYMENT (Admin Only, protected)
-orderRoute.patch("/verify-payment", adminCheck, async (req,res) => {
+// 🔹 5. VERIFY UPI PAYMENT (Admin Only, Cashier, Manager & Owner)
+orderRoute.patch("/verify-payment", adminCheck, requireRoles(["owner", "manager", "cashier"]), async (req,res) => {
     try {
         const result = await verifyPaymentController(req)
         res.json(result)
@@ -159,8 +159,8 @@ orderRoute.patch("/verify-payment", adminCheck, async (req,res) => {
     }
 })
 
-// 🔹 5b. UPDATE ESTIMATED PREPARATION TIME (Admin Only, protected)
-orderRoute.patch("/estimated-time", adminCheck, async (req, res) => {
+// 🔹 5b. UPDATE ESTIMATED PREPARATION TIME (Admin Only, Kitchen, Manager & Owner)
+orderRoute.patch("/estimated-time", adminCheck, requireRoles(["owner", "manager", "kitchen"]), async (req, res) => {
     try {
         const { orderId, estimatedPrepTime } = req.body;
         if (!orderId || !estimatedPrepTime) {
@@ -184,8 +184,8 @@ orderRoute.patch("/estimated-time", adminCheck, async (req, res) => {
     }
 })
 
-// 🔹 6. UPDATE ORDER STATUS (Admin Only, protected)
-orderRoute.patch("/updatestatus", adminCheck, async (req,res) => {
+// 🔹 6. UPDATE ORDER STATUS (Admin Only, Kitchen, Manager & Owner)
+orderRoute.patch("/updatestatus", adminCheck, requireRoles(["owner", "manager", "kitchen"]), async (req,res) => {
     try {
         const msg = await updateStatusController(req)
         res.json({"message": msg})
@@ -217,8 +217,8 @@ orderRoute.get("/userReport", authCheck, async (req,res) => {
     }
 })
 
-// 🔹 9. ADMIN REPORT (Admin Only, protected)
-orderRoute.get("/:tr", adminCheck, async (req,res) => {
+// 🔹 9. ADMIN REPORT (Admin Only, Owner & Manager)
+orderRoute.get("/:tr", adminCheck, requireRoles(["owner", "manager"]), async (req,res) => {
     try {
         const msg = await getReportController(req)
         res.json({"message": msg})

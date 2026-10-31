@@ -3,6 +3,7 @@ import { User } from "../models/user.models.js";
 import { Notification } from "../models/notification.models.js";
 import { admin } from "../utils/firebase_app.js";
 import { logger } from "../utils/logger.js";
+import { reverseLoyaltyPointsForOrder } from "./loyalty.controller.js";
 
 export const verifyPaymentController = async (req) => {
     const { orderId, verified, rejectionReason } = req.body;
@@ -102,6 +103,14 @@ export const verifyPaymentController = async (req) => {
         },
         { new: true }
     ).populate("userId", "fullName phoneNumber email");
+
+    if (!isConfirmed) {
+        try {
+            await reverseLoyaltyPointsForOrder(updatedOrder, resolvedReason || "Payment rejected by cashier");
+        } catch (revErr) {
+            console.error("Loyalty points reversal error on payment rejection:", revErr.message);
+        }
+    }
 
     // Persistent in-app notification in MongoDB
     try {

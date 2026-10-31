@@ -4,6 +4,7 @@ import 'package:frontend/pages/cart_page.dart';
 import 'package:frontend/pages/order_history_page.dart';
 import 'package:frontend/pages/login_page.dart';
 import 'package:frontend/pages/report_page.dart';
+import 'package:frontend/pages/customer_referral_page.dart';
 import 'package:frontend/utils/order_provider.dart';
 import 'package:frontend/utils/restaurant_provider.dart';
 import 'package:frontend/utils/theme_provider.dart';
@@ -102,6 +103,21 @@ class ServeoDrawer extends StatelessWidget {
                     value: orderProvider,
                     child: const OrderHistoryPage(),
                   ),
+                ),
+              );
+            },
+          ),
+
+          _buildDrawerItem(
+            context,
+            icon: Icons.card_giftcard,
+            title: "Refer & Earn",
+            textColor: textColor,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const CustomerReferralPage(),
                 ),
               );
             },

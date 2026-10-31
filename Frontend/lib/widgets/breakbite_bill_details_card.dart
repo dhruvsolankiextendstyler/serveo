@@ -10,7 +10,10 @@ class BillDetailsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final orderProvider = context.watch<OrderProvider>();
     final isDark = context.watch<ThemeProvider>().isDark;
-    final total = orderProvider.getTotal();
+    final subtotal = orderProvider.getTotal();
+    final couponDisc = orderProvider.couponDiscount;
+    final loyaltyDisc = orderProvider.loyaltyDiscount;
+    final grandTotal = orderProvider.getFinalPayableTotal();
 
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
@@ -39,10 +42,28 @@ class BillDetailsCard extends StatelessWidget {
           // Row 1: Item Total
           _buildRow(
             label: "Item Total",
-            value: "₹$total",
+            value: "₹$subtotal",
             labelColor: secondaryTextColor,
             valueColor: primaryTextColor,
           ),
+
+          // Coupon Discount (if applied)
+          if (couponDisc > 0)
+            _buildRow(
+              label: "Coupon (${orderProvider.appliedCouponCode})",
+              value: "-₹${couponDisc.round()}",
+              labelColor: const Color(0xFF16A34A),
+              valueColor: const Color(0xFF16A34A),
+            ),
+
+          // Loyalty Reward Discount (if applied)
+          if (loyaltyDisc > 0)
+            _buildRow(
+              label: "Loyalty Reward",
+              value: "-₹${loyaltyDisc.round()}",
+              labelColor: const Color(0xFF16A34A),
+              valueColor: const Color(0xFF16A34A),
+            ),
 
           // Row 2: Taxes & Charges (Free / Demo)
           _buildRow(
@@ -67,7 +88,7 @@ class BillDetailsCard extends StatelessWidget {
                 ),
               ),
               Text(
-                "₹$total",
+                "₹$grandTotal",
                 style: const TextStyle(
                   color: Color(0xFFD97706),
                   fontSize: 22,

@@ -2,6 +2,8 @@ import { Order } from "../models/order.models.js";
 import { User } from "../models/user.models.js";
 import { Notification } from "../models/notification.models.js";
 import { admin } from "../utils/firebase_app.js";
+import { awardLoyaltyPointsForOrder, reverseLoyaltyPointsForOrder } from "./loyalty.controller.js";
+import { convertReferralOnFirstOrder } from "./referral.controller.js";
 
 export const updateStatusController = async (req) => {
     const { id, newStatus, estimatedPrepTime } = req.body;
@@ -79,6 +81,22 @@ export const updateStatusController = async (req) => {
     }
 
     await order.save();
+
+    // Growth & Retention: Loyalty Points & Referral Processing
+    if (newStatus === "Completed" || newStatus === "Collected") {
+        try {
+            await awardLoyaltyPointsForOrder(order);
+            await convertReferralOnFirstOrder(order);
+        } catch (growErr) {
+            console.error("Loyalty/referral processing error on order completion:", growErr.message);
+        }
+    } else if (newStatus === "Cancelled" || newStatus === "Payment Rejected") {
+        try {
+            await reverseLoyaltyPointsForOrder(order, `Status transitioned to ${newStatus}`);
+        } catch (revErr) {
+            console.error("Loyalty reversal error on order cancellation:", revErr.message);
+        }
+    }
 
     // Map status change to in-app customer notification
     const shortId = order._id.toString().slice(-4);

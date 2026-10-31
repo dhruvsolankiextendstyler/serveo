@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "seed": "node src/seed.js",
-    "test": "node src/test_payment_reverification.js && node src/test_phase3_features.js && node src/test_order_security.js && node src/test_analytics.js && node src/test_item_and_menu.js && node src/test_phase4_restaurant_onboarding.js && node src/test_phase5_commercial_readiness.js"
+    "test": "node src/test_payment_reverification.js && node src/test_phase3_features.js && node src/test_order_security.js && node src/test_analytics.js && node src/test_item_and_menu.js && node src/test_phase4_restaurant_onboarding.js && node src/test_phase5_commercial_readiness.js && node src/test_phase6_growth_and_retention.js"
   },
   "keywords": [],
   "author": "",

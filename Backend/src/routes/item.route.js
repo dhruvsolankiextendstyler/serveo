@@ -2,7 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import multer from "multer";
 import { addItemController } from "../controllers/addItem.controller.js";
-import { getItemController } from "../controllers/getItem.controller.js";
+import { getItemController, getRecommendedItemsController } from "../controllers/getItem.controller.js";
 import { adminCheck, requireRoles, requireActiveSubscription } from "../middlewares/adminCheck.js";
 import { Item } from "../models/item.models.js";
 import {
@@ -45,6 +45,16 @@ itemRoute.get("/", async (req, res) => {
   try {
     const msg = await getItemController(req);
     res.json({ message: msg });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 🔹 1b. GET RECOMMENDATIONS (Personalized based on purchase history or popular)
+itemRoute.get("/recommendations", async (req, res) => {
+  try {
+    const data = await getRecommendedItemsController(req);
+    res.json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

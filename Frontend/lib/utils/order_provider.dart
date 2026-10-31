@@ -67,6 +67,178 @@ class OrderProvider extends ChangeNotifier{
     return _orderItems.fold(0, (total, item) => total + (item.effectiveUnitPrice * item.quantity));
   }
 
+  // Phase 6: Coupon & Loyalty Checkout State
+  String? _appliedCouponCode;
+  double _couponDiscount = 0.0;
+  String? _couponError;
+  bool _isApplyingCoupon = false;
+
+  String? get appliedCouponCode => _appliedCouponCode;
+  double get couponDiscount => _couponDiscount;
+  String? get couponError => _couponError;
+  bool get isApplyingCoupon => _isApplyingCoupon;
+
+  int _availableLoyaltyPoints = 0;
+  int get availableLoyaltyPoints => _availableLoyaltyPoints;
+  List<Map<String, dynamic>> _availableRewards = [];
+  List<Map<String, dynamic>> get availableRewards => _availableRewards;
+  String? _selectedRewardId;
+  String? get selectedRewardId => _selectedRewardId;
+  double _loyaltyDiscount = 0.0;
+  double get loyaltyDiscount => _loyaltyDiscount;
+
+  double get totalDiscounts => _couponDiscount + _loyaltyDiscount;
+
+  int getFinalPayableTotal() {
+    final subtotal = getTotal();
+    final net = subtotal - totalDiscounts.round();
+    return net > 0 ? net : 0;
+  }
+
+  Future<bool> applyCoupon(
+    String code, {
+    String? restaurantId,
+    http.Client? client,
+    String? overrideToken,
+  }) async {
+    final cleanCode = code.trim().toUpperCase();
+    if (cleanCode.isEmpty) {
+      _couponError = "Please enter a coupon code.";
+      notifyListeners();
+      return false;
+    }
+
+    _isApplyingCoupon = true;
+    _couponError = null;
+    notifyListeners();
+
+    String? token = overrideToken;
+    if (token == null) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) token = await user.getIdToken();
+      } catch (_) {}
+    }
+
+    final httpClient = client ?? http.Client();
+    final url = Uri.parse("${ApiConfig.baseUrl}/order/coupon/validate");
+
+    try {
+      final res = await httpClient.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "couponCode": cleanCode,
+          "subtotal": getTotal(),
+          "orderItems": _orderItems.map((e) => e.toJson()).toList(),
+          if (restaurantId != null && restaurantId.isNotEmpty) "restaurantId": restaurantId,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['isValid'] == true) {
+        _appliedCouponCode = cleanCode;
+        _couponDiscount = (data['discountAmount'] ?? 0).toDouble();
+        _couponError = null;
+        _isApplyingCoupon = false;
+        notifyListeners();
+        return true;
+      } else {
+        _couponError = (data['error'] ?? data['message'] ?? "Invalid coupon code").toString();
+        _appliedCouponCode = null;
+        _couponDiscount = 0.0;
+        _isApplyingCoupon = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _couponError = "Unable to validate coupon. Please check connection.";
+      _isApplyingCoupon = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  void removeCoupon() {
+    _appliedCouponCode = null;
+    _couponDiscount = 0.0;
+    _couponError = null;
+    notifyListeners();
+  }
+
+  Future<void> fetchLoyaltyInfo({
+    String? restaurantId,
+    http.Client? client,
+    String? overrideToken,
+  }) async {
+    String? token = overrideToken;
+    if (token == null) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) token = await user.getIdToken();
+      } catch (_) {}
+    }
+
+    if (token == null) return;
+
+    final httpClient = client ?? http.Client();
+    final url = Uri.parse(
+        "${ApiConfig.baseUrl}/order/loyalty/customer${restaurantId != null && restaurantId.isNotEmpty ? '?restaurantId=$restaurantId' : ''}");
+
+    try {
+      final res = await httpClient.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        _availableLoyaltyPoints = (data['currentBalance'] ?? 0) as int;
+        final rawRewards = data['availableRewards'];
+        if (rawRewards is List) {
+          _availableRewards = rawRewards.map((e) => Map<String, dynamic>.from(e)).toList();
+        }
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
+  void selectLoyaltyReward(String? rewardId) {
+    if (rewardId == null || rewardId.isEmpty) {
+      _selectedRewardId = null;
+      _loyaltyDiscount = 0.0;
+      notifyListeners();
+      return;
+    }
+
+    final reward = _availableRewards.firstWhere(
+      (r) => r['rewardId'] == rewardId,
+      orElse: () => {},
+    );
+
+    if (reward.isNotEmpty) {
+      _selectedRewardId = rewardId;
+      final val = (reward['discountValue'] ?? 0).toDouble();
+      final type = reward['discountType'] ?? 'flat';
+      final maxDisc = reward['maxDiscountAmount'] != null ? (reward['maxDiscountAmount'] as num).toDouble() : null;
+
+      if (type == 'percentage') {
+        double d = (getTotal() * val) / 100.0;
+        if (maxDisc != null) d = d > maxDisc ? maxDisc : d;
+        _loyaltyDiscount = d;
+      } else {
+        _loyaltyDiscount = val > getTotal() ? getTotal().toDouble() : val;
+      }
+    } else {
+      _selectedRewardId = null;
+      _loyaltyDiscount = 0.0;
+    }
+    notifyListeners();
+  }
+
   String? _lastOrderError;
   String? get lastOrderError => _lastOrderError;
 
@@ -133,6 +305,8 @@ class OrderProvider extends ChangeNotifier{
           "paymentMethod": paymentMethod,
           "idempotencyKey": idempotencyKey,
           if (restaurantId != null && restaurantId.isNotEmpty) "restaurantId": restaurantId,
+          if (_appliedCouponCode != null) "couponCode": _appliedCouponCode,
+          if (_selectedRewardId != null) "selectedRewardId": _selectedRewardId,
         }),
       ).timeout(const Duration(seconds: 25));
 
@@ -142,6 +316,10 @@ class OrderProvider extends ChangeNotifier{
         // Case 1: Backend returns modern format with { order: { ... } }
         if (data is Map && data['order'] != null) {
           _lastOrderError = null;
+          _appliedCouponCode = null;
+          _couponDiscount = 0.0;
+          _selectedRewardId = null;
+          _loyaltyDiscount = 0.0;
           _orderItems.clear();
           notifyListeners();
           return Order.fromJson(Map<String, dynamic>.from(data['order']));
@@ -150,6 +328,10 @@ class OrderProvider extends ChangeNotifier{
         // Case 2: Order object returned directly
         if (data is Map && (data['_id'] != null || data['totalAmount'] != null)) {
           _lastOrderError = null;
+          _appliedCouponCode = null;
+          _couponDiscount = 0.0;
+          _selectedRewardId = null;
+          _loyaltyDiscount = 0.0;
           _orderItems.clear();
           notifyListeners();
           return Order.fromJson(Map<String, dynamic>.from(data));
@@ -691,6 +873,10 @@ class Order {
   final DateTime? paymentVerifiedAt;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int? subtotal;
+  final int? discountAmount;
+  final String? appliedCouponCode;
+  final String? loyaltyRewardTitle;
 
   Order({
     required this.id,
@@ -708,6 +894,10 @@ class Order {
     this.paymentVerifiedAt,
     this.createdAt,
     this.updatedAt,
+    this.subtotal,
+    this.discountAmount,
+    this.appliedCouponCode,
+    this.loyaltyRewardTitle,
   });
 
   bool get isTerminal =>
@@ -764,6 +954,10 @@ class Order {
           : null,
       createdAt: cAt,
       updatedAt: uAt,
+      subtotal: int.tryParse(json['subtotal']?.toString() ?? ''),
+      discountAmount: int.tryParse(json['discountAmount']?.toString() ?? ''),
+      appliedCouponCode: json['appliedCoupon'] is Map ? json['appliedCoupon']['code']?.toString() : null,
+      loyaltyRewardTitle: json['appliedLoyaltyReward'] is Map ? json['appliedLoyaltyReward']['title']?.toString() : null,
     );
   }
 }

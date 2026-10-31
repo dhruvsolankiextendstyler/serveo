@@ -70,6 +70,63 @@ const orderSchema = new mongoose.Schema(
                 ]
             }
         ],
+        subtotal: {
+            type: Number,
+            default: 0
+        },
+        discountAmount: {
+            type: Number,
+            default: 0
+        },
+        appliedCoupon: {
+            couponId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Coupon',
+                default: null
+            },
+            code: {
+                type: String,
+                default: ""
+            },
+            discountType: {
+                type: String,
+                default: ""
+            },
+            discountAmount: {
+                type: Number,
+                default: 0
+            }
+        },
+        appliedLoyaltyReward: {
+            rewardId: {
+                type: String,
+                default: ""
+            },
+            title: {
+                type: String,
+                default: ""
+            },
+            pointsRedeemed: {
+                type: Number,
+                default: 0
+            },
+            discountAmount: {
+                type: Number,
+                default: 0
+            }
+        },
+        loyaltyPointsEarned: {
+            type: Number,
+            default: 0
+        },
+        loyaltyPointsAwarded: {
+            type: Boolean,
+            default: false
+        },
+        loyaltyPointsAwardedAt: {
+            type: Date,
+            default: null
+        },
         totalAmount: {
             type: Number,
             default: 0
@@ -148,17 +205,35 @@ const orderSchema = new mongoose.Schema(
 )
 
 orderSchema.pre("save", function(){
-    var total = 0
-    this.orderItems.forEach(item => {
-        let itemUnitCost = Number(item.itemPrice) || 0;
-        if (Array.isArray(item.selectedCustomizations)) {
-            item.selectedCustomizations.forEach(c => {
-                itemUnitCost += (Number(c.price) || 0);
-            });
-        }
-        total += itemUnitCost * (Number(item.quantity) || 1);
-    });
-    this.totalAmount = total
+    var calculatedSubtotal = 0;
+    if (Array.isArray(this.orderItems) && this.orderItems.length > 0) {
+        this.orderItems.forEach(item => {
+            let itemUnitCost = Number(item.itemPrice) || 0;
+            if (Array.isArray(item.selectedCustomizations)) {
+                item.selectedCustomizations.forEach(c => {
+                    itemUnitCost += (Number(c.price) || 0);
+                });
+            }
+            calculatedSubtotal += itemUnitCost * (Number(item.quantity) || 1);
+        });
+        this.subtotal = calculatedSubtotal;
+    } else {
+        calculatedSubtotal = this.subtotal || this.totalAmount || 0;
+        this.subtotal = calculatedSubtotal;
+    }
+
+    let totalDiscount = 0;
+    if (this.appliedCoupon && Number(this.appliedCoupon.discountAmount) > 0) {
+        totalDiscount += Number(this.appliedCoupon.discountAmount);
+    }
+    if (this.appliedLoyaltyReward && Number(this.appliedLoyaltyReward.discountAmount) > 0) {
+        totalDiscount += Number(this.appliedLoyaltyReward.discountAmount);
+    }
+    if (this.discountAmount !== undefined && Number(this.discountAmount) > totalDiscount) {
+        totalDiscount = Number(this.discountAmount);
+    }
+    this.discountAmount = totalDiscount;
+    this.totalAmount = Math.max(0, calculatedSubtotal - totalDiscount);
 })
 
 // Hot query paths: per-user order lists and the KDS createdAt sort

@@ -17,6 +17,8 @@ export const PLANS = {
       advancedAnalytics: false,
       exportData: false,
       prioritySupport: false,
+      marketingAndLoyalty: false,
+      customerRetentionAnalytics: false,
     },
   },
   growth: {
@@ -32,6 +34,8 @@ export const PLANS = {
       advancedAnalytics: true,
       exportData: true,
       prioritySupport: false,
+      marketingAndLoyalty: true,
+      customerRetentionAnalytics: true,
     },
   },
   premium: {
@@ -47,6 +51,8 @@ export const PLANS = {
       advancedAnalytics: true,
       exportData: true,
       prioritySupport: true,
+      marketingAndLoyalty: true,
+      customerRetentionAnalytics: true,
     },
   },
 };

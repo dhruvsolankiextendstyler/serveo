@@ -50,6 +50,13 @@ class _DashboardPageState extends State<DashboardPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<OrderProvider>().fetchNotifications();
+        RestaurantProvider? restProvider;
+        try {
+          restProvider = context.read<RestaurantProvider>();
+        } catch (_) {}
+        final restId = restProvider?.config.id;
+        context.read<MenuProvider>().fetchCampaigns(restaurantId: restId);
+        context.read<MenuProvider>().fetchRecommendations(restaurantId: restId);
       }
     });
   }
@@ -340,6 +347,238 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  Widget _buildCampaignsBanner(BuildContext context, MenuProvider menuProvider, bool isDark) {
+    final campaigns = menuProvider.activeCampaigns;
+    if (campaigns.isEmpty) return const SizedBox.shrink();
+
+    final c = campaigns.first;
+    final title = c['title']?.toString() ?? "Special Offer";
+    final desc = c['description']?.toString() ?? "";
+    final code = c['couponCode']?.toString() ?? "";
+    final terms = c['termsAndConditions']?.toString() ?? "Valid for a limited time at participating restaurant.";
+
+    return Container(
+      key: const Key('active_campaigns_banner'),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFFB45309).withValues(alpha: 0.35), const Color(0xFF1E1E1E)]
+              : [const Color(0xFFFDE68A), Colors.amber.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD97706).withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.celebration_outlined, color: Color(0xFFD97706), size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : const Color(0xFF1F2937),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.info_outline, size: 16),
+                      tooltip: "Terms & Conditions",
+                      color: isDark ? Colors.white60 : Colors.black54,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (dialogCtx) => AlertDialog(
+                            title: Text(title),
+                            content: Text(terms),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dialogCtx),
+                                child: const Text("Got it"),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                if (desc.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    desc,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+                if (code.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD97706).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFD97706)),
+                    ),
+                    child: Text(
+                      "Promo Code: $code",
+                      style: const TextStyle(
+                        color: Color(0xFFD97706),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendationsSection(
+    BuildContext context,
+    MenuProvider menuProvider,
+    OrderProvider orderProvider,
+    bool isDark,
+  ) {
+    final items = menuProvider.recommendedItems;
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            const Icon(Icons.recommend, size: 16, color: Color(0xFFD97706)),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                menuProvider.recommendationReason.toUpperCase(),
+                style: const TextStyle(
+                  color: Color(0xFFD97706),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.1,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 95,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return Container(
+                width: 200,
+                margin: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.circle,
+                                size: 8,
+                                color: item.isVeg ? Colors.green : Colors.red,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  item.itemName,
+                                  style: TextStyle(
+                                    color: primaryTextColor,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "₹${item.itemPrice}",
+                            style: const TextStyle(
+                              color: Color(0xFFD97706),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        orderProvider.addToCart(item, context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellow,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      ),
+                      child: const Text("Add", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final menuProvider = context.watch<MenuProvider>();
@@ -510,6 +749,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                             const SizedBox(height: 10),
                           ],
+
+                          // 🔹 PROMOTIONAL CAMPAIGNS BANNER (Phase 6)
+                          _buildCampaignsBanner(context, menuProvider, isDark),
 
                           // 🔹 SEARCH INPUT FIELD
                           Container(
@@ -697,6 +939,10 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                           ),
                           const SizedBox(height: 8),
+
+                          // 🔹 PERSONALIZED RECOMMENDATIONS (Phase 6)
+                          if (!isSearchingOrFiltered)
+                            _buildRecommendationsSection(context, menuProvider, orderProvider, isDark),
                         ],
                       ),
                     ),

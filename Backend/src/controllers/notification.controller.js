@@ -94,3 +94,57 @@ export const markAllNotificationsReadController = async (req) => {
 
     return { message: "All notifications marked as read" };
 };
+
+export const getNotificationPreferencesController = async (req) => {
+    const uid = req.user?.uid;
+    const email = req.user?.email;
+
+    let user = await User.findOne({ uid });
+    if (!user && email) {
+        user = await User.findOne({ email });
+    }
+    if (!user) {
+        return {
+            preferences: {
+                orders: true,
+                promotional: true,
+            },
+        };
+    }
+
+    return {
+        preferences: user.notificationPreferences || {
+            orders: true,
+            promotional: true,
+        },
+    };
+};
+
+export const updateNotificationPreferencesController = async (req) => {
+    const uid = req.user?.uid;
+    const email = req.user?.email;
+    const { orders, promotional } = req.body;
+
+    let user = await User.findOne({ uid });
+    if (!user && email) {
+        user = await User.findOne({ email });
+    }
+    if (!user) {
+        const error = new Error("User not found");
+        error.status = 401;
+        throw error;
+    }
+
+    if (!user.notificationPreferences) {
+        user.notificationPreferences = { orders: true, promotional: true };
+    }
+
+    if (orders !== undefined) user.notificationPreferences.orders = Boolean(orders);
+    if (promotional !== undefined) user.notificationPreferences.promotional = Boolean(promotional);
+
+    await user.save();
+    return {
+        message: "Notification preferences updated",
+        preferences: user.notificationPreferences,
+    };
+};

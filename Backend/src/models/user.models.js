@@ -32,6 +32,16 @@ const userSchema = new mongoose.Schema(
         sapId : {
             type: String,
             required: false
+        },
+        notificationPreferences: {
+            orders: {
+                type: Boolean,
+                default: true
+            },
+            promotional: {
+                type: Boolean,
+                default: true
+            }
         }
     },
     {

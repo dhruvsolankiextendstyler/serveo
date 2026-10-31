@@ -431,7 +431,9 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget build(BuildContext context) {
     final orderProvider = context.watch<OrderProvider>();
     final isDark = context.watch<ThemeProvider>().isDark;
-    final total = orderProvider.getTotal();
+    final total = orderProvider.getFinalPayableTotal();
+    final subtotal = orderProvider.getTotal();
+    final totalDiscount = orderProvider.totalDiscounts;
 
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
@@ -520,15 +522,18 @@ class _PaymentPageState extends State<PaymentPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Total Amount",
+                                totalDiscount > 0 ? "Total Payable (Saved ₹${totalDiscount.round()})" : "Total Amount",
                                 style: TextStyle(
-                                  color: secondaryTextColor,
+                                  color: totalDiscount > 0 ? const Color(0xFF16A34A) : secondaryTextColor,
                                   fontSize: 13,
+                                  fontWeight: totalDiscount > 0 ? FontWeight.bold : FontWeight.normal,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "${orderProvider.orderItems.length} items in tray",
+                                totalDiscount > 0
+                                    ? "${orderProvider.orderItems.length} items (Subtotal ₹$subtotal)"
+                                    : "${orderProvider.orderItems.length} items in tray",
                                 style: TextStyle(
                                   color: primaryTextColor,
                                   fontSize: 14,

@@ -1,5 +1,9 @@
 import { Order } from "../models/order.models.js";
 import { Item } from "../models/item.models.js";
+import { LoyaltyLedger } from "../models/loyalty.models.js";
+import { Coupon } from "../models/coupon.models.js";
+import { Campaign } from "../models/campaign.models.js";
+import { ReferralRecord } from "../models/referral.models.js";
 
 // Asia/Kolkata timezone offset is UTC+05:30 (+330 minutes)
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -890,18 +894,188 @@ export async function getPaymentAnalyticsController(req, res) {
   }
 }
 
+/**
+ * Computes Customer Retention, Segmentation & Marketing metrics.
+ * Uses real persisted data for New vs Returning customers, repeat order rate,
+ * coupons, loyalty points, and referral conversions.
+ */
+export async function computeCustomerRetentionData(timeframe = "today", startDate = null, endDate = null, restaurantId = null) {
+  const { current } = getISTDateRanges(timeframe, startDate, endDate);
+  const restFilter = getRestaurantFilter(restaurantId);
+  const revenueFilter = getSuccessfulRevenueFilter();
+
+  // 1. Fetch all verified orders in current range
+  const orders = await Order.find({
+    createdAt: { $gte: current.start, $lte: current.end },
+    ...restFilter,
+    ...revenueFilter,
+  }).select("userId subtotal discountAmount totalAmount appliedCoupon appliedLoyaltyReward createdAt").lean();
+
+  const userIds = [...new Set(orders.map((o) => o.userId?.toString()).filter(Boolean))];
+  const totalActiveCustomers = userIds.length;
+
+  let newCustomers = 0;
+  let returningCustomers = 0;
+
+  if (totalActiveCustomers > 0) {
+    // Find all users who had at least 1 verified order before current.start
+    const priorUserIds = await Order.distinct("userId", {
+      userId: { $in: userIds },
+      ...restFilter,
+      ...revenueFilter,
+      createdAt: { $lt: current.start },
+    });
+    const priorSet = new Set(priorUserIds.map((id) => id.toString()));
+
+    userIds.forEach((uid) => {
+      if (priorSet.has(uid)) {
+        returningCustomers++;
+      } else {
+        newCustomers++;
+      }
+    });
+  }
+
+  const repeatOrderRate = totalActiveCustomers > 0
+    ? Math.round((returningCustomers / totalActiveCustomers) * 1000) / 10
+    : 0;
+
+  const grossSales = orders.reduce((sum, o) => sum + (Number(o.subtotal) || Number(o.totalAmount) || 0), 0);
+  const totalDiscounts = orders.reduce((sum, o) => sum + (Number(o.discountAmount) || 0), 0);
+  const netPaidRevenue = orders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+  const totalVerifiedOrders = orders.length;
+
+  const aov = totalVerifiedOrders > 0 ? Math.round(netPaidRevenue / totalVerifiedOrders) : 0;
+  const orderFrequency = totalActiveCustomers > 0 ? Math.round((totalVerifiedOrders / totalActiveCustomers) * 10) / 10 : 0;
+
+  // 2. Coupon metrics
+  const couponOrders = orders.filter((o) => o.appliedCoupon && o.appliedCoupon.code);
+  const couponRedemptions = couponOrders.length;
+  const couponDiscountsTotal = couponOrders.reduce((sum, o) => sum + (Number(o.appliedCoupon.discountAmount) || 0), 0);
+  const couponAttributedSales = couponOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+
+  const couponCodeMap = {};
+  couponOrders.forEach((o) => {
+    const code = o.appliedCoupon.code;
+    if (!couponCodeMap[code]) {
+      couponCodeMap[code] = { code, timesRedeemed: 0, discountTotal: 0, netSales: 0 };
+    }
+    couponCodeMap[code].timesRedeemed += 1;
+    couponCodeMap[code].discountTotal += (Number(o.appliedCoupon.discountAmount) || 0);
+    couponCodeMap[code].netSales += (Number(o.totalAmount) || 0);
+  });
+
+  // 3. Loyalty metrics
+  const loyaltyMatch = {
+    createdAt: { $gte: current.start, $lte: current.end },
+  };
+  if (restaurantId) loyaltyMatch.restaurantId = restaurantId;
+
+  const loyaltyStats = await LoyaltyLedger.aggregate([
+    { $match: loyaltyMatch },
+    {
+      $group: {
+        _id: "$transactionType",
+        totalPoints: { $sum: "$points" },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  let loyaltyPointsEarned = 0;
+  let loyaltyPointsRedeemed = 0;
+  loyaltyStats.forEach((stat) => {
+    if (stat._id === "EARN" || stat._id === "BONUS_REFERRAL") {
+      loyaltyPointsEarned += stat.totalPoints;
+    } else if (stat._id === "REDEEM") {
+      loyaltyPointsRedeemed += Math.abs(stat.totalPoints);
+    }
+  });
+
+  // 4. Referral conversions
+  const referralMatch = {
+    createdAt: { $gte: current.start, $lte: current.end },
+  };
+  if (restaurantId) referralMatch.restaurantId = restaurantId;
+
+  const referralRecords = await ReferralRecord.find(referralMatch).lean();
+  const totalReferrals = referralRecords.length;
+  const convertedReferrals = referralRecords.filter((r) => r.status === "converted").length;
+  const referralConversionRate = totalReferrals > 0 ? Math.round((convertedReferrals / totalReferrals) * 100) : 0;
+
+  // 5. Campaign performance
+  const campaignMatch = {};
+  if (restaurantId) campaignMatch.restaurantId = restaurantId;
+  const campaigns = await Campaign.find(campaignMatch).select("title viewCount clickCount couponCode").lean();
+  const campaignPerformance = campaigns.map((c) => ({
+    title: c.title,
+    viewCount: c.viewCount || 0,
+    clickCount: c.clickCount || 0,
+    ctr: c.viewCount > 0 ? Math.round(((c.clickCount || 0) / c.viewCount) * 1000) / 10 : 0,
+    couponCode: c.couponCode || "",
+    couponUsage: c.couponCode && couponCodeMap[c.couponCode] ? couponCodeMap[c.couponCode].timesRedeemed : 0,
+  }));
+
+  return {
+    timeframe: current.label,
+    customers: {
+      totalActive: totalActiveCustomers,
+      newCustomers,
+      returningCustomers,
+      repeatOrderRate,
+      orderFrequency,
+    },
+    revenue: {
+      grossSales,
+      totalDiscounts,
+      netPaidRevenue,
+      averageOrderValue: aov,
+      totalOrders: totalVerifiedOrders,
+    },
+    coupons: {
+      redemptionCount: couponRedemptions,
+      discountTotal: couponDiscountsTotal,
+      attributedSales: couponAttributedSales,
+      breakdown: Object.values(couponCodeMap),
+    },
+    loyalty: {
+      pointsEarned: loyaltyPointsEarned,
+      pointsRedeemed: loyaltyPointsRedeemed,
+    },
+    referrals: {
+      totalReferrals,
+      convertedReferrals,
+      conversionRate: referralConversionRate,
+    },
+    campaigns: campaignPerformance,
+  };
+}
+
+export async function getRetentionAnalyticsController(req, res) {
+  try {
+    const { timeframe = "today", startDate, endDate } = req.query;
+    const restaurantId = req.restaurantId || req.query.restaurantId;
+    const data = await computeCustomerRetentionData(timeframe, startDate, endDate, restaurantId);
+    res.json(data);
+  } catch (error) {
+    console.error("Retention Analytics Error:", error);
+    res.status(400).json({ error: error.message });
+  }
+}
+
 export async function getAnalyticsDashboardController(req, res) {
   try {
     const { timeframe = "today", startDate, endDate, sortBy = "quantity" } = req.query;
     const restaurantId = req.restaurantId || req.query.restaurantId;
 
-    const [overview, sales, orders, items, peakHours, payments] = await Promise.all([
+    const [overview, sales, orders, items, peakHours, payments, retention] = await Promise.all([
       computeOverviewData(timeframe, startDate, endDate, restaurantId),
       computeSalesChartData(timeframe, startDate, endDate, restaurantId),
       computeOrderPerformanceData(timeframe, startDate, endDate, restaurantId),
       computePopularItemsData(timeframe, startDate, endDate, sortBy, restaurantId),
       computePeakHoursData(timeframe, startDate, endDate, restaurantId),
-      computePaymentAnalyticsData(timeframe, startDate, endDate, restaurantId)
+      computePaymentAnalyticsData(timeframe, startDate, endDate, restaurantId),
+      computeCustomerRetentionData(timeframe, startDate, endDate, restaurantId),
     ]);
 
     res.json({
@@ -910,7 +1084,8 @@ export async function getAnalyticsDashboardController(req, res) {
       orders,
       items,
       peakHours,
-      payments
+      payments,
+      retention,
     });
   } catch (error) {
     console.error("Analytics Dashboard Error:", error);

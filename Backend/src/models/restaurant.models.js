@@ -1,5 +1,76 @@
 import mongoose from "mongoose";
 
+const loyaltyRewardSchema = new mongoose.Schema(
+  {
+    rewardId: { type: String, required: true },
+    title: { type: String, required: true },
+    description: { type: String, default: "" },
+    pointsRequired: { type: Number, required: true, min: 1 },
+    discountType: { type: String, enum: ["flat", "percentage"], default: "flat" },
+    discountValue: { type: Number, required: true, min: 1 },
+    maxDiscountAmount: { type: Number, default: null },
+    minOrderValue: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
+const loyaltyProgramSchema = new mongoose.Schema(
+  {
+    isEnabled: { type: Boolean, default: true },
+    pointsPerRupee: { type: Number, default: 0.1 }, // e.g. 1 point for every ₹10 spent
+    minimumOrderValueForEarn: { type: Number, default: 50 },
+    canEarnOnDiscountedOrders: { type: Boolean, default: false },
+    rewards: {
+      type: [loyaltyRewardSchema],
+      default: () => [
+        {
+          rewardId: "rew_flat_25",
+          title: "₹25 Off Your Order",
+          description: "Redeem 100 points for a ₹25 discount",
+          pointsRequired: 100,
+          discountType: "flat",
+          discountValue: 25,
+          minOrderValue: 75,
+          isActive: true,
+        },
+        {
+          rewardId: "rew_flat_50",
+          title: "₹50 Off Your Order",
+          description: "Redeem 200 points for a ₹50 discount",
+          pointsRequired: 200,
+          discountType: "flat",
+          discountValue: 50,
+          minOrderValue: 150,
+          isActive: true,
+        },
+        {
+          rewardId: "rew_pct_15",
+          title: "15% Off Your Order",
+          description: "Redeem 150 points for 15% off (up to ₹60)",
+          pointsRequired: 150,
+          discountType: "percentage",
+          discountValue: 15,
+          maxDiscountAmount: 60,
+          minOrderValue: 100,
+          isActive: true,
+        },
+      ],
+    },
+  },
+  { _id: false }
+);
+
+const referralProgramSchema = new mongoose.Schema(
+  {
+    isEnabled: { type: Boolean, default: true },
+    referrerPoints: { type: Number, default: 50 },
+    refereePoints: { type: Number, default: 25 },
+    minOrderValueForConversion: { type: Number, default: 100 },
+  },
+  { _id: false }
+);
+
 const operatingHourSchema = new mongoose.Schema(
   {
     day: {
@@ -245,6 +316,24 @@ const restaurantSchema = new mongoose.Schema(
           isActive: true,
         },
       ],
+    },
+    loyaltyProgram: {
+      type: loyaltyProgramSchema,
+      default: () => ({
+        isEnabled: true,
+        pointsPerRupee: 0.1,
+        minimumOrderValueForEarn: 50,
+        canEarnOnDiscountedOrders: false,
+      }),
+    },
+    referralProgram: {
+      type: referralProgramSchema,
+      default: () => ({
+        isEnabled: true,
+        referrerPoints: 50,
+        refereePoints: 25,
+        minOrderValueForConversion: 100,
+      }),
     },
     subscription: {
       type: subscriptionSchema,

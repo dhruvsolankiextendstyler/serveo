@@ -3,6 +3,8 @@ import { authCheck } from "../middlewares/authCheck.js"
 import { signupController } from "../controllers/signup.controller.js"
 import { loginController } from "../controllers/login.controller.js"
 import { updateFcmToken, clearFcmToken } from "../controllers/fcm.controller.js";
+import { getNotificationPreferencesController, updateNotificationPreferencesController } from "../controllers/notification.controller.js";
+import { getCustomerReferralController, applyReferralCodeController } from "../controllers/referral.controller.js";
 
 export const userRoute = express.Router()
 
@@ -34,3 +36,27 @@ userRoute.get('/login', authCheck, async (req,res) => {
 userRoute.patch("/update-fcm", authCheck, updateFcmToken);
 
 userRoute.patch("/clear-fcm", authCheck, clearFcmToken);
+
+// 🔹 Customer Notification Preferences
+userRoute.get("/notification-preferences", authCheck, async (req, res) => {
+    try {
+        const result = await getNotificationPreferencesController(req);
+        res.json(result);
+    } catch (error) {
+        res.status(error.status || 500).json({ error: error.message });
+    }
+});
+
+userRoute.patch("/notification-preferences", authCheck, async (req, res) => {
+    try {
+        const result = await updateNotificationPreferencesController(req);
+        res.json(result);
+    } catch (error) {
+        res.status(error.status || 500).json({ error: error.message });
+    }
+});
+
+// 🔹 Customer Referral System
+userRoute.get("/referral", authCheck, getCustomerReferralController);
+userRoute.post("/apply-referral", authCheck, applyReferralCodeController);
+

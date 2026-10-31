@@ -17,7 +17,8 @@ const notificationSchema = new mongoose.Schema(
         orderId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Order',
-            required: true,
+            required: false,
+            default: null,
             index: true
         },
         title: {
@@ -39,9 +40,19 @@ const notificationSchema = new mongoose.Schema(
                 "order_cancelled",
                 "payment_pending",
                 "payment_verified",
-                "payment_rejected"
+                "payment_rejected",
+                "promotion",
+                "coupon_expiring",
+                "reward_unlocked",
+                "points_credited",
+                "referral_reward",
+                "special_offer"
             ],
             default: "order_placed"
+        },
+        metadata: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {}
         },
         isRead: {
             type: Boolean,

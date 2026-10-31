@@ -8,7 +8,8 @@ import {
   getPeakHoursController,
   getPaymentAnalyticsController,
   getAnalyticsDashboardController,
-  getAnalyticsExportController
+  getAnalyticsExportController,
+  getRetentionAnalyticsController
 } from "../controllers/analytics.controller.js";
 
 export const analyticsRoute = express.Router();
@@ -37,6 +38,9 @@ analyticsRoute.get("/peak-hours", getPeakHoursController);
 
 // 6. Payment Analytics & UPI Verification Claims
 analyticsRoute.get("/payments", getPaymentAnalyticsController);
+
+// 6b. Customer Retention & Segmentation Analytics
+analyticsRoute.get("/retention", getRetentionAnalyticsController);
 
 // 7. CSV Report Export (Requires plan exportData entitlement)
 analyticsRoute.get("/export", requirePlanFeature("exportData"), getAnalyticsExportController);

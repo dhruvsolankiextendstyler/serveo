@@ -15,6 +15,8 @@ import { trackOrderController } from '../controllers/trackOrder.controller.js'
 
 import { getUserNotificationsController, markNotificationReadController, markAllNotificationsReadController } from '../controllers/notification.controller.js'
 import { submitFeedbackController, getOrderFeedbackController, getAdminFeedbackController } from '../controllers/feedback.controller.js'
+import { validateCouponController } from '../controllers/coupon.controller.js'
+import { getCustomerLoyaltyController } from '../controllers/loyalty.controller.js'
 import { Order } from '../models/order.models.js'
 
 export const orderRoute = express.Router()
@@ -119,6 +121,10 @@ orderRoute.get("/feedback/order/:orderId", authCheck, async (req, res) => {
         res.status(error.status || 400).json({ error: error.message });
     }
 })
+
+// 🔹 2f. COUPONS & LOYALTY (Customer checkout & rewards)
+orderRoute.post("/coupon/validate", authCheck, validateCouponController);
+orderRoute.get("/loyalty/customer", authCheck, getCustomerLoyaltyController);
 
 // 🔹 3. CREATE ORDER (Customer, protected)
 orderRoute.post("/add", authCheck, async (req,res) => {

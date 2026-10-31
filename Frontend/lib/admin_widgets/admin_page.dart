@@ -8,6 +8,7 @@ import '../pages/login_page.dart';
 import 'admin_history_page.dart';
 import 'admin_live_page.dart';
 import 'admin_menu_list_page.dart';
+import 'admin_marketing_page.dart';
 import 'admin_notification_overlay.dart';
 import 'admin_order_details.dart';
 import 'admin_report_page.dart';
@@ -141,7 +142,13 @@ class _AdminPageState extends State<AdminPage> {
       navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: "Analytics"));
     }
 
-    // 5. Business Settings, Staff & Subscription (Owner only)
+    // 5. Marketing, Loyalty & Retention (Owner, Manager)
+    if (role == 'owner' || role == 'manager') {
+      screens.add(const AdminMarketingPage());
+      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.campaign_outlined), label: "Marketing"));
+    }
+
+    // 6. Business Settings, Staff & Subscription (Owner only)
     if (role == 'owner') {
       screens.add(const AdminSettingsPage());
       navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.storefront_outlined), label: "Settings"));
@@ -262,6 +269,8 @@ class _AdminPageState extends State<AdminPage> {
       bottomNavigationBar: navItems.length > 1
           ? BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
+              selectedFontSize: 11,
+              unselectedFontSize: 10,
               backgroundColor: isDark ? const Color(0xFF181818) : Colors.white,
               selectedItemColor: isDark ? Colors.yellow : const Color(0xFFD97706),
               unselectedItemColor: isDark ? Colors.white60 : const Color(0xFF6B7280),

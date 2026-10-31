@@ -214,6 +214,8 @@ class SubscriptionInfo {
   final int staffMax;
   final bool allowAdvancedAnalytics;
   final bool allowExport;
+  final bool allowMarketingAndLoyalty;
+  final bool allowCustomerRetentionAnalytics;
 
   SubscriptionInfo({
     required this.planId,
@@ -231,6 +233,8 @@ class SubscriptionInfo {
     required this.staffMax,
     this.allowAdvancedAnalytics = false,
     this.allowExport = false,
+    this.allowMarketingAndLoyalty = false,
+    this.allowCustomerRetentionAnalytics = false,
   });
 
   factory SubscriptionInfo.fromJson(Map<String, dynamic> json) {
@@ -241,8 +245,9 @@ class SubscriptionInfo {
     final staff = usage['staffAccounts'] is Map ? usage['staffAccounts'] as Map : {};
     final features = plan['features'] is Map ? plan['features'] as Map : {};
 
+    final planIdStr = (plan['id'] ?? 'starter').toString();
     return SubscriptionInfo(
-      planId: (plan['id'] ?? 'starter').toString(),
+      planId: planIdStr,
       planName: (plan['name'] ?? 'Starter').toString(),
       planDescription: (plan['description'] ?? '').toString(),
       status: (sub['status'] ?? 'active').toString(),
@@ -257,6 +262,8 @@ class SubscriptionInfo {
       staffMax: int.tryParse(staff['max']?.toString() ?? '2') ?? 2,
       allowAdvancedAnalytics: features['advancedAnalytics'] == true,
       allowExport: features['exportData'] == true,
+      allowMarketingAndLoyalty: features['marketingAndLoyalty'] == true || (planIdStr != 'starter' && planIdStr.isNotEmpty),
+      allowCustomerRetentionAnalytics: features['customerRetentionAnalytics'] == true || (planIdStr != 'starter' && planIdStr.isNotEmpty),
     );
   }
 }

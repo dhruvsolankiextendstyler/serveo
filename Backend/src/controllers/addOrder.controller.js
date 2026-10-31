@@ -3,6 +3,9 @@ import { User } from '../models/user.models.js';
 import { Item } from '../models/item.models.js';
 import { Restaurant } from '../models/restaurant.models.js';
 import { Notification } from '../models/notification.models.js';
+import { Coupon } from '../models/coupon.models.js';
+import { LoyaltyAccount, LoyaltyLedger } from '../models/loyalty.models.js';
+import { validateAndCalculateCouponDiscount } from './coupon.controller.js';
 import { checkRestaurantAvailability } from '../utils/restaurant_availability.js';
 import { logger } from '../utils/logger.js';
 import mongoose from 'mongoose';
@@ -39,7 +42,7 @@ export const addOrderController = async (req) => {
         throw new Error("Unable to associate user account with order");
     }
 
-    const { orderItems, paymentMethod = "COD", restaurantId, restaurantSlug, idempotencyKey: bodyIdempKey } = req.body;
+    const { orderItems, paymentMethod = "COD", restaurantId, restaurantSlug, idempotencyKey: bodyIdempKey, couponCode, selectedRewardId } = req.body;
 
     // Idempotency Guard: Prevent duplicate orders from network retries or repeated button taps
     const idempotencyKey = (bodyIdempKey || req.headers?.["x-idempotency-key"] || req.headers?.["idempotency-key"] || "").trim();
@@ -175,6 +178,127 @@ export const addOrderController = async (req) => {
         });
     }
 
+    // 4. Coupon Validation & Processing (Authoritative backend calculation)
+    let appliedCouponData = null;
+    let couponDiscount = 0;
+
+    if (couponCode && typeof couponCode === "string" && couponCode.trim()) {
+        const couponRes = await validateAndCalculateCouponDiscount({
+            couponCode: couponCode.trim(),
+            restaurantId: resolvedRestaurantId,
+            userId: user._id,
+            orderItems: validatedOrderItems,
+            subtotal: serverTotal,
+        });
+
+        if (!couponRes.isValid) {
+            const err = new Error(couponRes.message);
+            err.status = 400;
+            throw err;
+        }
+
+        // Atomically increment usage count while respecting usage limit
+        let usageFilter = { _id: couponRes.coupon._id };
+        if (couponRes.coupon.totalUsageLimit !== null && couponRes.coupon.totalUsageLimit !== undefined) {
+            usageFilter.usedCount = { $lt: couponRes.coupon.totalUsageLimit };
+        }
+
+        const updatedCoupon = await Coupon.findOneAndUpdate(
+            usageFilter,
+            { $inc: { usedCount: 1 } },
+            { new: true }
+        );
+
+        if (!updatedCoupon && couponRes.coupon.totalUsageLimit !== null) {
+            const err = new Error("This coupon reached its maximum total usage limit before your order could be placed.");
+            err.status = 400;
+            throw err;
+        }
+
+        couponDiscount = couponRes.discountAmount;
+        appliedCouponData = {
+            couponId: couponRes.coupon._id,
+            code: couponRes.coupon.code,
+            discountType: couponRes.coupon.discountType,
+            discountAmount: couponDiscount,
+        };
+    }
+
+    // 5. Loyalty Reward Redemption Processing
+    let appliedLoyaltyRewardData = null;
+    let loyaltyDiscount = 0;
+    let loyaltyAccountAfterRedemption = null;
+
+    if (selectedRewardId && typeof selectedRewardId === "string" && selectedRewardId.trim()) {
+        const rewardIdTrimmed = selectedRewardId.trim();
+        const loyaltyConfig = restaurant?.loyaltyProgram;
+
+        if (!loyaltyConfig || loyaltyConfig.isEnabled === false) {
+            const err = new Error("Loyalty rewards are not currently active for this restaurant");
+            err.status = 400;
+            throw err;
+        }
+
+        const reward = (loyaltyConfig.rewards || []).find(
+            (r) => r.rewardId === rewardIdTrimmed && r.isActive !== false
+        );
+
+        if (!reward) {
+            const err = new Error("Selected loyalty reward is not valid or has been deactivated");
+            err.status = 400;
+            throw err;
+        }
+
+        if (reward.minOrderValue > 0 && serverTotal < reward.minOrderValue) {
+            const err = new Error(`Minimum order of ₹${reward.minOrderValue} required to redeem '${reward.title}'`);
+            err.status = 400;
+            throw err;
+        }
+
+        // Atomically deduct points from customer loyalty account to prevent duplicate/concurrent redemption
+        const updatedAccount = await LoyaltyAccount.findOneAndUpdate(
+            {
+                restaurantId: resolvedRestaurantId,
+                userId: user._id,
+                currentBalance: { $gte: reward.pointsRequired },
+            },
+            {
+                $inc: {
+                    currentBalance: -reward.pointsRequired,
+                    totalRedeemed: reward.pointsRequired,
+                },
+            },
+            { new: true }
+        );
+
+        if (!updatedAccount) {
+            const err = new Error(`Insufficient loyalty points. '${reward.title}' requires ${reward.pointsRequired} points.`);
+            err.status = 400;
+            throw err;
+        }
+
+        loyaltyAccountAfterRedemption = updatedAccount;
+
+        // Calculate reward discount
+        if (reward.discountType === "percentage") {
+            const rawDiscount = (serverTotal * reward.discountValue) / 100;
+            loyaltyDiscount = reward.maxDiscountAmount ? Math.min(reward.maxDiscountAmount, rawDiscount) : rawDiscount;
+        } else {
+            loyaltyDiscount = Math.min(serverTotal, reward.discountValue);
+        }
+        loyaltyDiscount = Math.round(loyaltyDiscount * 100) / 100;
+
+        appliedLoyaltyRewardData = {
+            rewardId: reward.rewardId,
+            title: reward.title,
+            pointsRedeemed: reward.pointsRequired,
+            discountAmount: loyaltyDiscount,
+        };
+    }
+
+    const totalDiscounts = couponDiscount + loyaltyDiscount;
+    const finalPayableTotal = Math.max(0, serverTotal - totalDiscounts);
+
     let initialPaymentStatus = "Pending";
     let initialOrderStatus = "Processing";
 
@@ -199,7 +323,11 @@ export const addOrderController = async (req) => {
             email: user.email || ""
         },
         orderItems: validatedOrderItems,
-        totalAmount: serverTotal,
+        subtotal: serverTotal,
+        discountAmount: totalDiscounts,
+        appliedCoupon: appliedCouponData || undefined,
+        appliedLoyaltyReward: appliedLoyaltyRewardData || undefined,
+        totalAmount: finalPayableTotal,
         paymentMethod: paymentMethod,
         paymentStatus: initialPaymentStatus,
         status: initialOrderStatus,
@@ -209,6 +337,27 @@ export const addOrderController = async (req) => {
 
     await newOrder.save();
 
+    // If loyalty reward was redeemed, record transaction in auditable ledger
+    if (appliedLoyaltyRewardData && loyaltyAccountAfterRedemption) {
+        try {
+            await LoyaltyLedger.create({
+                restaurantId: resolvedRestaurantId,
+                userId: user._id,
+                orderId: newOrder._id,
+                transactionType: "REDEEM",
+                points: -appliedLoyaltyRewardData.pointsRedeemed,
+                balanceAfter: loyaltyAccountAfterRedemption.currentBalance,
+                description: `Redeemed ${appliedLoyaltyRewardData.pointsRedeemed} points for: ${appliedLoyaltyRewardData.title}`,
+                metadata: {
+                    rewardId: appliedLoyaltyRewardData.rewardId,
+                    discountAmount: appliedLoyaltyRewardData.discountAmount,
+                },
+            });
+        } catch (ledgerErr) {
+            console.error("Failed to write redemption ledger entry:", ledgerErr.message);
+        }
+    }
+
     // Persist in-app notification for the customer
     try {
         await Notification.create({
@@ -216,7 +365,7 @@ export const addOrderController = async (req) => {
             userId: user._id,
             orderId: newOrder._id,
             title: "Order Placed Successfully",
-            body: `Order #${newOrder._id.toString().slice(-4)} placed for ₹${serverTotal} (${paymentMethod}). Estimated preparation time: ~${estimatedMinutes} mins.`,
+            body: `Order #${newOrder._id.toString().slice(-4)} placed for ₹${finalPayableTotal} (${paymentMethod}). Estimated preparation time: ~${estimatedMinutes} mins.`,
             type: "order_placed"
         });
     } catch (notifErr) {

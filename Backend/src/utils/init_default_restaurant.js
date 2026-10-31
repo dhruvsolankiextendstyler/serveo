@@ -119,7 +119,7 @@ export async function initDefaultRestaurant() {
       changed = true;
     }
 
-    if (!defaultRestaurant.subscription || !defaultRestaurant.subscription.planId) {
+    if (!defaultRestaurant.subscription || defaultRestaurant.subscription.planId === "starter" || !defaultRestaurant.subscription.planId) {
       defaultRestaurant.subscription = {
         planId: "growth",
         status: "active",
@@ -128,7 +128,7 @@ export async function initDefaultRestaurant() {
         history: [
           {
             action: "DEFAULT_INIT",
-            fromPlan: "",
+            fromPlan: defaultRestaurant.subscription?.planId || "starter",
             toPlan: "growth",
             actor: "system",
             reason: "Default demo restaurant initialization",

@@ -217,23 +217,21 @@ class _CartPageState extends State<CartPage> {
                     controller: _couponController,
                     textCapitalization: TextCapitalization.characters,
                     style: TextStyle(color: primaryTextColor, fontSize: 13),
-                    decoration: InputDecoration(
+                    decoration: AppTheme.inputDecoration(
+                      isDark: isDark,
                       hintText: "Enter promo code",
-                      hintStyle: TextStyle(
-                        color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
-                        fontSize: 13,
-                      ),
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD97706),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
+                  ),
                   onPressed: orderProvider.isApplyingCoupon
                       ? null
                       : () async {

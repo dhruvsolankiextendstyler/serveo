@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend/admin_utils/admin_order_provider.dart';
 import 'package:provider/provider.dart';
 import '../admin_utils/admin_order.dart';
+import '../utils/theme_provider.dart';
+import '../widgets/serveo_glass_container.dart';
 
 class AdminOrderDetailsPage extends StatefulWidget {
   final AdminOrder order;
@@ -66,7 +68,7 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
     String selectedReason = "Payment not received in bank account";
     final customController = TextEditingController();
 
-    final result = await showDialog<String>(
+    final result = await showGlassDialog<String>(
       context: context,
       builder: (dialogCtx) {
         String currentSelection = selectedReason;
@@ -77,7 +79,7 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: dialogBg,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
               title: const Text(
                 "Reject Payment Verification",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -114,11 +116,10 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                       TextField(
                         controller: customController,
                         maxLines: 2,
-                        decoration: InputDecoration(
+                        decoration: AppTheme.inputDecoration(
+                          isDark: isDark,
                           hintText: "Enter specific rejection reason...",
-                          hintStyle: const TextStyle(fontSize: 12),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.all(10),
+                          isDense: true,
                         ),
                       ),
                     ],

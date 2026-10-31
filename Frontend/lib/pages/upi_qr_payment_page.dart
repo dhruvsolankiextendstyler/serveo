@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../utils/order_provider.dart';
 import '../utils/payment_config.dart';
 import '../utils/theme_provider.dart';
+import '../widgets/serveo_glass_container.dart';
 import 'order_history_page.dart';
 import 'order_tracking_page.dart';
 
@@ -60,7 +61,7 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
   }
 
   void _showClaimSubmittedDialog(BuildContext context, OrderProvider orderProvider) {
-    showDialog(
+    showGlassDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogCtx) {
@@ -70,7 +71,7 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
 
         return AlertDialog(
           backgroundColor: dialogBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
           contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
           content: Column(
             mainAxisSize: MainAxisSize.min,

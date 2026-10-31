@@ -1273,11 +1273,11 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
           TextField(
             controller: _feedbackController,
             maxLines: 2,
-            decoration: InputDecoration(
+            decoration: AppTheme.inputDecoration(
+              isDark: isDark,
               hintText: "Add an optional comment...",
-              hintStyle: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : Colors.grey),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              contentPadding: const EdgeInsets.all(10),
+              isDense: true,
+              contentPadding: const EdgeInsets.all(12),
             ),
           ),
           const SizedBox(height: 12),

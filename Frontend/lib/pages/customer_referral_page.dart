@@ -378,18 +378,11 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                                 controller: _inputCodeController,
                                 textCapitalization: TextCapitalization.characters,
                                 style: TextStyle(color: primaryTextColor, fontSize: 13),
-                                decoration: InputDecoration(
+                                decoration: AppTheme.inputDecoration(
+                                  isDark: isDark,
                                   hintText: "Enter friend's code",
-                                  hintStyle: TextStyle(
-                                    color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
-                                    fontSize: 13,
-                                  ),
                                   isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: borderColor),
-                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                 ),
                               ),
                             ),
@@ -399,7 +392,7 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFD97706),
                                 foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                               ),
                               child: _isSubmittingCode

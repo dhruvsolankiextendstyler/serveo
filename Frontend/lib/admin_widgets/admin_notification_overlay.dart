@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../admin_utils/admin_order.dart';
 import '../admin_utils/admin_order_provider.dart';
+import '../widgets/serveo_glass_container.dart';
 import 'admin_order_details.dart';
 
 class AdminNotificationOverlay {
@@ -132,24 +133,19 @@ class _FloatingAlertWidgetState extends State<_FloatingAlertWidget>
         position: _offsetAnimation,
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: Material(
-            elevation: 12,
-            borderRadius: BorderRadius.circular(16),
-            shadowColor: Colors.black.withValues(alpha: 0.4),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: cardBg,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.amber,
-                  width: 2,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          child: ServeoGlassContainer(
+            blur: 16,
+            borderRadius: BorderRadius.circular(18),
+            color: isDark ? const Color(0xEB1C1C1E) : const Color(0xF2FFFFFF),
+            border: Border.all(
+              color: const Color(0xFFD97706).withValues(alpha: 0.5),
+              width: 1.2,
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                   // Header Row: Pulsing Bell Icon + Title + Dismiss (X)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -334,7 +330,6 @@ class _FloatingAlertWidgetState extends State<_FloatingAlertWidget>
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

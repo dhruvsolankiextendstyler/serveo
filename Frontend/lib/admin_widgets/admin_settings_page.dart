@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../utils/restaurant_provider.dart';
 import '../utils/theme_provider.dart';
 import '../widgets/breakbite_spinner.dart';
+import '../widgets/serveo_glass_container.dart';
 
 class AdminSettingsPage extends StatefulWidget {
   const AdminSettingsPage({super.key});
@@ -403,13 +404,10 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
             const SizedBox(height: 12),
             TextField(
               controller: _pauseReasonController,
-              decoration: InputDecoration(
+              decoration: AppTheme.inputDecoration(
+                isDark: isDark,
                 labelText: "Pause Reason (Customer-facing)",
                 hintText: "e.g. Kitchen rush, back in 20 minutes",
-                filled: true,
-                fillColor: isDark ? const Color(0xFF141414) : const Color(0xFFF9FAFB),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               ),
             ),
             const SizedBox(height: 8),
@@ -578,10 +576,10 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
           TextFormField(
             key: const Key('admin_restaurant_name_input'),
             controller: _nameController,
-            decoration: const InputDecoration(
+            decoration: AppTheme.inputDecoration(
+              isDark: isDark,
               labelText: "Restaurant Name *",
               hintText: "e.g. Serveo Bistro Central",
-              border: OutlineInputBorder(),
             ),
             validator: (v) => (v == null || v.trim().isEmpty) ? "Restaurant name is required" : null,
           ),
@@ -589,10 +587,10 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
           TextFormField(
             controller: _descController,
             maxLines: 2,
-            decoration: const InputDecoration(
+            decoration: AppTheme.inputDecoration(
+              isDark: isDark,
               labelText: "Tagline / Description",
               hintText: "e.g. Fresh meals & quick snacks ready for counter pickup",
-              border: OutlineInputBorder(),
             ),
           ),
         ],
@@ -634,10 +632,10 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
                 child: TextFormField(
                   key: const Key('admin_opening_time_input'),
                   controller: _openTimeController,
-                  decoration: const InputDecoration(
+                  decoration: AppTheme.inputDecoration(
+                    isDark: isDark,
                     labelText: "Opening Time (24h) *",
                     hintText: "09:00",
-                    border: OutlineInputBorder(),
                   ),
                   validator: (v) {
                     final regex = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
@@ -653,10 +651,10 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
                 child: TextFormField(
                   key: const Key('admin_closing_time_input'),
                   controller: _closeTimeController,
-                  decoration: const InputDecoration(
+                  decoration: AppTheme.inputDecoration(
+                    isDark: isDark,
                     labelText: "Closing Time (24h) *",
                     hintText: "22:00",
-                    border: OutlineInputBorder(),
                   ),
                   validator: (v) {
                     final regex = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
@@ -708,11 +706,14 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
           TextFormField(
             controller: _prepTimeController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            decoration: AppTheme.inputDecoration(
+              isDark: isDark,
               labelText: "Default Estimated Preparation Time (Minutes)",
               hintText: "20",
-              border: OutlineInputBorder(),
-              suffixText: "mins",
+              suffixIcon: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                child: Text("mins", style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+              ),
             ),
             validator: (v) {
               final n = int.tryParse(v ?? '');
@@ -743,28 +744,28 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _phoneController,
-            decoration: const InputDecoration(
+            decoration: AppTheme.inputDecoration(
+              isDark: isDark,
               labelText: "Contact Phone",
               hintText: "+91 98765 43210",
-              border: OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: _emailController,
-            decoration: const InputDecoration(
+            decoration: AppTheme.inputDecoration(
+              isDark: isDark,
               labelText: "Support Email",
               hintText: "support@restaurant.com",
-              border: OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: _streetController,
-            decoration: const InputDecoration(
+            decoration: AppTheme.inputDecoration(
+              isDark: isDark,
               labelText: "Street Address",
               hintText: "Central Food Court, Campus Block A",
-              border: OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
@@ -773,21 +774,21 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
               Expanded(
                 child: TextFormField(
                   controller: _cityController,
-                  decoration: const InputDecoration(labelText: "City", border: OutlineInputBorder()),
+                  decoration: AppTheme.inputDecoration(isDark: isDark, labelText: "City"),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextFormField(
                   controller: _stateController,
-                  decoration: const InputDecoration(labelText: "State", border: OutlineInputBorder()),
+                  decoration: AppTheme.inputDecoration(isDark: isDark, labelText: "State"),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextFormField(
                   controller: _postalController,
-                  decoration: const InputDecoration(labelText: "Pincode", border: OutlineInputBorder()),
+                  decoration: AppTheme.inputDecoration(isDark: isDark, labelText: "Pincode"),
                 ),
               ),
             ],
@@ -816,10 +817,10 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
           TextFormField(
             controller: _announcementController,
             maxLines: 2,
-            decoration: const InputDecoration(
+            decoration: AppTheme.inputDecoration(
+              isDark: isDark,
               labelText: "Announcement Banner (Optional)",
               hintText: "e.g. 10% discount on smoothies between 4 PM and 6 PM!",
-              border: OutlineInputBorder(),
             ),
           ),
         ],
@@ -1071,29 +1072,46 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
     final emailController = TextEditingController();
     final nameController = TextEditingController();
     String selectedRole = 'manager';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text("Add Staff Account"),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+          title: const Text("Add Staff Account", style: TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: emailController,
-                decoration: const InputDecoration(labelText: "Staff Email", hintText: "staff@restaurant.com"),
+                decoration: AppTheme.inputDecoration(
+                  isDark: isDark,
+                  labelText: "Staff Email",
+                  hintText: "staff@restaurant.com",
+                  isDense: true,
+                ),
                 keyboardType: TextInputType.emailAddress,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: "Full Name", hintText: "e.g. John Doe"),
+                decoration: AppTheme.inputDecoration(
+                  isDark: isDark,
+                  labelText: "Full Name",
+                  hintText: "e.g. John Doe",
+                  isDense: true,
+                ),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: selectedRole,
-                decoration: const InputDecoration(labelText: "Staff Role"),
+                dropdownColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                decoration: AppTheme.inputDecoration(
+                  isDark: isDark,
+                  labelText: "Staff Role",
+                  isDense: true,
+                ),
                 items: const [
                   DropdownMenuItem(value: 'owner', child: Text("Owner (Full Access)")),
                   DropdownMenuItem(value: 'manager', child: Text("Manager (Operations)")),
@@ -1110,6 +1128,9 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text("Cancel")),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
+              ),
               onPressed: () async {
                 final email = emailController.text.trim();
                 if (email.isEmpty || !email.contains('@')) return;
@@ -1134,15 +1155,22 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
 
   void _showEditRoleDialog(BuildContext context, RestaurantProvider provider, StaffMember member) {
     String selectedRole = member.role;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text("Change Role: ${member.name}"),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+          title: Text("Change Role: ${member.name}", style: const TextStyle(fontWeight: FontWeight.bold)),
           content: DropdownButtonFormField<String>(
             initialValue: selectedRole,
-            decoration: const InputDecoration(labelText: "New Role"),
+            dropdownColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+            decoration: AppTheme.inputDecoration(
+              isDark: isDark,
+              labelText: "New Role",
+              isDense: true,
+            ),
             items: const [
               DropdownMenuItem(value: 'owner', child: Text("Owner (Full Access)")),
               DropdownMenuItem(value: 'manager', child: Text("Manager (Operations)")),
@@ -1157,6 +1185,9 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text("Cancel")),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
+              ),
               onPressed: () async {
                 Navigator.pop(dialogCtx);
                 final success = await provider.updateStaffRole(member.id, selectedRole);

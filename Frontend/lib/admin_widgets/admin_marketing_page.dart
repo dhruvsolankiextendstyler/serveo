@@ -7,6 +7,7 @@ import '../utils/api_config.dart';
 import '../utils/restaurant_provider.dart';
 import '../utils/theme_provider.dart';
 import '../widgets/breakbite_spinner.dart';
+import '../widgets/serveo_glass_container.dart';
 
 class AdminMarketingPage extends StatefulWidget {
   const AdminMarketingPage({super.key});
@@ -225,10 +226,11 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
 
   void _showErrorDialog(String message) {
     if (!mounted) return;
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Error"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+        title: const Text("Error", style: TextStyle(fontWeight: FontWeight.bold)),
         content: Text(message),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("OK")),
@@ -248,17 +250,19 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
     final usageLimitCtrl = TextEditingController(text: "100");
     final perCustomerCtrl = TextEditingController(text: "1");
     final daysValidCtrl = TextEditingController(text: "30");
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
           return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
             title: const Row(
               children: [
                 Icon(Icons.local_offer, color: Color(0xFFD97706)),
                 SizedBox(width: 8),
-                Text("Create New Coupon", style: TextStyle(fontSize: 18)),
+                Text("Create New Coupon", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ],
             ),
             content: SingleChildScrollView(
@@ -270,19 +274,20 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                     TextField(
                       controller: codeCtrl,
                       textCapitalization: TextCapitalization.characters,
-                      decoration: const InputDecoration(
+                      decoration: AppTheme.inputDecoration(
+                        isDark: isDark,
                         labelText: "Coupon Code *",
                         hintText: "e.g. SERVEO20",
-                        border: OutlineInputBorder(),
                         isDense: true,
                       ),
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: discountType,
-                      decoration: const InputDecoration(
+                      dropdownColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                      decoration: AppTheme.inputDecoration(
+                        isDark: isDark,
                         labelText: "Discount Type",
-                        border: OutlineInputBorder(),
                         isDense: true,
                       ),
                       items: const [
@@ -300,11 +305,11 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                     TextField(
                       controller: discountValCtrl,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
+                      decoration: AppTheme.inputDecoration(
+                        isDark: isDark,
                         labelText: discountType == "percentage" || discountType == "first_order"
                             ? "Discount Percentage (%) *"
                             : "Discount Amount (₹) *",
-                        border: const OutlineInputBorder(),
                         isDense: true,
                       ),
                     ),
@@ -312,9 +317,9 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                     TextField(
                       controller: minOrderCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                      decoration: AppTheme.inputDecoration(
+                        isDark: isDark,
                         labelText: "Minimum Order Value (₹)",
-                        border: OutlineInputBorder(),
                         isDense: true,
                       ),
                     ),
@@ -322,9 +327,9 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                     TextField(
                       controller: maxDiscountCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                      decoration: AppTheme.inputDecoration(
+                        isDark: isDark,
                         labelText: "Max Discount Cap (₹, optional)",
-                        border: OutlineInputBorder(),
                         isDense: true,
                       ),
                     ),
@@ -335,9 +340,9 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                           child: TextField(
                             controller: usageLimitCtrl,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
+                            decoration: AppTheme.inputDecoration(
+                              isDark: isDark,
                               labelText: "Total Uses",
-                              border: OutlineInputBorder(),
                               isDense: true,
                             ),
                           ),
@@ -347,9 +352,9 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                           child: TextField(
                             controller: perCustomerCtrl,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
+                            decoration: AppTheme.inputDecoration(
+                              isDark: isDark,
                               labelText: "Per Customer",
-                              border: OutlineInputBorder(),
                               isDense: true,
                             ),
                           ),
@@ -360,9 +365,9 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                     TextField(
                       controller: daysValidCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                      decoration: AppTheme.inputDecoration(
+                        isDark: isDark,
                         labelText: "Validity (Days from now)",
-                        border: OutlineInputBorder(),
                         isDense: true,
                       ),
                     ),
@@ -376,6 +381,7 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD97706),
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
                 ),
                 onPressed: () async {
                   final code = codeCtrl.text.trim().toUpperCase();
@@ -390,15 +396,21 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                   final days = int.tryParse(daysValidCtrl.text.trim()) ?? 30;
                   final validUntil = DateTime.now().add(Duration(days: days)).toIso8601String();
 
+                  final parsedMaxDiscount = maxDiscountCtrl.text.isNotEmpty
+                      ? double.tryParse(maxDiscountCtrl.text.trim())
+                      : null;
                   final body = {
                     "code": code,
                     "discountType": discountType,
                     "discountValue": val,
                     "minOrderValue": double.tryParse(minOrderCtrl.text.trim()) ?? 0,
-                    if (maxDiscountCtrl.text.isNotEmpty)
-                      "maxDiscount": double.tryParse(maxDiscountCtrl.text.trim()),
+                    if (parsedMaxDiscount != null) ...{
+                      "maxDiscountAmount": parsedMaxDiscount,
+                      "maxDiscount": parsedMaxDiscount,
+                    },
                     "totalUsageLimit": int.tryParse(usageLimitCtrl.text.trim()) ?? 100,
                     "perCustomerLimit": int.tryParse(perCustomerCtrl.text.trim()) ?? 1,
+                    "endDate": validUntil,
                     "validUntil": validUntil,
                   };
 
@@ -437,15 +449,17 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
     final bannerCtrl = TextEditingController();
     final couponCtrl = TextEditingController();
     final daysCtrl = TextEditingController(text: "14");
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
         title: const Row(
           children: [
             Icon(Icons.campaign, color: Color(0xFFD97706)),
             SizedBox(width: 8),
-            Text("Create Promotion", style: TextStyle(fontSize: 18)),
+            Text("Create Promotion", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
         content: SingleChildScrollView(
@@ -456,10 +470,10 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
               children: [
                 TextField(
                   controller: titleCtrl,
-                  decoration: const InputDecoration(
+                  decoration: AppTheme.inputDecoration(
+                    isDark: isDark,
                     labelText: "Campaign Title *",
                     hintText: "e.g. Weekend Biryani Feast",
-                    border: OutlineInputBorder(),
                     isDense: true,
                   ),
                 ),
@@ -467,20 +481,20 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 TextField(
                   controller: descCtrl,
                   maxLines: 2,
-                  decoration: const InputDecoration(
+                  decoration: AppTheme.inputDecoration(
+                    isDark: isDark,
                     labelText: "Description",
                     hintText: "Short description shown on customer menu",
-                    border: OutlineInputBorder(),
                     isDense: true,
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: bannerCtrl,
-                  decoration: const InputDecoration(
+                  decoration: AppTheme.inputDecoration(
+                    isDark: isDark,
                     labelText: "Banner Image URL (optional)",
                     hintText: "https://example.com/banner.jpg",
-                    border: OutlineInputBorder(),
                     isDense: true,
                   ),
                 ),
@@ -488,10 +502,10 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 TextField(
                   controller: couponCtrl,
                   textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(
+                  decoration: AppTheme.inputDecoration(
+                    isDark: isDark,
                     labelText: "Associated Coupon Code (optional)",
                     hintText: "e.g. FEAST20",
-                    border: OutlineInputBorder(),
                     isDense: true,
                   ),
                 ),
@@ -499,9 +513,9 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 TextField(
                   controller: daysCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
+                  decoration: AppTheme.inputDecoration(
+                    isDark: isDark,
                     labelText: "Duration (Days)",
-                    border: OutlineInputBorder(),
                     isDense: true,
                   ),
                 ),
@@ -515,6 +529,7 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFD97706),
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
             ),
             onPressed: () async {
               final title = titleCtrl.text.trim();
@@ -999,7 +1014,7 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                             initialValue: pointsPerRupee.toString(),
                             enabled: allowMarketing,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                            decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
                             onChanged: (val) {
                               _loyaltyConfig['pointsPerRupee'] = double.tryParse(val) ?? 0.1;
                             },
@@ -1018,7 +1033,7 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                             initialValue: minOrder.toString(),
                             enabled: allowMarketing,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                            decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
                             onChanged: (val) {
                               _loyaltyConfig['minOrderValue'] = int.tryParse(val) ?? 100;
                             },
@@ -1136,36 +1151,55 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
     final nameCtrl = TextEditingController();
     final pointsCtrl = TextEditingController(text: "100");
     final valCtrl = TextEditingController(text: "50");
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Add Redeemable Reward"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+        title: const Text("Add Redeemable Reward", style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameCtrl,
-              decoration: const InputDecoration(labelText: "Reward Name (e.g. ₹50 Off Order)", border: OutlineInputBorder(), isDense: true),
+              decoration: AppTheme.inputDecoration(
+                isDark: isDark,
+                labelText: "Reward Name",
+                hintText: "e.g. ₹50 Off Order",
+                isDense: true,
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: pointsCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Points Required", border: OutlineInputBorder(), isDense: true),
+              decoration: AppTheme.inputDecoration(
+                isDark: isDark,
+                labelText: "Points Required",
+                isDense: true,
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: valCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Discount Amount (₹)", border: OutlineInputBorder(), isDense: true),
+              decoration: AppTheme.inputDecoration(
+                isDark: isDark,
+                labelText: "Discount Amount (₹)",
+                isDense: true,
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD97706), foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD97706),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
+            ),
             onPressed: () {
               final name = nameCtrl.text.trim();
               final pts = int.tryParse(pointsCtrl.text.trim()) ?? 100;
@@ -1255,7 +1289,7 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                         initialValue: referrerBonus.toString(),
                         enabled: allowMarketing,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                        decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
                         onChanged: (val) {
                           _referralConfig['referrerBonusPoints'] = int.tryParse(val) ?? 50;
                         },
@@ -1274,7 +1308,7 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                         initialValue: refereeBonus.toString(),
                         enabled: allowMarketing,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                        decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
                         onChanged: (val) {
                           _referralConfig['refereeBonusPoints'] = int.tryParse(val) ?? 25;
                         },
@@ -1294,7 +1328,7 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                   initialValue: minOrder.toString(),
                   enabled: allowMarketing,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                  decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
                   onChanged: (val) {
                     _referralConfig['minOrderValueForReward'] = int.tryParse(val) ?? 100;
                   },

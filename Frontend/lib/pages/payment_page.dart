@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../utils/order_provider.dart';
 import '../utils/restaurant_provider.dart';
 import '../utils/theme_provider.dart';
+import '../widgets/serveo_glass_container.dart';
 import 'login_page.dart';
 import 'order_history_page.dart';
 import 'order_tracking_page.dart';
@@ -158,7 +159,7 @@ class _PaymentPageState extends State<PaymentPage> {
             ? createdOrder.id.substring(createdOrder.id.length - 4)
             : "";
 
-        await showDialog(
+        await showGlassDialog(
           context: context,
           barrierDismissible: false,
           builder: (dialogContext) {
@@ -168,7 +169,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
             return AlertDialog(
               backgroundColor: dialogBg,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
               contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -303,7 +304,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
         if (!mounted) return;
 
-        await showDialog(
+        await showGlassDialog(
           context: context,
           barrierDismissible: false,
           builder: (dialogContext) {
@@ -313,7 +314,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
             return AlertDialog(
               backgroundColor: dialogBg,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
               contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
               content: Column(
                 mainAxisSize: MainAxisSize.min,

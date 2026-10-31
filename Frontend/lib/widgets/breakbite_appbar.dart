@@ -4,6 +4,7 @@ import '../pages/order_tracking_page.dart';
 import '../utils/order_provider.dart';
 import '../utils/restaurant_provider.dart';
 import '../utils/theme_provider.dart';
+import 'serveo_glass_container.dart';
 
 class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -19,17 +20,13 @@ class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget {
     final orderProvider = context.read<OrderProvider>();
     orderProvider.fetchNotifications();
 
-    showModalBottomSheet(
+    showGlassBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (modalCtx) {
         return Consumer<OrderProvider>(
           builder: (context, provider, _) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
-            final bg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
             final primaryTextColor = isDark ? Colors.white : const Color(0xFF111827);
             final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF6B7280);
             final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
@@ -38,7 +35,6 @@ class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget {
             final unreadCount = provider.unreadNotificationCount;
 
             return Container(
-              color: bg,
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.75,
               ),

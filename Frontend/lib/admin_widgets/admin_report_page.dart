@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../admin_utils/admin_analytics_provider.dart';
+import '../utils/theme_provider.dart';
 import '../widgets/breakbite_spinner.dart';
+import '../widgets/serveo_glass_container.dart';
 import 'analytics/serveo_peak_hours_chart.dart';
 import 'analytics/serveo_sales_chart.dart';
 
@@ -60,9 +62,10 @@ class _AdminReportPageState extends State<AdminReportPage> {
   }
 
   void _showNetSalesInfoDialog() {
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
         backgroundColor: const Color(0xFF1E1E1E),
         title: const Text("Net Sales Definition", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: const Text(
@@ -1150,6 +1153,7 @@ class _AdminReportPageState extends State<AdminReportPage> {
                 DropdownButton<String>(
                   value: provider.itemSortBy,
                   underline: const SizedBox(),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusDropdown),
                   dropdownColor: isDark ? const Color(0xFF252525) : Colors.white,
                   items: const [
                     DropdownMenuItem(value: "quantity", child: Text("Qty Sold", style: TextStyle(fontSize: 12))),

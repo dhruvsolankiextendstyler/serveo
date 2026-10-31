@@ -3,6 +3,7 @@ import 'package:frontend/widgets/breakbite_spinner.dart';
 import 'package:provider/provider.dart';
 import '../utils/menu_provider.dart';
 import '../utils/order_provider.dart';
+import '../widgets/serveo_glass_container.dart';
 import 'cart_page.dart';
 import 'digital_receipt_page.dart';
 import 'order_tracking_page.dart';
@@ -30,21 +31,15 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
     final result = orderProvider.reorderOrder(order, menuProvider.menuItems);
 
-    showModalBottomSheet(
+    showGlassBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         final isDark = Theme.of(sheetContext).brightness == Brightness.dark;
-        final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
         final textColor = isDark ? Colors.white : const Color(0xFF111827);
 
         return Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: sheetBg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

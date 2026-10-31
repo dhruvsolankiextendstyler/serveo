@@ -15,6 +15,7 @@ import 'admin_report_page.dart';
 import 'admin_settings_page.dart';
 import '../utils/theme_provider.dart';
 import '../utils/restaurant_provider.dart';
+import '../widgets/serveo_glass_container.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -46,17 +47,18 @@ class _AdminPageState extends State<AdminPage> {
     final orderProvider = context.read<AdminOrderProvider>();
     final navigator = Navigator.of(context);
 
-    bool? confirm = await showDialog(
+    bool? confirm = await showGlassDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
         backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text("Logout", style: TextStyle(color: Colors.white)),
+        title: const Text("Logout", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: const Text("Are you sure you want to sign out?", style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text("Cancel")),
           TextButton(
               onPressed: () => Navigator.pop(dialogCtx, true),
-              child: const Text("Logout", style: TextStyle(color: Colors.redAccent))
+              child: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))
           ),
         ],
       ),
@@ -267,16 +269,28 @@ class _AdminPageState extends State<AdminPage> {
         ],
       ),
       bottomNavigationBar: navItems.length > 1
-          ? BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              selectedFontSize: 11,
-              unselectedFontSize: 10,
-              backgroundColor: isDark ? const Color(0xFF181818) : Colors.white,
-              selectedItemColor: isDark ? Colors.yellow : const Color(0xFFD97706),
-              unselectedItemColor: isDark ? Colors.white60 : const Color(0xFF6B7280),
-              currentIndex: activeIndex,
-              onTap: (index) => setState(() => _selectedIndex = index),
-              items: navItems,
+          ? ServeoGlassContainer(
+              blur: 14,
+              borderRadius: BorderRadius.zero,
+              color: isDark ? const Color(0xCC161616) : const Color(0xD9FFFFFF),
+              border: Border(
+                top: BorderSide(
+                  color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.08),
+                  width: 0.8,
+                ),
+              ),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                elevation: 0,
+                selectedFontSize: 11,
+                unselectedFontSize: 10,
+                backgroundColor: Colors.transparent,
+                selectedItemColor: isDark ? Colors.yellow : const Color(0xFFD97706),
+                unselectedItemColor: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                currentIndex: activeIndex,
+                onTap: (index) => setState(() => _selectedIndex = index),
+                items: navItems,
+              ),
             )
           : null,
     );

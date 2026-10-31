@@ -6,7 +6,9 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../utils/api_config.dart';
 import '../utils/order_provider.dart';
+import '../utils/theme_provider.dart';
 import '../widgets/breakbite_textbox.dart';
+import '../widgets/serveo_glass_container.dart';
 
 class ItemFormPage extends StatefulWidget {
   final Uint8List? initialImageBytes;
@@ -151,12 +153,8 @@ class _ItemFormPageState extends State<ItemFormPage> {
   }
 
   void _showImageSourceDialog() {
-    showModalBottomSheet(
+    showGlassBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -449,26 +447,25 @@ class _ItemFormPageState extends State<ItemFormPage> {
                       const SizedBox(height: 10),
                       DropdownButtonFormField<String>(
                         initialValue: category.text.isNotEmpty ? category.text : null,
-                        hint: Text(
+                        hint: const Text(
                           "Select Category",
-                          style: TextTheme.of(context)
-                              .bodyMedium
-                              ?.copyWith(color: Colors.brown),
+                          style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
                         ),
-                        dropdownColor: Colors.grey[300],
-                        icon: const Icon(Icons.arrow_drop_down, color: Colors.brown),
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.category, color: Colors.brown),
-                          filled: true,
-                          fillColor: Colors.white70,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
+                        dropdownColor: Theme.of(context).brightness == Brightness.dark
+                            ? AppTheme.darkSurface
+                            : AppTheme.lightSurface,
+                        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFD97706)),
+                        decoration: AppTheme.inputDecoration(
+                          isDark: Theme.of(context).brightness == Brightness.dark,
+                          hintText: "Select Category",
+                          prefixIcon: const Icon(Icons.category, color: Color(0xFFD97706), size: 20),
                         ),
-                        style: TextTheme.of(context)
-                            .bodyMedium
-                            ?.copyWith(color: Colors.brown),
+                        style: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : const Color(0xFF1F2937),
+                          fontSize: 14,
+                        ),
                         items: [
                           "Burgers",
                           "Pizza",

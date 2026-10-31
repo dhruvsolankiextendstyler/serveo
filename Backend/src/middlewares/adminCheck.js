@@ -169,6 +169,9 @@ export const requireActiveSubscription = (req, res, next) => {
 export const requirePlanFeature = (featureKey) => {
   return (req, res, next) => {
     const restaurant = req.restaurant;
+    if (restaurant?.subscription?.adminOverride === true) {
+      return next();
+    }
     const planId = restaurant?.subscription?.planId || "starter";
     const plan = getPlanConfig(planId);
 

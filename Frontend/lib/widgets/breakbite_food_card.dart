@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../utils/api_config.dart';
 import '../utils/order_provider.dart';
 import '../utils/theme_provider.dart';
+import 'serveo_glass_container.dart';
 
 IconData getCategoryIcon(String category) {
   switch (category.toLowerCase().trim()) {
@@ -473,15 +474,11 @@ class ServeoFoodCard extends StatelessWidget {
     Item item,
     OrderProvider orderProvider,
   ) {
-    showModalBottomSheet(
+    showGlassBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (modalCtx) {
         final isDark = Theme.of(modalCtx).brightness == Brightness.dark;
-        final bg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
         final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
         final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
 

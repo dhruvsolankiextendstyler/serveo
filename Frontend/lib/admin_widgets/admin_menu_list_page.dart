@@ -5,6 +5,8 @@ import 'package:frontend/widgets/breakbite_spinner.dart';
 import 'package:http/http.dart' as http;
 import '../utils/api_config.dart';
 import '../utils/order_provider.dart';
+import '../utils/theme_provider.dart';
+import '../widgets/serveo_glass_container.dart';
 import 'item_form_page.dart';
 
 class AdminMenuListPage extends StatefulWidget {
@@ -239,11 +241,12 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
   }
 
   Future<void> _confirmAndDeleteItem(Item item) async {
-    final bool? confirm = await showDialog<bool>(
+    final bool? confirm = await showGlassDialog<bool>(
       context: context,
       builder: (dialogCtx) {
         final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
           backgroundColor: isDark ? const Color(0xFF1F1F1F) : Colors.white,
           title: Text(
             "Delete Item",
@@ -440,9 +443,9 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
               child: TextField(
                 controller: _searchController,
                 style: TextStyle(color: primaryTextColor, fontSize: 14),
-                decoration: InputDecoration(
+                decoration: AppTheme.inputDecoration(
+                  isDark: isDark,
                   hintText: "Search menu items...",
-                  hintStyle: TextStyle(color: secondaryTextColor, fontSize: 14),
                   prefixIcon: Icon(Icons.search, size: 20, color: secondaryTextColor),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
@@ -453,13 +456,8 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
                           },
                         )
                       : null,
-                  filled: true,
-                  fillColor: isDark ? const Color(0xFF262626) : const Color(0xFFF3F4F6),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 ),
                 onChanged: (val) {
                   setState(() => _searchQuery = val.trim());

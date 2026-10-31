@@ -150,7 +150,7 @@ export async function validateAndCalculateCouponDiscount({
     } else {
       discountAmount = rawDiscount;
     }
-  } else if (coupon.discountType === "fixed" || coupon.discountType === "free_delivery") {
+  } else if (coupon.discountType === "fixed" || coupon.discountType === "free_delivery" || coupon.discountType === "min_order") {
     discountAmount = Math.min(eligibleSubtotal, coupon.discountValue);
   }
 
@@ -274,15 +274,22 @@ export async function getAdminCouponsController(req, res) {
 export async function createCouponController(req, res) {
   try {
     const restaurantId = req.restaurantId;
+    if (!restaurantId) {
+      return res.status(401).json({ error: "Unauthorized: restaurantId is required" });
+    }
+
     const {
       code,
       description,
       discountType,
       discountValue,
       maxDiscountAmount,
+      maxDiscount,
       minOrderValue,
       startDate,
+      validFrom,
       endDate,
+      validUntil,
       totalUsageLimit,
       perCustomerLimit,
       restrictedCategories,
@@ -295,32 +302,90 @@ export async function createCouponController(req, res) {
 
     const normalizedCode = code.trim().toUpperCase();
 
+    // Validate discountType
+    const validDiscountTypes = ["percentage", "fixed", "free_delivery", "first_order", "min_order"];
+    const resolvedDiscountType = discountType || "percentage";
+    if (!validDiscountTypes.includes(resolvedDiscountType)) {
+      return res.status(400).json({
+        error: `Invalid discount type '${resolvedDiscountType}'. Allowed types: ${validDiscountTypes.join(", ")}`,
+      });
+    }
+
     // Check duplicate code in this restaurant
     const existing = await Coupon.findOne({ restaurantId, code: normalizedCode });
     if (existing) {
       return res.status(400).json({ error: `Coupon '${normalizedCode}' already exists for this restaurant` });
     }
 
-    if (discountValue === undefined || isNaN(Number(discountValue)) || Number(discountValue) <= 0) {
+    // Validate discount value
+    const numDiscountValue = Number(discountValue);
+    if (resolvedDiscountType !== "free_delivery" && (discountValue === undefined || isNaN(numDiscountValue) || numDiscountValue <= 0)) {
       return res.status(400).json({ error: "A positive discount value is required" });
     }
 
-    if (discountType === "percentage" && Number(discountValue) > 100) {
+    if ((resolvedDiscountType === "percentage" || resolvedDiscountType === "first_order") && numDiscountValue > 100) {
       return res.status(400).json({ error: "Percentage discount cannot exceed 100%" });
+    }
+
+    // Resolve max discount cap (support maxDiscountAmount or maxDiscount)
+    const rawMaxDiscount = maxDiscountAmount !== undefined && maxDiscountAmount !== null && maxDiscountAmount !== ""
+      ? maxDiscountAmount
+      : (maxDiscount !== undefined && maxDiscount !== null && maxDiscount !== "" ? maxDiscount : null);
+    const resolvedMaxDiscount = rawMaxDiscount !== null ? Number(rawMaxDiscount) : null;
+    if (resolvedMaxDiscount !== null && (isNaN(resolvedMaxDiscount) || resolvedMaxDiscount < 0)) {
+      return res.status(400).json({ error: "Max discount cap must be a non-negative number" });
+    }
+
+    // Resolve min order value
+    const numMinOrder = minOrderValue !== undefined && minOrderValue !== null && minOrderValue !== ""
+      ? Number(minOrderValue)
+      : 0;
+    if (isNaN(numMinOrder) || numMinOrder < 0) {
+      return res.status(400).json({ error: "Minimum order value cannot be negative" });
+    }
+
+    // Resolve dates (support endDate or validUntil, startDate or validFrom)
+    const rawStart = startDate || validFrom;
+    const rawEnd = endDate || validUntil;
+    const resolvedStartDate = rawStart ? new Date(rawStart) : new Date();
+    const resolvedEndDate = rawEnd ? new Date(rawEnd) : null;
+    if (resolvedStartDate && isNaN(resolvedStartDate.getTime())) {
+      return res.status(400).json({ error: "Invalid start date format" });
+    }
+    if (resolvedEndDate && isNaN(resolvedEndDate.getTime())) {
+      return res.status(400).json({ error: "Invalid expiry date format" });
+    }
+    if (resolvedEndDate && resolvedEndDate < resolvedStartDate) {
+      return res.status(400).json({ error: "Expiry date cannot be earlier than start date" });
+    }
+
+    // Resolve usage limits
+    const rawTotalLimit = totalUsageLimit !== undefined && totalUsageLimit !== null && totalUsageLimit !== ""
+      ? Number(totalUsageLimit)
+      : null;
+    if (rawTotalLimit !== null && (isNaN(rawTotalLimit) || rawTotalLimit <= 0)) {
+      return res.status(400).json({ error: "Total usage limit must be at least 1" });
+    }
+
+    const rawPerCustomer = perCustomerLimit !== undefined && perCustomerLimit !== null && perCustomerLimit !== ""
+      ? Number(perCustomerLimit)
+      : 1;
+    if (isNaN(rawPerCustomer) || rawPerCustomer <= 0) {
+      return res.status(400).json({ error: "Per-customer usage limit must be at least 1" });
     }
 
     const coupon = new Coupon({
       restaurantId,
       code: normalizedCode,
       description: (description || "").trim(),
-      discountType: discountType || "percentage",
-      discountValue: Number(discountValue),
-      maxDiscountAmount: maxDiscountAmount !== null && maxDiscountAmount !== undefined ? Number(maxDiscountAmount) : null,
-      minOrderValue: Number(minOrderValue) || 0,
-      startDate: startDate ? new Date(startDate) : new Date(),
-      endDate: endDate ? new Date(endDate) : null,
-      totalUsageLimit: totalUsageLimit ? Number(totalUsageLimit) : null,
-      perCustomerLimit: Number(perCustomerLimit) || 1,
+      discountType: resolvedDiscountType,
+      discountValue: isNaN(numDiscountValue) ? 0 : numDiscountValue,
+      maxDiscountAmount: resolvedMaxDiscount,
+      minOrderValue: numMinOrder,
+      startDate: resolvedStartDate,
+      endDate: resolvedEndDate,
+      totalUsageLimit: rawTotalLimit,
+      perCustomerLimit: rawPerCustomer,
       restrictedCategories: Array.isArray(restrictedCategories) ? restrictedCategories : [],
       restrictedItems: Array.isArray(restrictedItems) ? restrictedItems : [],
       createdBy: req.user?.email || "owner",
@@ -350,9 +415,12 @@ export async function updateCouponController(req, res) {
       discountType,
       discountValue,
       maxDiscountAmount,
+      maxDiscount,
       minOrderValue,
       startDate,
+      validFrom,
       endDate,
+      validUntil,
       isActive,
       totalUsageLimit,
       perCustomerLimit,
@@ -364,15 +432,18 @@ export async function updateCouponController(req, res) {
     if (discountType !== undefined) coupon.discountType = discountType;
     if (discountValue !== undefined) {
       const val = Number(discountValue);
-      if (val <= 0 || (coupon.discountType === "percentage" && val > 100)) {
+      if (val <= 0 || ((coupon.discountType === "percentage" || coupon.discountType === "first_order") && val > 100)) {
         return res.status(400).json({ error: "Invalid discount value" });
       }
       coupon.discountValue = val;
     }
-    if (maxDiscountAmount !== undefined) coupon.maxDiscountAmount = maxDiscountAmount ? Number(maxDiscountAmount) : null;
+    const resolvedMax = maxDiscountAmount !== undefined ? maxDiscountAmount : maxDiscount;
+    if (resolvedMax !== undefined) coupon.maxDiscountAmount = resolvedMax ? Number(resolvedMax) : null;
     if (minOrderValue !== undefined) coupon.minOrderValue = Number(minOrderValue) || 0;
-    if (startDate !== undefined) coupon.startDate = new Date(startDate);
-    if (endDate !== undefined) coupon.endDate = endDate ? new Date(endDate) : null;
+    const resolvedStart = startDate || validFrom;
+    if (resolvedStart !== undefined) coupon.startDate = new Date(resolvedStart);
+    const resolvedEnd = endDate || validUntil;
+    if (resolvedEnd !== undefined) coupon.endDate = resolvedEnd ? new Date(resolvedEnd) : null;
     if (isActive !== undefined) coupon.isActive = Boolean(isActive);
     if (totalUsageLimit !== undefined) coupon.totalUsageLimit = totalUsageLimit ? Number(totalUsageLimit) : null;
     if (perCustomerLimit !== undefined) coupon.perCustomerLimit = Number(perCustomerLimit) || 1;

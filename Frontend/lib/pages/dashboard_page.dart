@@ -9,6 +9,7 @@ import '../widgets/breakbite_appbar.dart';
 import '../widgets/breakbite_drawer.dart';
 import '../widgets/breakbite_food_card.dart';
 import '../widgets/breakbite_spinner.dart';
+import '../widgets/serveo_glass_container.dart';
 import 'cart_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -408,10 +409,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () {
-                        showDialog(
+                        showGlassDialog(
                           context: context,
                           builder: (dialogCtx) => AlertDialog(
-                            title: Text(title),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+                            title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
                             content: Text(terms),
                             actions: [
                               TextButton(
@@ -755,20 +757,21 @@ class _DashboardPageState extends State<DashboardPage> {
 
                           // 🔹 SEARCH INPUT FIELD
                           Container(
-                            height: 46,
+                            height: 48,
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                              borderRadius: BorderRadius.circular(12),
+                              color: isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill,
+                              borderRadius: BorderRadius.circular(AppTheme.radiusInput),
                               border: Border.all(
                                 color: _searchQuery.isNotEmpty
-                                    ? Colors.yellow
-                                    : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+                                    ? const Color(0xFFD97706)
+                                    : (isDark ? AppTheme.darkInputBorder : AppTheme.lightInputBorder),
+                                width: _searchQuery.isNotEmpty ? 1.4 : 1.0,
                               ),
                               boxShadow: isDark
                                   ? null
                                   : [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.04),
+                                        color: Colors.black.withValues(alpha: 0.03),
                                         blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
@@ -783,7 +786,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               decoration: InputDecoration(
                                 hintText: "Search dishes, snacks & drinks...",
                                 hintStyle: TextStyle(
-                                  color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+                                  color: isDark ? AppTheme.darkInputHint : AppTheme.lightInputHint,
                                   fontSize: 13,
                                 ),
                                 prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFFD97706)),
@@ -795,7 +798,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                       )
                                     : null,
                                 border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 13),
                               ),
                             ),
                           ),
@@ -1018,18 +1023,17 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
       bottomNavigationBar: cartTotalItems > 0
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF181818) : Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
+          ? ServeoGlassContainer(
+              blur: 14,
+              borderRadius: BorderRadius.zero,
+              color: isDark ? const Color(0xCC181818) : const Color(0xD9FFFFFF),
+              border: Border(
+                top: BorderSide(
+                  color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.08),
+                  width: 0.8,
+                ),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: SafeArea(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -24,7 +24,8 @@ class _CartPageState extends State<CartPage> {
       if (mounted) {
         final restProvider = Provider.of<RestaurantProvider?>(context, listen: false);
         final restId = restProvider?.config.id;
-        context.read<OrderProvider>().fetchLoyaltyInfo(restaurantId: restId);
+        final orderProvider = Provider.of<OrderProvider?>(context, listen: false);
+        orderProvider?.fetchLoyaltyInfo(restaurantId: restId);
       }
     });
   }
@@ -231,6 +232,7 @@ class _CartPageState extends State<CartPage> {
                     backgroundColor: const Color(0xFFD97706),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   ),
                   onPressed: orderProvider.isApplyingCoupon
                       ? null
@@ -249,12 +251,6 @@ class _CartPageState extends State<CartPage> {
                             }
                           }
                         },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD97706),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  ),
                   child: orderProvider.isApplyingCoupon
                       ? const SizedBox(
                           width: 16,
@@ -426,9 +422,10 @@ class _CartPageState extends State<CartPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
+              key: const Key('go_to_menu_button'),
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.restaurant_menu),
-              label: const Text("Browse Menu"),
+              label: const Text("Go to Menu"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD97706),
                 foregroundColor: Colors.white,
@@ -480,6 +477,7 @@ class _CartPageState extends State<CartPage> {
           children: [
             if (!canOrder) ...[
               Container(
+                key: const Key('cart_restaurant_closed_banner'),
                 width: double.infinity,
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

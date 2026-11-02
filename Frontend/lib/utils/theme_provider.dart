@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -165,6 +167,28 @@ class AppTheme {
     );
   }
 
+  static bool get _isTestEnvironment {
+    try {
+      return !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static TextTheme _poppinsTextTheme(TextTheme base, {Color? bodyColor, Color? displayColor}) {
+    if (_isTestEnvironment) {
+      return base.apply(fontFamily: 'Poppins', bodyColor: bodyColor, displayColor: displayColor);
+    }
+    return GoogleFonts.poppinsTextTheme(base).apply(bodyColor: bodyColor, displayColor: displayColor);
+  }
+
+  static TextStyle _poppinsTextStyle(TextStyle base) {
+    if (_isTestEnvironment) {
+      return base.copyWith(fontFamily: 'Poppins');
+    }
+    return GoogleFonts.poppins(textStyle: base);
+  }
+
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
@@ -182,9 +206,8 @@ class AppTheme {
         onSurface: darkTextPrimary,
         outline: darkInputBorder,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(
+      textTheme: _poppinsTextTheme(
         ThemeData.dark().textTheme,
-      ).apply(
         bodyColor: darkTextPrimary,
         displayColor: darkTextPrimary,
       ),
@@ -194,10 +217,12 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         systemOverlayStyle: darkOverlayStyle,
-        titleTextStyle: GoogleFonts.poppins(
-          color: darkTextPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
+        titleTextStyle: _poppinsTextStyle(
+          const TextStyle(
+            color: darkTextPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -254,7 +279,7 @@ class AppTheme {
           backgroundColor: brandYellow,
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          textStyle: _poppinsTextStyle(const TextStyle(fontWeight: FontWeight.bold)),
         ),
       ),
     );
@@ -277,9 +302,8 @@ class AppTheme {
         onSurface: lightTextPrimary,
         outline: lightInputBorder,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(
+      textTheme: _poppinsTextTheme(
         ThemeData.light().textTheme,
-      ).apply(
         bodyColor: lightTextPrimary,
         displayColor: lightTextPrimary,
       ),
@@ -289,10 +313,12 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         systemOverlayStyle: lightOverlayStyle,
-        titleTextStyle: GoogleFonts.poppins(
-          color: lightTextPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
+        titleTextStyle: _poppinsTextStyle(
+          const TextStyle(
+            color: lightTextPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -349,10 +375,9 @@ class AppTheme {
           backgroundColor: brandYellow,
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          textStyle: _poppinsTextStyle(const TextStyle(fontWeight: FontWeight.bold)),
         ),
       ),
     );
   }
-}
 }

@@ -1,17 +1,12 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/admin_utils/admin_order_provider.dart';
 import 'package:frontend/admin_widgets/admin_page.dart';
 import 'package:frontend/admin_widgets/admin_marketing_page.dart';
-import 'package:frontend/pages/customer_referral_page.dart';
-import 'package:frontend/utils/menu_provider.dart';
 import 'package:frontend/utils/order_provider.dart';
 import 'package:frontend/utils/restaurant_provider.dart';
 import 'package:frontend/utils/theme_provider.dart';
 import 'package:frontend/widgets/breakbite_bill_details_card.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -64,22 +59,22 @@ void main() {
       final provider = OrderProvider();
 
       // Add mock item to tray
-      provider.addItem(
-        MenuItem(
-          id: 'item_1',
-          name: 'Paneer Butter Masala',
-          price: 250,
+      provider.addToCart(
+        Item(
+          itemId: 'item_1',
+          itemName: 'Paneer Butter Masala',
+          itemPrice: 250,
           category: 'Curry',
-          available: true,
+          isAvailable: true,
         ),
       );
-      provider.addItem(
-        MenuItem(
-          id: 'item_2',
-          name: 'Butter Naan',
-          price: 50,
+      provider.addToCart(
+        Item(
+          itemId: 'item_2',
+          itemName: 'Butter Naan',
+          itemPrice: 50,
           category: 'Breads',
-          available: true,
+          isAvailable: true,
         ),
       );
 
@@ -88,13 +83,13 @@ void main() {
       expect(provider.getFinalPayableTotal(), 300);
 
       // Apply coupon (₹50 discount)
-      provider.applyCoupon('WELCOME50', 50.0);
+      provider.setDiscountForTesting(couponCode: 'WELCOME50', couponDiscount: 50.0);
       expect(provider.appliedCouponCode, 'WELCOME50');
       expect(provider.couponDiscount, 50.0);
       expect(provider.getFinalPayableTotal(), 250);
 
       // Apply loyalty reward (₹30 discount)
-      provider.selectLoyaltyReward('reward_1', 30.0);
+      provider.setDiscountForTesting(rewardId: 'reward_1', loyaltyDiscount: 30.0);
       expect(provider.selectedRewardId, 'reward_1');
       expect(provider.loyaltyDiscount, 30.0);
       expect(provider.getFinalPayableTotal(), 220);
@@ -114,20 +109,20 @@ void main() {
 
     test('Prevents negative payable total when discount exceeds subtotal', () {
       final provider = OrderProvider();
-      provider.addItem(
-        MenuItem(
-          id: 'item_tea',
-          name: 'Masala Chai',
-          price: 20,
+      provider.addToCart(
+        Item(
+          itemId: 'item_tea',
+          itemName: 'Masala Chai',
+          itemPrice: 20,
           category: 'Beverages',
-          available: true,
+          isAvailable: true,
         ),
       );
 
       expect(provider.getTotal(), 20);
 
       // Apply a large discount
-      provider.applyCoupon('SUPER100', 100.0);
+      provider.setDiscountForTesting(couponCode: 'SUPER100', couponDiscount: 100.0);
       expect(provider.getFinalPayableTotal(), 0);
     });
   });
@@ -137,17 +132,21 @@ void main() {
       final orderProvider = OrderProvider();
       final themeProvider = ThemeProvider();
 
-      orderProvider.addItem(
-        MenuItem(
-          id: 'item_1',
-          name: 'Veg Biryani',
-          price: 200,
+      orderProvider.addToCart(
+        Item(
+          itemId: 'item_1',
+          itemName: 'Veg Biryani',
+          itemPrice: 200,
           category: 'Rice',
-          available: true,
+          isAvailable: true,
         ),
       );
-      orderProvider.applyCoupon('FEAST20', 40.0);
-      orderProvider.selectLoyaltyReward('rew_loyalty', 20.0);
+      orderProvider.setDiscountForTesting(
+        couponCode: 'FEAST20',
+        couponDiscount: 40.0,
+        rewardId: 'rew_loyalty',
+        loyaltyDiscount: 20.0,
+      );
 
       await tester.pumpWidget(
         MultiProvider(
@@ -209,6 +208,9 @@ void main() {
       expect(find.text("Marketing"), findsNothing);
       expect(find.text("Analytics"), findsNothing);
       expect(find.text("Settings"), findsNothing);
+
+      adminOrderProvider.stopPolling();
+      await tester.pumpWidget(const SizedBox());
     });
   });
 

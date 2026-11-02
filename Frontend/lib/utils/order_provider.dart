@@ -239,6 +239,24 @@ class OrderProvider extends ChangeNotifier{
     notifyListeners();
   }
 
+  void deselectLoyaltyReward() {
+    selectLoyaltyReward(null);
+  }
+
+  /// Sets discount values directly for unit tests and local simulations
+  void setDiscountForTesting({
+    String? couponCode,
+    double? couponDiscount,
+    String? rewardId,
+    double? loyaltyDiscount,
+  }) {
+    if (couponCode != null) _appliedCouponCode = couponCode;
+    if (couponDiscount != null) _couponDiscount = couponDiscount;
+    if (rewardId != null) _selectedRewardId = rewardId;
+    if (loyaltyDiscount != null) _loyaltyDiscount = loyaltyDiscount;
+    notifyListeners();
+  }
+
   String? _lastOrderError;
   String? get lastOrderError => _lastOrderError;
 

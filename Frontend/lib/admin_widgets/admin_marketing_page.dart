@@ -951,6 +951,7 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
   // TAB 3: LOYALTY PROGRAM
   // ==========================================
   Widget _buildLoyaltyTab(Color cardBg, Color borderColor, Color textColor, Color subtextColor, bool allowMarketing) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isEnabled = _loyaltyConfig['enabled'] == true;
     final pointsPerRupee = _loyaltyConfig['pointsPerRupee'] ?? 0.1;
     final minOrder = _loyaltyConfig['minOrderValue'] ?? 100;
@@ -1231,6 +1232,7 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
   // TAB 4: REFERRALS PROGRAM
   // ==========================================
   Widget _buildReferralsTab(Color cardBg, Color borderColor, Color textColor, Color subtextColor, bool allowMarketing) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isEnabled = _referralConfig['enabled'] == true;
     final referrerBonus = _referralConfig['referrerBonusPoints'] ?? 50;
     final refereeBonus = _referralConfig['refereeBonusPoints'] ?? 25;

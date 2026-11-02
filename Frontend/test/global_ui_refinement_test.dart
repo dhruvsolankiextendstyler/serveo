@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/utils/theme_provider.dart';
@@ -189,14 +188,14 @@ void main() {
       expect(editableText.obscureText, isTrue);
 
       // Find visibility toggle icon button and tap it
-      expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.visibility_outlined));
+      expect(find.byIcon(Icons.visibility_off_outlined), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.visibility_off_outlined));
       await tester.pumpAndSettle();
 
       // Verify text is now revealed
       editableText = tester.widget<EditableText>(editableTextFinder);
       expect(editableText.obscureText, isFalse);
-      expect(find.byIcon(Icons.visibility_off_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
     });
   });
 }

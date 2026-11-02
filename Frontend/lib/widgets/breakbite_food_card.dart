@@ -481,6 +481,7 @@ class ServeoFoodCard extends StatelessWidget {
         final isDark = Theme.of(modalCtx).brightness == Brightness.dark;
         final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
         final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+        final bg = isDark ? AppTheme.darkSurface : AppTheme.lightSurface;
 
         final Map<String, List<SelectedCustomization>> selectedMap = {};
 

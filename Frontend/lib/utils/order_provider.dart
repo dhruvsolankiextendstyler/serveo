@@ -7,8 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'api_config.dart';
 
-
-class OrderProvider extends ChangeNotifier{
+class OrderProvider extends ChangeNotifier {
   final List<Item> _orderItems = [];
 
   List<Item> get orderItems => _orderItems;
@@ -19,14 +18,15 @@ class OrderProvider extends ChangeNotifier{
         .fold(0, (sum, it) => sum + it.quantity);
   }
 
-  void addToCart(Item item, [BuildContext? context]){
+  void addToCart(Item item, [BuildContext? context]) {
     int index = _orderItems.indexWhere((it) => it.cartKey == item.cartKey);
     if (index != -1) {
       // 2. Check Quantity Limit (Max 3)
       if (_orderItems[index].quantity < 3) {
         _orderItems[index].quantity++;
       } else {
-        if (context != null) showToast("Maximum 3 of the same item allowed!", context);
+        if (context != null)
+          showToast("Maximum 3 of the same item allowed!", context);
         return;
       }
     } else {
@@ -34,7 +34,8 @@ class OrderProvider extends ChangeNotifier{
       if (_orderItems.length < 5) {
         _orderItems.add(item..quantity = 1);
       } else {
-        if (context != null) showToast("You can only order up to 5 different items!", context);
+        if (context != null)
+          showToast("You can only order up to 5 different items!", context);
         return;
       }
     }
@@ -63,8 +64,11 @@ class OrderProvider extends ChangeNotifier{
     notifyListeners();
   }
 
-  int getTotal(){
-    return _orderItems.fold(0, (total, item) => total + (item.effectiveUnitPrice * item.quantity));
+  int getTotal() {
+    return _orderItems.fold(
+      0,
+      (total, item) => total + (item.effectiveUnitPrice * item.quantity),
+    );
   }
 
   // Phase 6: Coupon & Loyalty Checkout State
@@ -124,19 +128,22 @@ class OrderProvider extends ChangeNotifier{
     final url = Uri.parse("${ApiConfig.baseUrl}/order/coupon/validate");
 
     try {
-      final res = await httpClient.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          "couponCode": cleanCode,
-          "subtotal": getTotal(),
-          "orderItems": _orderItems.map((e) => e.toJson()).toList(),
-          if (restaurantId != null && restaurantId.isNotEmpty) "restaurantId": restaurantId,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final res = await httpClient
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              "couponCode": cleanCode,
+              "subtotal": getTotal(),
+              "orderItems": _orderItems.map((e) => e.toJson()).toList(),
+              if (restaurantId != null && restaurantId.isNotEmpty)
+                "restaurantId": restaurantId,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(res.body);
       if (res.statusCode == 200 && data['isValid'] == true) {
@@ -147,7 +154,9 @@ class OrderProvider extends ChangeNotifier{
         notifyListeners();
         return true;
       } else {
-        _couponError = (data['error'] ?? data['message'] ?? "Invalid coupon code").toString();
+        _couponError =
+            (data['error'] ?? data['message'] ?? "Invalid coupon code")
+                .toString();
         _appliedCouponCode = null;
         _couponDiscount = 0.0;
         _isApplyingCoupon = false;
@@ -186,20 +195,22 @@ class OrderProvider extends ChangeNotifier{
 
     final httpClient = client ?? http.Client();
     final url = Uri.parse(
-        "${ApiConfig.baseUrl}/order/loyalty/customer${restaurantId != null && restaurantId.isNotEmpty ? '?restaurantId=$restaurantId' : ''}");
+      "${ApiConfig.baseUrl}/order/loyalty/customer${restaurantId != null && restaurantId.isNotEmpty ? '?restaurantId=$restaurantId' : ''}",
+    );
 
     try {
-      final res = await httpClient.get(
-        url,
-        headers: {'Authorization': 'Bearer $token'},
-      ).timeout(const Duration(seconds: 10));
+      final res = await httpClient
+          .get(url, headers: {'Authorization': 'Bearer $token'})
+          .timeout(const Duration(seconds: 10));
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         _availableLoyaltyPoints = (data['currentBalance'] ?? 0) as int;
         final rawRewards = data['availableRewards'];
         if (rawRewards is List) {
-          _availableRewards = rawRewards.map((e) => Map<String, dynamic>.from(e)).toList();
+          _availableRewards = rawRewards
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
         }
         notifyListeners();
       }
@@ -223,7 +234,9 @@ class OrderProvider extends ChangeNotifier{
       _selectedRewardId = rewardId;
       final val = (reward['discountValue'] ?? 0).toDouble();
       final type = reward['discountType'] ?? 'flat';
-      final maxDisc = reward['maxDiscountAmount'] != null ? (reward['maxDiscountAmount'] as num).toDouble() : null;
+      final maxDisc = reward['maxDiscountAmount'] != null
+          ? (reward['maxDiscountAmount'] as num).toDouble()
+          : null;
 
       if (type == 'percentage') {
         double d = (getTotal() * val) / 100.0;
@@ -278,7 +291,9 @@ class OrderProvider extends ChangeNotifier{
     try {
       user = FirebaseAuth.instance.currentUser;
     } catch (e) {
-      debugPrint("[Serveo Order] FirebaseAuth not initialized or unavailable: $e");
+      debugPrint(
+        "[Serveo Order] FirebaseAuth not initialized or unavailable: $e",
+      );
     }
 
     if (overrideToken == null && user == null) {
@@ -308,25 +323,30 @@ class OrderProvider extends ChangeNotifier{
     final totalAmountSnapshot = getTotal();
 
     // Idempotency Key: Guarantees at-most-once order placement on network retries or repeated taps
-    final idempotencyKey = "order_${DateTime.now().millisecondsSinceEpoch}_${(user?.uid ?? 'guest').hashCode.abs()}";
+    final idempotencyKey =
+        "order_${DateTime.now().millisecondsSinceEpoch}_${(user?.uid ?? 'guest').hashCode.abs()}";
 
     try {
-      final response = await httpClient.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'X-Idempotency-Key': idempotencyKey,
-        },
-        body: jsonEncode({
-          "orderItems": cartItemsSnapshot,
-          "paymentMethod": paymentMethod,
-          "idempotencyKey": idempotencyKey,
-          if (restaurantId != null && restaurantId.isNotEmpty) "restaurantId": restaurantId,
-          if (_appliedCouponCode != null) "couponCode": _appliedCouponCode,
-          if (_selectedRewardId != null) "selectedRewardId": _selectedRewardId,
-        }),
-      ).timeout(const Duration(seconds: 25));
+      final response = await httpClient
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+              'X-Idempotency-Key': idempotencyKey,
+            },
+            body: jsonEncode({
+              "orderItems": cartItemsSnapshot,
+              "paymentMethod": paymentMethod,
+              "idempotencyKey": idempotencyKey,
+              if (restaurantId != null && restaurantId.isNotEmpty)
+                "restaurantId": restaurantId,
+              if (_appliedCouponCode != null) "couponCode": _appliedCouponCode,
+              if (_selectedRewardId != null)
+                "selectedRewardId": _selectedRewardId,
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final dynamic data = jsonDecode(response.body);
@@ -344,7 +364,8 @@ class OrderProvider extends ChangeNotifier{
         }
 
         // Case 2: Order object returned directly
-        if (data is Map && (data['_id'] != null || data['totalAmount'] != null)) {
+        if (data is Map &&
+            (data['_id'] != null || data['totalAmount'] != null)) {
           _lastOrderError = null;
           _appliedCouponCode = null;
           _couponDiscount = 0.0;
@@ -356,17 +377,23 @@ class OrderProvider extends ChangeNotifier{
         }
 
         // Case 3: Deployed/legacy backend returns { message: "Order Placed !!" } without 'order' key
-        debugPrint("[Serveo Order] Backend accepted order (HTTP ${response.statusCode}), resolving order details...");
+        debugPrint(
+          "[Serveo Order] Backend accepted order (HTTP ${response.statusCode}), resolving order details...",
+        );
 
         try {
-          final userOrdersRes = await httpClient.get(
-            Uri.parse("${ApiConfig.baseUrl}/order/user"),
-            headers: {"Authorization": "Bearer $token"},
-          ).timeout(const Duration(seconds: 8));
+          final userOrdersRes = await httpClient
+              .get(
+                Uri.parse("${ApiConfig.baseUrl}/order/user"),
+                headers: {"Authorization": "Bearer $token"},
+              )
+              .timeout(const Duration(seconds: 8));
 
           if (userOrdersRes.statusCode == 200) {
             final decoded = jsonDecode(userOrdersRes.body);
-            final List<dynamic>? list = decoded is Map ? decoded['message'] : null;
+            final List<dynamic>? list = decoded is Map
+                ? decoded['message']
+                : null;
             if (list != null && list.isNotEmpty) {
               _lastOrderError = null;
               _orderItems.clear();
@@ -375,11 +402,15 @@ class OrderProvider extends ChangeNotifier{
             }
           }
         } catch (fetchErr) {
-          debugPrint("[Serveo Order] Secondary order fetch exception: $fetchErr");
+          debugPrint(
+            "[Serveo Order] Secondary order fetch exception: $fetchErr",
+          );
         }
 
         // Fallback: Construct Order from accepted cart details so customer can proceed smoothly
-        final String orderId = (data is Map && (data['_id'] ?? data['id'] ?? data['orderId']) != null)
+        final String orderId =
+            (data is Map &&
+                (data['_id'] ?? data['id'] ?? data['orderId']) != null)
             ? (data['_id'] ?? data['id'] ?? data['orderId']).toString()
             : "ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}";
 
@@ -387,7 +418,10 @@ class OrderProvider extends ChangeNotifier{
           id: orderId,
           totalAmount: totalAmountSnapshot,
           status: "Processing",
-          orderDate: DateTime.now().toIso8601String().replaceFirst('T', ' ').substring(0, 16),
+          orderDate: DateTime.now()
+              .toIso8601String()
+              .replaceFirst('T', ' ')
+              .substring(0, 16),
           orderItems: cartItemsSnapshot,
           paymentMethod: paymentMethod,
           paymentStatus: paymentMethod == "Card" ? "Verified" : "Pending",
@@ -404,7 +438,8 @@ class OrderProvider extends ChangeNotifier{
       try {
         final decoded = jsonDecode(response.body);
         if (decoded is Map) {
-          serverErrorMsg = (decoded['error'] ?? decoded['message'] ?? "").toString();
+          serverErrorMsg = (decoded['error'] ?? decoded['message'] ?? "")
+              .toString();
         }
       } catch (_) {}
 
@@ -415,22 +450,29 @@ class OrderProvider extends ChangeNotifier{
             ? serverErrorMsg
             : "Invalid order request. Please review your cart.";
       } else if (response.statusCode >= 500) {
-        _lastOrderError = "Server is temporarily unavailable. Please try again shortly.";
+        _lastOrderError =
+            "Server is temporarily unavailable. Please try again shortly.";
       } else {
         _lastOrderError = serverErrorMsg.isNotEmpty
             ? serverErrorMsg
             : "Failed to place order (HTTP ${response.statusCode}).";
       }
 
-      debugPrint("[Serveo Order] Request to POST $url failed (${response.statusCode}): $_lastOrderError");
+      debugPrint(
+        "[Serveo Order] Request to POST $url failed (${response.statusCode}): $_lastOrderError",
+      );
       // Preserves _orderItems so customer never loses their tray!
       return null;
     } on TimeoutException {
-      _lastOrderError = "Server took too long to respond. It may be waking up. Please try again.";
-      debugPrint("[Serveo Order] Connection timed out after 25s calling POST $url");
+      _lastOrderError =
+          "Server took too long to respond. It may be waking up. Please try again.";
+      debugPrint(
+        "[Serveo Order] Connection timed out after 25s calling POST $url",
+      );
       return null;
     } catch (e) {
-      _lastOrderError = "Unable to connect to server. Please check your internet connection.";
+      _lastOrderError =
+          "Unable to connect to server. Please check your internet connection.";
       debugPrint("[Serveo Order] Network error calling POST $url: $e");
       return null;
     } finally {
@@ -450,9 +492,7 @@ class OrderProvider extends ChangeNotifier{
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          "orderId": orderId,
-        }),
+        body: jsonEncode({"orderId": orderId}),
       );
       if (response.statusCode == 200) {
         await trackOrder(orderId);
@@ -476,19 +516,24 @@ class OrderProvider extends ChangeNotifier{
     try {
       final user = FirebaseAuth.instance.currentUser;
       final token = await user?.getIdToken();
-      final response = await http.get(
-        Uri.parse("${ApiConfig.baseUrl}/order/notifications/user"),
-        headers: {
-          "Content-Type": "application/json",
-          if (token != null) "Authorization": "Bearer $token",
-        },
-      ).timeout(const Duration(seconds: 6));
+      final response = await http
+          .get(
+            Uri.parse("${ApiConfig.baseUrl}/order/notifications/user"),
+            headers: {
+              "Content-Type": "application/json",
+              if (token != null) "Authorization": "Bearer $token",
+            },
+          )
+          .timeout(const Duration(seconds: 6));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map) {
-          _notifications = List<Map<String, dynamic>>.from(decoded['notifications'] ?? []);
-          _unreadNotificationCount = int.tryParse(decoded['unreadCount']?.toString() ?? '0') ?? 0;
+          _notifications = List<Map<String, dynamic>>.from(
+            decoded['notifications'] ?? [],
+          );
+          _unreadNotificationCount =
+              int.tryParse(decoded['unreadCount']?.toString() ?? '0') ?? 0;
           notifyListeners();
         }
       }
@@ -509,7 +554,9 @@ class OrderProvider extends ChangeNotifier{
         },
       );
       if (response.statusCode == 200) {
-        final idx = _notifications.indexWhere((n) => n['_id']?.toString() == id);
+        final idx = _notifications.indexWhere(
+          (n) => n['_id']?.toString() == id,
+        );
         if (idx != -1 && _notifications[idx]['isRead'] != true) {
           _notifications[idx]['isRead'] = true;
           if (_unreadNotificationCount > 0) _unreadNotificationCount--;
@@ -607,9 +654,7 @@ class OrderProvider extends ChangeNotifier{
 
       final response = await get(
         Uri.parse("${ApiConfig.baseUrl}/order/user"),
-        headers: {
-          "Authorization": "Bearer $token",
-        },
+        headers: {"Authorization": "Bearer $token"},
       );
 
       if (response.statusCode == 200) {
@@ -630,18 +675,22 @@ class OrderProvider extends ChangeNotifier{
       final user = FirebaseAuth.instance.currentUser;
       final token = await user?.getIdToken();
 
-      final response = await http.get(
-        Uri.parse("${ApiConfig.baseUrl}/order/track/$orderId"),
-        headers: {
-          "Content-Type": "application/json",
-          if (token != null) "Authorization": "Bearer $token",
-        },
-      ).timeout(const Duration(seconds: 12));
+      final response = await http
+          .get(
+            Uri.parse("${ApiConfig.baseUrl}/order/track/$orderId"),
+            headers: {
+              "Content-Type": "application/json",
+              if (token != null) "Authorization": "Bearer $token",
+            },
+          )
+          .timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map && decoded['order'] != null) {
-          final liveOrder = Order.fromJson(Map<String, dynamic>.from(decoded['order']));
+          final liveOrder = Order.fromJson(
+            Map<String, dynamic>.from(decoded['order']),
+          );
           // Update in cached list if present
           final idx = _myOrders.indexWhere((o) => o.id == liveOrder.id);
           if (idx != -1) {
@@ -675,10 +724,14 @@ class OrderProvider extends ChangeNotifier{
 
     for (final rawItem in order.orderItems) {
       final itemMap = rawItem is Map ? rawItem : {};
-      final String rawId = (itemMap['itemId'] ?? itemMap['_id'] ?? '').toString();
-      final String rawName = (itemMap['itemName'] ?? itemMap['name'] ?? 'Unknown Item').toString();
-      final int histPrice = int.tryParse(itemMap['itemPrice']?.toString() ?? '0') ?? 0;
-      final int reqQty = int.tryParse(itemMap['quantity']?.toString() ?? '1') ?? 1;
+      final String rawId = (itemMap['itemId'] ?? itemMap['_id'] ?? '')
+          .toString();
+      final String rawName =
+          (itemMap['itemName'] ?? itemMap['name'] ?? 'Unknown Item').toString();
+      final int histPrice =
+          int.tryParse(itemMap['itemPrice']?.toString() ?? '0') ?? 0;
+      final int reqQty =
+          int.tryParse(itemMap['quantity']?.toString() ?? '1') ?? 1;
 
       // Find in current catalog
       Item? catalogItem;
@@ -690,7 +743,8 @@ class OrderProvider extends ChangeNotifier{
       if (catalogItem == null && rawName.isNotEmpty) {
         try {
           catalogItem = currentCatalog.firstWhere(
-            (c) => c.itemName.toLowerCase().trim() == rawName.toLowerCase().trim(),
+            (c) =>
+                c.itemName.toLowerCase().trim() == rawName.toLowerCase().trim(),
           );
         } catch (_) {}
       }
@@ -708,11 +762,13 @@ class OrderProvider extends ChangeNotifier{
 
       // Check price changes
       if (catalogItem.itemPrice != histPrice) {
-        priceChanges.add(PriceChangeInfo(
-          itemName: catalogItem.itemName,
-          oldPrice: histPrice,
-          newPrice: catalogItem.itemPrice,
-        ));
+        priceChanges.add(
+          PriceChangeInfo(
+            itemName: catalogItem.itemName,
+            oldPrice: histPrice,
+            newPrice: catalogItem.itemPrice,
+          ),
+        );
       }
 
       // Add to cart with current catalog price
@@ -723,11 +779,13 @@ class OrderProvider extends ChangeNotifier{
         for (int i = 0; i < toAdd; i++) {
           addToCart(catalogItem);
         }
-        addedItems.add(ReorderItemInfo(
-          itemName: catalogItem.itemName,
-          currentPrice: catalogItem.itemPrice,
-          quantityAdded: toAdd,
-        ));
+        addedItems.add(
+          ReorderItemInfo(
+            itemName: catalogItem.itemName,
+            currentPrice: catalogItem.itemPrice,
+            quantityAdded: toAdd,
+          ),
+        );
       }
     }
 
@@ -743,7 +801,10 @@ class OrderProvider extends ChangeNotifier{
   void showToast(String message, BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(fontFamily: 'Poppins', color: Colors.black)),
+        content: Text(
+          message,
+          style: const TextStyle(fontFamily: 'Poppins', color: Colors.black),
+        ),
         backgroundColor: Colors.yellow,
         behavior: SnackBarBehavior.floating,
       ),
@@ -799,17 +860,14 @@ class CustomizationOption {
 
   factory CustomizationOption.fromJson(Map<String, dynamic> json) {
     final rawPrice = json['price'];
-    final p = rawPrice != null ? (int.tryParse(rawPrice.toString()) ?? (double.tryParse(rawPrice.toString())?.round() ?? 0)) : 0;
-    return CustomizationOption(
-      name: (json['name'] ?? '').toString(),
-      price: p,
-    );
+    final p = rawPrice != null
+        ? (int.tryParse(rawPrice.toString()) ??
+              (double.tryParse(rawPrice.toString())?.round() ?? 0))
+        : 0;
+    return CustomizationOption(name: (json['name'] ?? '').toString(), price: p);
   }
 
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'price': price,
-  };
+  Map<String, dynamic> toJson() => {'name': name, 'price': price};
 }
 
 class CustomizationGroup {
@@ -860,7 +918,10 @@ class SelectedCustomization {
 
   factory SelectedCustomization.fromJson(Map<String, dynamic> json) {
     final rawPrice = json['price'];
-    final p = rawPrice != null ? (int.tryParse(rawPrice.toString()) ?? (double.tryParse(rawPrice.toString())?.round() ?? 0)) : 0;
+    final p = rawPrice != null
+        ? (int.tryParse(rawPrice.toString()) ??
+              (double.tryParse(rawPrice.toString())?.round() ?? 0))
+        : 0;
     return SelectedCustomization(
       customizationName: (json['customizationName'] ?? '').toString(),
       optionName: (json['optionName'] ?? '').toString(),
@@ -921,24 +982,31 @@ class Order {
   bool get isTerminal =>
       ['Collected', 'Completed', 'Cancelled'].contains(status);
 
-  bool get isCancelled =>
-      ['Cancelled', 'Payment Rejected'].contains(status);
+  bool get isCancelled => ['Cancelled', 'Payment Rejected'].contains(status);
 
   bool get isPaymentRejected =>
       paymentStatus == 'Rejected' || status == 'Payment Rejected';
 
   bool get isAwaitingVerification =>
-      paymentStatus == 'Awaiting Verification' || status == 'Pending Verification';
+      paymentStatus == 'Awaiting Verification' ||
+      status == 'Pending Verification';
 
   bool get isPaid => paymentStatus == 'Verified';
 
-  int get attemptCount =>
-      verificationAttempts.isNotEmpty ? verificationAttempts.length : (isPaymentRejected || isAwaitingVerification ? 1 : 0);
+  int get attemptCount => verificationAttempts.isNotEmpty
+      ? verificationAttempts.length
+      : (isPaymentRejected || isAwaitingVerification ? 1 : 0);
 
   factory Order.fromJson(Map<String, dynamic> json) {
-    final cAt = json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null;
-    final uAt = json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null;
-    final eAt = json['estimatedReadyAt'] != null ? DateTime.tryParse(json['estimatedReadyAt'].toString()) : null;
+    final cAt = json['createdAt'] != null
+        ? DateTime.tryParse(json['createdAt'].toString())
+        : null;
+    final uAt = json['updatedAt'] != null
+        ? DateTime.tryParse(json['updatedAt'].toString())
+        : null;
+    final eAt = json['estimatedReadyAt'] != null
+        ? DateTime.tryParse(json['estimatedReadyAt'].toString())
+        : null;
 
     final rawAttempts = json['verificationAttempts'];
     final List<Map<String, dynamic>> parsedAttempts = [];
@@ -954,7 +1022,8 @@ class Order {
       id: (json['_id'] ?? json['id'] ?? json['orderId'] ?? '').toString(),
       totalAmount: int.tryParse(json['totalAmount']?.toString() ?? '0') ?? 0,
       status: json['status'] ?? 'Processing',
-      orderDate: json['createdAt'] != null && json['createdAt'].toString().length >= 16
+      orderDate:
+          json['createdAt'] != null && json['createdAt'].toString().length >= 16
           ? json['createdAt'].toString().replaceFirst('T', ' ').substring(0, 16)
           : (json['orderDate'] ?? json['createdAt']?.toString() ?? ''),
       orderItems: json['orderItems'] ?? [],
@@ -962,7 +1031,9 @@ class Order {
       paymentStatus: json['paymentStatus'] ?? 'Pending',
       paymentRejectionReason: json['paymentRejectionReason']?.toString(),
       verificationAttempts: parsedAttempts,
-      estimatedPrepTime: int.tryParse(json['estimatedPrepTime']?.toString() ?? ''),
+      estimatedPrepTime: int.tryParse(
+        json['estimatedPrepTime']?.toString() ?? '',
+      ),
       estimatedReadyAt: eAt,
       paymentClaimedAt: json['paymentClaimedAt'] != null
           ? DateTime.tryParse(json['paymentClaimedAt'].toString())
@@ -974,8 +1045,12 @@ class Order {
       updatedAt: uAt,
       subtotal: int.tryParse(json['subtotal']?.toString() ?? ''),
       discountAmount: int.tryParse(json['discountAmount']?.toString() ?? ''),
-      appliedCouponCode: json['appliedCoupon'] is Map ? json['appliedCoupon']['code']?.toString() : null,
-      loyaltyRewardTitle: json['appliedLoyaltyReward'] is Map ? json['appliedLoyaltyReward']['title']?.toString() : null,
+      appliedCouponCode: json['appliedCoupon'] is Map
+          ? json['appliedCoupon']['code']?.toString()
+          : null,
+      loyaltyRewardTitle: json['appliedLoyaltyReward'] is Map
+          ? json['appliedLoyaltyReward']['title']?.toString()
+          : null,
     );
   }
 }
@@ -1007,9 +1082,11 @@ class Item {
   });
 
   bool get hasCustomizations => customizations.isNotEmpty;
-  int get customizationsTotal => selectedCustomizations.fold(0, (sum, c) => sum + c.price);
+  int get customizationsTotal =>
+      selectedCustomizations.fold(0, (sum, c) => sum + c.price);
   int get effectiveUnitPrice => itemPrice + customizationsTotal;
-  String get cartKey => "$itemId:${selectedCustomizations.map((c) => "${c.customizationName}=${c.optionName}").join(';')}";
+  String get cartKey =>
+      "$itemId:${selectedCustomizations.map((c) => "${c.customizationName}=${c.optionName}").join(';')}";
 
   Item copyWith({
     String? itemId,
@@ -1036,20 +1113,23 @@ class Item {
       isVeg: isVeg ?? this.isVeg,
       dietary: dietary ?? this.dietary,
       customizations: customizations ?? this.customizations,
-      selectedCustomizations: selectedCustomizations ?? this.selectedCustomizations,
+      selectedCustomizations:
+          selectedCustomizations ?? this.selectedCustomizations,
     );
     copy.quantity = quantity ?? this.quantity;
     return copy;
   }
 
-  factory Item.fromJson(Map<String, dynamic> json){
+  factory Item.fromJson(Map<String, dynamic> json) {
     final dietaryStr = json['dietary']?.toString() ?? 'Veg';
-    final bool vegVal = json['isVeg'] ?? (dietaryStr.toLowerCase() != 'non-veg');
+    final bool vegVal =
+        json['isVeg'] ?? (dietaryStr.toLowerCase() != 'non-veg');
 
     final rawPrice = json['itemPrice'];
     int parsedPrice = 0;
     if (rawPrice != null) {
-      parsedPrice = int.tryParse(rawPrice.toString()) ??
+      parsedPrice =
+          int.tryParse(rawPrice.toString()) ??
           (double.tryParse(rawPrice.toString())?.round() ?? 0);
     }
 
@@ -1058,7 +1138,9 @@ class Item {
     if (rawCust is List) {
       for (final g in rawCust) {
         if (g is Map) {
-          parsedGroups.add(CustomizationGroup.fromJson(Map<String, dynamic>.from(g)));
+          parsedGroups.add(
+            CustomizationGroup.fromJson(Map<String, dynamic>.from(g)),
+          );
         }
       }
     }
@@ -1068,7 +1150,9 @@ class Item {
     if (rawSel is List) {
       for (final s in rawSel) {
         if (s is Map) {
-          parsedSel.add(SelectedCustomization.fromJson(Map<String, dynamic>.from(s)));
+          parsedSel.add(
+            SelectedCustomization.fromJson(Map<String, dynamic>.from(s)),
+          );
         }
       }
     }
@@ -1079,7 +1163,9 @@ class Item {
       itemPrice: parsedPrice,
       category: (json['category'] ?? '').toString(),
       description: json['description']?.toString(),
-      isAvailable: json['isAvailable'] == null ? true : (json['isAvailable'] == true || json['isAvailable'] == 'true'),
+      isAvailable: json['isAvailable'] == null
+          ? true
+          : (json['isAvailable'] == true || json['isAvailable'] == 'true'),
       imageUrl: json['imageUrl']?.toString(),
       isVeg: vegVal,
       dietary: dietaryStr,
@@ -1098,7 +1184,9 @@ class Item {
       'isVeg': isVeg,
       'dietary': dietary,
       if (selectedCustomizations.isNotEmpty)
-        'selectedCustomizations': selectedCustomizations.map((s) => s.toJson()).toList(),
+        'selectedCustomizations': selectedCustomizations
+            .map((s) => s.toJson())
+            .toList(),
       if (customizations.isNotEmpty)
         'customizations': customizations.map((g) => g.toJson()).toList(),
     };

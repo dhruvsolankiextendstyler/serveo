@@ -55,57 +55,66 @@ void main() {
   });
 
   group('Phase 6 — OrderProvider Coupon & Loyalty Calculation', () {
-    test('Calculates final payable total accurately with coupon and loyalty discounts', () {
-      final provider = OrderProvider();
+    test(
+      'Calculates final payable total accurately with coupon and loyalty discounts',
+      () {
+        final provider = OrderProvider();
 
-      // Add mock item to tray
-      provider.addToCart(
-        Item(
-          itemId: 'item_1',
-          itemName: 'Paneer Butter Masala',
-          itemPrice: 250,
-          category: 'Curry',
-          isAvailable: true,
-        ),
-      );
-      provider.addToCart(
-        Item(
-          itemId: 'item_2',
-          itemName: 'Butter Naan',
-          itemPrice: 50,
-          category: 'Breads',
-          isAvailable: true,
-        ),
-      );
+        // Add mock item to tray
+        provider.addToCart(
+          Item(
+            itemId: 'item_1',
+            itemName: 'Paneer Butter Masala',
+            itemPrice: 250,
+            category: 'Curry',
+            isAvailable: true,
+          ),
+        );
+        provider.addToCart(
+          Item(
+            itemId: 'item_2',
+            itemName: 'Butter Naan',
+            itemPrice: 50,
+            category: 'Breads',
+            isAvailable: true,
+          ),
+        );
 
-      // Subtotal should be 300
-      expect(provider.getTotal(), 300);
-      expect(provider.getFinalPayableTotal(), 300);
+        // Subtotal should be 300
+        expect(provider.getTotal(), 300);
+        expect(provider.getFinalPayableTotal(), 300);
 
-      // Apply coupon (₹50 discount)
-      provider.setDiscountForTesting(couponCode: 'WELCOME50', couponDiscount: 50.0);
-      expect(provider.appliedCouponCode, 'WELCOME50');
-      expect(provider.couponDiscount, 50.0);
-      expect(provider.getFinalPayableTotal(), 250);
+        // Apply coupon (₹50 discount)
+        provider.setDiscountForTesting(
+          couponCode: 'WELCOME50',
+          couponDiscount: 50.0,
+        );
+        expect(provider.appliedCouponCode, 'WELCOME50');
+        expect(provider.couponDiscount, 50.0);
+        expect(provider.getFinalPayableTotal(), 250);
 
-      // Apply loyalty reward (₹30 discount)
-      provider.setDiscountForTesting(rewardId: 'reward_1', loyaltyDiscount: 30.0);
-      expect(provider.selectedRewardId, 'reward_1');
-      expect(provider.loyaltyDiscount, 30.0);
-      expect(provider.getFinalPayableTotal(), 220);
+        // Apply loyalty reward (₹30 discount)
+        provider.setDiscountForTesting(
+          rewardId: 'reward_1',
+          loyaltyDiscount: 30.0,
+        );
+        expect(provider.selectedRewardId, 'reward_1');
+        expect(provider.loyaltyDiscount, 30.0);
+        expect(provider.getFinalPayableTotal(), 220);
 
-      // Remove coupon
-      provider.removeCoupon();
-      expect(provider.appliedCouponCode, isNull);
-      expect(provider.couponDiscount, 0.0);
-      expect(provider.getFinalPayableTotal(), 270);
+        // Remove coupon
+        provider.removeCoupon();
+        expect(provider.appliedCouponCode, isNull);
+        expect(provider.couponDiscount, 0.0);
+        expect(provider.getFinalPayableTotal(), 270);
 
-      // Deselect loyalty reward
-      provider.deselectLoyaltyReward();
-      expect(provider.selectedRewardId, isNull);
-      expect(provider.loyaltyDiscount, 0.0);
-      expect(provider.getFinalPayableTotal(), 300);
-    });
+        // Deselect loyalty reward
+        provider.deselectLoyaltyReward();
+        expect(provider.selectedRewardId, isNull);
+        expect(provider.loyaltyDiscount, 0.0);
+        expect(provider.getFinalPayableTotal(), 300);
+      },
+    );
 
     test('Prevents negative payable total when discount exceeds subtotal', () {
       final provider = OrderProvider();
@@ -122,13 +131,18 @@ void main() {
       expect(provider.getTotal(), 20);
 
       // Apply a large discount
-      provider.setDiscountForTesting(couponCode: 'SUPER100', couponDiscount: 100.0);
+      provider.setDiscountForTesting(
+        couponCode: 'SUPER100',
+        couponDiscount: 100.0,
+      );
       expect(provider.getFinalPayableTotal(), 0);
     });
   });
 
   group('Phase 6 — BillDetailsCard Widget Test', () {
-    testWidgets('Renders subtotal, coupon discount, and net grand total', (tester) async {
+    testWidgets('Renders subtotal, coupon discount, and net grand total', (
+      tester,
+    ) async {
       final orderProvider = OrderProvider();
       final themeProvider = ThemeProvider();
 
@@ -154,11 +168,7 @@ void main() {
             ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
             ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
           ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: BillDetailsCard(),
-            ),
-          ),
+          child: const MaterialApp(home: Scaffold(body: BillDetailsCard())),
         ),
       );
 
@@ -175,7 +185,9 @@ void main() {
   });
 
   group('Phase 6 — Admin Page Navigation & Role Isolation', () {
-    testWidgets('Owner and Manager see Marketing tab; Kitchen staff does NOT', (tester) async {
+    testWidgets('Owner and Manager see Marketing tab; Kitchen staff does NOT', (
+      tester,
+    ) async {
       final restProvider = RestaurantProvider();
       restProvider.setRoleForTest('owner');
 
@@ -185,13 +197,15 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
-            ChangeNotifierProvider<RestaurantProvider>.value(value: restProvider),
-            ChangeNotifierProvider<AdminOrderProvider>.value(value: adminOrderProvider),
+            ChangeNotifierProvider<RestaurantProvider>.value(
+              value: restProvider,
+            ),
+            ChangeNotifierProvider<AdminOrderProvider>.value(
+              value: adminOrderProvider,
+            ),
             ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
           ],
-          child: const MaterialApp(
-            home: AdminPage(),
-          ),
+          child: const MaterialApp(home: AdminPage()),
         ),
       );
 
@@ -215,7 +229,9 @@ void main() {
   });
 
   group('Phase 6 — AdminMarketingPage UI', () {
-    testWidgets('Renders all 5 subtabs and restriction banner on Starter plan', (tester) async {
+    testWidgets('Renders all 5 subtabs and restriction banner on Starter plan', (
+      tester,
+    ) async {
       final restProvider = RestaurantProvider();
       // Set to starter plan
       final starterSub = SubscriptionInfo.fromJson({
@@ -236,14 +252,12 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
-            ChangeNotifierProvider<RestaurantProvider>.value(value: restProvider),
+            ChangeNotifierProvider<RestaurantProvider>.value(
+              value: restProvider,
+            ),
             ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
           ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: AdminMarketingPage(),
-            ),
-          ),
+          child: const MaterialApp(home: Scaffold(body: AdminMarketingPage())),
         ),
       );
 
@@ -256,7 +270,9 @@ void main() {
 
       // Verify Starter plan warning banner is present
       expect(
-        find.text("Marketing & Loyalty requires a Growth or Premium plan. You are viewing in read-only mode."),
+        find.text(
+          "Marketing & Loyalty requires a Growth or Premium plan. You are viewing in read-only mode.",
+        ),
         findsOneWidget,
       );
     });

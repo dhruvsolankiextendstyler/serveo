@@ -60,17 +60,24 @@ class _SignupPageState extends State<SignupPage> {
                     padding: const EdgeInsets.symmetric(vertical: 30),
                     decoration: const BoxDecoration(
                       color: Color(0xFFD99058),
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(80)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(80),
+                      ),
                       boxShadow: [
-                        BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4))
+                        BoxShadow(
+                          color: Colors.black45,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
                       ],
                     ),
                     child: Text(
                       "Register",
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineLarge
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -121,7 +128,9 @@ class _SignupPageState extends State<SignupPage> {
                   // --- BOTTOM BUN ---
                   Material(
                     color: const Color(0xFFA66D42),
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(30),
+                    ),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () async {
@@ -129,62 +138,89 @@ class _SignupPageState extends State<SignupPage> {
 
                         final String name = uname.text.trim();
                         final String email = uemail.text.trim();
-                        final String pass = upass.text; // Note: do not trim password
+                        final String pass =
+                            upass.text; // Note: do not trim password
                         final String phone = unum.text.trim();
 
                         if (name.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter your full name")),
+                            const SnackBar(
+                              content: Text("Please enter your full name"),
+                            ),
                           );
                           return;
                         }
 
                         if (email.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter your email")),
+                            const SnackBar(
+                              content: Text("Please enter your email"),
+                            ),
                           );
                           return;
                         }
 
-                        final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                        final emailRegex = RegExp(
+                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                        );
                         if (!emailRegex.hasMatch(email)) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter a valid email address")),
+                            const SnackBar(
+                              content: Text(
+                                "Please enter a valid email address",
+                              ),
+                            ),
                           );
                           return;
                         }
 
                         if (pass.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter a password")),
+                            const SnackBar(
+                              content: Text("Please enter a password"),
+                            ),
                           );
                           return;
                         }
 
                         if (pass.length < 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Password must be at least 6 characters long")),
+                            const SnackBar(
+                              content: Text(
+                                "Password must be at least 6 characters long",
+                              ),
+                            ),
                           );
                           return;
                         }
 
                         if (phone.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter your phone number")),
+                            const SnackBar(
+                              content: Text("Please enter your phone number"),
+                            ),
                           );
                           return;
                         }
 
                         if (phone.length < 10 || phone.length > 15) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter a valid phone number (10 to 15 digits)")),
+                            const SnackBar(
+                              content: Text(
+                                "Please enter a valid phone number (10 to 15 digits)",
+                              ),
+                            ),
                           );
                           return;
                         }
 
                         setState(() => _isRegistering = true);
                         try {
-                          User? user = await AuthCheck.signUp(email, pass, name);
+                          User? user = await AuthCheck.signUp(
+                            email,
+                            pass,
+                            name,
+                          );
 
                           if (user != null) {
                             String? token = await user.getIdToken();
@@ -205,54 +241,86 @@ class _SignupPageState extends State<SignupPage> {
 
                             if (!context.mounted) return;
 
-                            if (response.statusCode == 200 || response.statusCode == 201) {
+                            if (response.statusCode == 200 ||
+                                response.statusCode == 201) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Account created successfully! Please login.")),
+                                const SnackBar(
+                                  content: Text(
+                                    "Account created successfully! Please login.",
+                                  ),
+                                ),
                               );
                               Navigator.of(context).pop();
                             } else if (response.statusCode >= 500) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Server unavailable. Please try again later.")),
+                                const SnackBar(
+                                  content: Text(
+                                    "Server unavailable. Please try again later.",
+                                  ),
+                                ),
                               );
                             } else {
                               String msg = "Registration failed";
                               try {
                                 final body = jsonDecode(response.body);
-                                if (body is Map && body.containsKey("message")) {
+                                if (body is Map &&
+                                    body.containsKey("message")) {
                                   msg = body["message"].toString();
                                 }
                               } catch (_) {}
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(msg)),
-                              );
+                              ScaffoldMessenger.of(
+                                context,
+                              ).showSnackBar(SnackBar(content: Text(msg)));
                             }
                           }
                         } on FirebaseAuthException catch (e) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(AuthCheck.getFirebaseAuthErrorMessage(e))),
+                            SnackBar(
+                              content: Text(
+                                AuthCheck.getFirebaseAuthErrorMessage(e),
+                              ),
+                            ),
                           );
                         } on ClientException catch (_) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Network connection failed. Please check your internet connection.")),
+                            const SnackBar(
+                              content: Text(
+                                "Network connection failed. Please check your internet connection.",
+                              ),
+                            ),
                           );
                         } on TimeoutException catch (_) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Server timed out. Please try again later.")),
+                            const SnackBar(
+                              content: Text(
+                                "Server timed out. Please try again later.",
+                              ),
+                            ),
                           );
                         } catch (e) {
                           debugPrint("Signup error: $e");
                           if (!context.mounted) return;
                           final errStr = e.toString().toLowerCase();
-                          if (errStr.contains("socketexception") || errStr.contains("network") || errStr.contains("connection")) {
+                          if (errStr.contains("socketexception") ||
+                              errStr.contains("network") ||
+                              errStr.contains("connection")) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Network connection failed. Please check your internet connection.")),
+                              const SnackBar(
+                                content: Text(
+                                  "Network connection failed. Please check your internet connection.",
+                                ),
+                              ),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("An unexpected error occurred. Please try again.")),
+                              const SnackBar(
+                                content: Text(
+                                  "An unexpected error occurred. Please try again.",
+                                ),
+                              ),
                             );
                           }
                         } finally {
@@ -267,7 +335,10 @@ class _SignupPageState extends State<SignupPage> {
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
                               )
                             : const Text(
                                 "Create Account",

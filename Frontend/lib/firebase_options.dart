@@ -72,5 +72,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'serveo-foods.firebasestorage.app',
     iosBundleId: 'com.example.frontend',
   );
-
 }

@@ -51,10 +51,18 @@ class MetricComparison {
 
   factory MetricComparison.fromJson(Map<String, dynamic> json) {
     return MetricComparison(
-      grossSalesChangePct: json['grossSalesChangePct'] != null ? (json['grossSalesChangePct'] as num).toDouble() : null,
-      totalOrdersChangePct: json['totalOrdersChangePct'] != null ? (json['totalOrdersChangePct'] as num).toDouble() : null,
-      completedOrdersChangePct: json['completedOrdersChangePct'] != null ? (json['completedOrdersChangePct'] as num).toDouble() : null,
-      aovChangePct: json['aovChangePct'] != null ? (json['aovChangePct'] as num).toDouble() : null,
+      grossSalesChangePct: json['grossSalesChangePct'] != null
+          ? (json['grossSalesChangePct'] as num).toDouble()
+          : null,
+      totalOrdersChangePct: json['totalOrdersChangePct'] != null
+          ? (json['totalOrdersChangePct'] as num).toDouble()
+          : null,
+      completedOrdersChangePct: json['completedOrdersChangePct'] != null
+          ? (json['completedOrdersChangePct'] as num).toDouble()
+          : null,
+      aovChangePct: json['aovChangePct'] != null
+          ? (json['aovChangePct'] as num).toDouble()
+          : null,
     );
   }
 }
@@ -89,10 +97,18 @@ class AnalyticsOverview {
   });
 
   factory AnalyticsOverview.fromJson(Map<String, dynamic> json) {
-    final summary = json['summary'] is Map ? (json['summary'] as Map) : const <String, dynamic>{};
-    final prev = json['previousPeriod'] is Map ? (json['previousPeriod'] as Map) : const <String, dynamic>{};
-    final comp = json['comparison'] is Map ? Map<String, dynamic>.from(json['comparison']) : <String, dynamic>{};
-    final range = json['selectedRange'] is Map ? Map<String, dynamic>.from(json['selectedRange']) : <String, dynamic>{};
+    final summary = json['summary'] is Map
+        ? (json['summary'] as Map)
+        : const <String, dynamic>{};
+    final prev = json['previousPeriod'] is Map
+        ? (json['previousPeriod'] as Map)
+        : const <String, dynamic>{};
+    final comp = json['comparison'] is Map
+        ? Map<String, dynamic>.from(json['comparison'])
+        : <String, dynamic>{};
+    final range = json['selectedRange'] is Map
+        ? Map<String, dynamic>.from(json['selectedRange'])
+        : <String, dynamic>{};
 
     return AnalyticsOverview(
       selectedRange: SelectedRangeInfo.fromJson(range),
@@ -104,7 +120,8 @@ class AnalyticsOverview {
       pendingOrders: (summary['pendingOrders'] as num?)?.toInt() ?? 0,
       cancelledOrders: (summary['cancelledOrders'] as num?)?.toInt() ?? 0,
       averageOrderValue: (summary['averageOrderValue'] as num?)?.toInt() ?? 0,
-      pendingUpiVerifications: (summary['pendingUpiVerifications'] as num?)?.toInt() ?? 0,
+      pendingUpiVerifications:
+          (summary['pendingUpiVerifications'] as num?)?.toInt() ?? 0,
       comparison: MetricComparison.fromJson(comp),
       previousLabel: prev['label'] ?? 'Previous Period',
     );
@@ -281,9 +298,12 @@ class ItemInsights {
     final popRaw = json['popularItems'] as List? ?? [];
     final underRaw = json['underperformingItems'] as List? ?? [];
     return ItemInsights(
-      totalUniqueItemsSold: (json['totalUniqueItemsSold'] as num?)?.toInt() ?? 0,
+      totalUniqueItemsSold:
+          (json['totalUniqueItemsSold'] as num?)?.toInt() ?? 0,
       popularItems: popRaw.map((e) => PopularItem.fromJson(e)).toList(),
-      underperformingItems: underRaw.map((e) => UnderperformingItem.fromJson(e)).toList(),
+      underperformingItems: underRaw
+          .map((e) => UnderperformingItem.fromJson(e))
+          .toList(),
     );
   }
 }
@@ -294,7 +314,12 @@ class PeakHourPoint {
   final int ordersCount;
   final int volume;
 
-  PeakHourPoint({required this.hour, required this.label, required this.ordersCount, required this.volume});
+  PeakHourPoint({
+    required this.hour,
+    required this.label,
+    required this.ordersCount,
+    required this.volume,
+  });
 
   factory PeakHourPoint.fromJson(Map<String, dynamic> json) {
     return PeakHourPoint(
@@ -312,7 +337,12 @@ class PeakDayPoint {
   final int ordersCount;
   final int volume;
 
-  PeakDayPoint({required this.dayOfWeek, required this.dayName, required this.ordersCount, required this.volume});
+  PeakDayPoint({
+    required this.dayOfWeek,
+    required this.dayName,
+    required this.ordersCount,
+    required this.volume,
+  });
 
   factory PeakDayPoint.fromJson(Map<String, dynamic> json) {
     return PeakDayPoint(
@@ -338,13 +368,21 @@ class PeakHoursData {
   });
 
   factory PeakHoursData.fromJson(Map<String, dynamic> json) {
-    final hours = (json['hourlyVolume'] as List? ?? []).map((e) => PeakHourPoint.fromJson(e)).toList();
-    final days = (json['dayOfWeekVolume'] as List? ?? []).map((e) => PeakDayPoint.fromJson(e)).toList();
+    final hours = (json['hourlyVolume'] as List? ?? [])
+        .map((e) => PeakHourPoint.fromJson(e))
+        .toList();
+    final days = (json['dayOfWeekVolume'] as List? ?? [])
+        .map((e) => PeakDayPoint.fromJson(e))
+        .toList();
     return PeakHoursData(
       hourlyVolume: hours,
       dayOfWeekVolume: days,
-      peakHour: json['peakHour'] != null ? PeakHourPoint.fromJson(json['peakHour']) : null,
-      peakDay: json['peakDay'] != null ? PeakDayPoint.fromJson(json['peakDay']) : null,
+      peakHour: json['peakHour'] != null
+          ? PeakHourPoint.fromJson(json['peakHour'])
+          : null,
+      peakDay: json['peakDay'] != null
+          ? PeakDayPoint.fromJson(json['peakDay'])
+          : null,
     );
   }
 }
@@ -376,8 +414,10 @@ class PaymentMethodStats {
       totalAmount: (json['totalAmount'] as num?)?.toInt() ?? 0,
       verifiedCount: (json['verifiedCount'] as num?)?.toInt() ?? 0,
       verifiedAmount: (json['verifiedAmount'] as num?)?.toInt() ?? 0,
-      pendingVerificationCount: (json['pendingVerificationCount'] as num?)?.toInt() ?? 0,
-      pendingVerificationAmount: (json['pendingVerificationAmount'] as num?)?.toInt() ?? 0,
+      pendingVerificationCount:
+          (json['pendingVerificationCount'] as num?)?.toInt() ?? 0,
+      pendingVerificationAmount:
+          (json['pendingVerificationAmount'] as num?)?.toInt() ?? 0,
       rejectedCount: (json['rejectedCount'] as num?)?.toInt() ?? 0,
       rejectedAmount: (json['rejectedAmount'] as num?)?.toInt() ?? 0,
     );
@@ -491,8 +531,10 @@ class AdminAnalyticsProvider extends ChangeNotifier {
 
   String _buildCacheKey(String tf, DateTimeRange? cr, String sortBy) {
     if (tf == 'custom' && cr != null) {
-      final s = "${cr.start.year}-${cr.start.month.toString().padLeft(2, '0')}-${cr.start.day.toString().padLeft(2, '0')}";
-      final e = "${cr.end.year}-${cr.end.month.toString().padLeft(2, '0')}-${cr.end.day.toString().padLeft(2, '0')}";
+      final s =
+          "${cr.start.year}-${cr.start.month.toString().padLeft(2, '0')}-${cr.start.day.toString().padLeft(2, '0')}";
+      final e =
+          "${cr.end.year}-${cr.end.month.toString().padLeft(2, '0')}-${cr.end.day.toString().padLeft(2, '0')}";
       return "custom_${s}_${e}_$sortBy";
     }
     return "${tf}_$sortBy";
@@ -551,8 +593,10 @@ class AdminAnalyticsProvider extends ChangeNotifier {
 
       String queryParams = "timeframe=$_selectedTimeframe&sortBy=$_itemSortBy";
       if (_selectedTimeframe == 'custom' && _customRange != null) {
-        final s = "${_customRange!.start.year}-${_customRange!.start.month.toString().padLeft(2, '0')}-${_customRange!.start.day.toString().padLeft(2, '0')}";
-        final e = "${_customRange!.end.year}-${_customRange!.end.month.toString().padLeft(2, '0')}-${_customRange!.end.day.toString().padLeft(2, '0')}";
+        final s =
+            "${_customRange!.start.year}-${_customRange!.start.month.toString().padLeft(2, '0')}-${_customRange!.start.day.toString().padLeft(2, '0')}";
+        final e =
+            "${_customRange!.end.year}-${_customRange!.end.month.toString().padLeft(2, '0')}-${_customRange!.end.day.toString().padLeft(2, '0')}";
         queryParams += "&startDate=$s&endDate=$e";
       }
 
@@ -561,18 +605,40 @@ class AdminAnalyticsProvider extends ChangeNotifier {
       // 1. Attempt single-trip consolidated /dashboard endpoint first (fast, single round-trip)
       bool dashboardLoaded = false;
       try {
-        final dashboardUri = Uri.parse("$baseUrl/order/analytics/dashboard?$queryParams");
-        final dashRes = await activeClient.get(dashboardUri, headers: headers).timeout(const Duration(seconds: 25));
+        final dashboardUri = Uri.parse(
+          "$baseUrl/order/analytics/dashboard?$queryParams",
+        );
+        final dashRes = await activeClient
+            .get(dashboardUri, headers: headers)
+            .timeout(const Duration(seconds: 25));
 
         if (dashRes.statusCode == 200) {
           final data = _safeParseJsonResponse(dashRes, "dashboard");
           if (data['overview'] is Map && data['sales'] is Map) {
-            final overviewData = AnalyticsOverview.fromJson(data['overview'] as Map<String, dynamic>);
-            final salesData = SalesTimeline.fromJson(data['sales'] as Map<String, dynamic>);
-            final ordersData = OrderPerformance.fromJson(data['orders'] is Map ? data['orders'] as Map<String, dynamic> : {});
-            final itemsData = ItemInsights.fromJson(data['items'] is Map ? data['items'] as Map<String, dynamic> : {});
-            final peakHoursData = PeakHoursData.fromJson(data['peakHours'] is Map ? data['peakHours'] as Map<String, dynamic> : {});
-            final paymentsData = PaymentAnalytics.fromJson(data['payments'] is Map ? data['payments'] as Map<String, dynamic> : {});
+            final overviewData = AnalyticsOverview.fromJson(
+              data['overview'] as Map<String, dynamic>,
+            );
+            final salesData = SalesTimeline.fromJson(
+              data['sales'] as Map<String, dynamic>,
+            );
+            final ordersData = OrderPerformance.fromJson(
+              data['orders'] is Map
+                  ? data['orders'] as Map<String, dynamic>
+                  : {},
+            );
+            final itemsData = ItemInsights.fromJson(
+              data['items'] is Map ? data['items'] as Map<String, dynamic> : {},
+            );
+            final peakHoursData = PeakHoursData.fromJson(
+              data['peakHours'] is Map
+                  ? data['peakHours'] as Map<String, dynamic>
+                  : {},
+            );
+            final paymentsData = PaymentAnalytics.fromJson(
+              data['payments'] is Map
+                  ? data['payments'] as Map<String, dynamic>
+                  : {},
+            );
 
             if (requestId != _activeRequestId) return;
 
@@ -607,24 +673,69 @@ class AdminAnalyticsProvider extends ChangeNotifier {
       // 2. Fallback: Fetch modular endpoints concurrently
       String basePath = "$baseUrl/order/analytics";
       var results = await Future.wait([
-        activeClient.get(Uri.parse("$basePath/overview?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-        activeClient.get(Uri.parse("$basePath/sales?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-        activeClient.get(Uri.parse("$basePath/orders?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-        activeClient.get(Uri.parse("$basePath/items?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-        activeClient.get(Uri.parse("$basePath/peak-hours?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-        activeClient.get(Uri.parse("$basePath/payments?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+        activeClient
+            .get(Uri.parse("$basePath/overview?$queryParams"), headers: headers)
+            .timeout(const Duration(seconds: 15)),
+        activeClient
+            .get(Uri.parse("$basePath/sales?$queryParams"), headers: headers)
+            .timeout(const Duration(seconds: 15)),
+        activeClient
+            .get(Uri.parse("$basePath/orders?$queryParams"), headers: headers)
+            .timeout(const Duration(seconds: 15)),
+        activeClient
+            .get(Uri.parse("$basePath/items?$queryParams"), headers: headers)
+            .timeout(const Duration(seconds: 15)),
+        activeClient
+            .get(
+              Uri.parse("$basePath/peak-hours?$queryParams"),
+              headers: headers,
+            )
+            .timeout(const Duration(seconds: 15)),
+        activeClient
+            .get(Uri.parse("$basePath/payments?$queryParams"), headers: headers)
+            .timeout(const Duration(seconds: 15)),
       ]);
 
       // If the primary path returns 404, check if mounted under /admin/analytics
       if (results[0].statusCode == 404) {
         final altBasePath = "$baseUrl/admin/analytics";
         final altResults = await Future.wait([
-          activeClient.get(Uri.parse("$altBasePath/overview?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-          activeClient.get(Uri.parse("$altBasePath/sales?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-          activeClient.get(Uri.parse("$altBasePath/orders?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-          activeClient.get(Uri.parse("$altBasePath/items?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-          activeClient.get(Uri.parse("$altBasePath/peak-hours?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
-          activeClient.get(Uri.parse("$altBasePath/payments?$queryParams"), headers: headers).timeout(const Duration(seconds: 15)),
+          activeClient
+              .get(
+                Uri.parse("$altBasePath/overview?$queryParams"),
+                headers: headers,
+              )
+              .timeout(const Duration(seconds: 15)),
+          activeClient
+              .get(
+                Uri.parse("$altBasePath/sales?$queryParams"),
+                headers: headers,
+              )
+              .timeout(const Duration(seconds: 15)),
+          activeClient
+              .get(
+                Uri.parse("$altBasePath/orders?$queryParams"),
+                headers: headers,
+              )
+              .timeout(const Duration(seconds: 15)),
+          activeClient
+              .get(
+                Uri.parse("$altBasePath/items?$queryParams"),
+                headers: headers,
+              )
+              .timeout(const Duration(seconds: 15)),
+          activeClient
+              .get(
+                Uri.parse("$altBasePath/peak-hours?$queryParams"),
+                headers: headers,
+              )
+              .timeout(const Duration(seconds: 15)),
+          activeClient
+              .get(
+                Uri.parse("$altBasePath/payments?$queryParams"),
+                headers: headers,
+              )
+              .timeout(const Duration(seconds: 15)),
         ]);
         if (altResults[0].statusCode != 404) {
           results = altResults;
@@ -636,12 +747,24 @@ class AdminAnalyticsProvider extends ChangeNotifier {
       if (requestId != _activeRequestId) return;
 
       // Safely parse each endpoint response with HTML detection and status checks
-      final overviewData = AnalyticsOverview.fromJson(_safeParseJsonResponse(results[0], "overview"));
-      final salesData = SalesTimeline.fromJson(_safeParseJsonResponse(results[1], "sales"));
-      final ordersData = OrderPerformance.fromJson(_safeParseJsonResponse(results[2], "orders"));
-      final itemsData = ItemInsights.fromJson(_safeParseJsonResponse(results[3], "items"));
-      final peakHoursData = PeakHoursData.fromJson(_safeParseJsonResponse(results[4], "peak-hours"));
-      final paymentsData = PaymentAnalytics.fromJson(_safeParseJsonResponse(results[5], "payments"));
+      final overviewData = AnalyticsOverview.fromJson(
+        _safeParseJsonResponse(results[0], "overview"),
+      );
+      final salesData = SalesTimeline.fromJson(
+        _safeParseJsonResponse(results[1], "sales"),
+      );
+      final ordersData = OrderPerformance.fromJson(
+        _safeParseJsonResponse(results[2], "orders"),
+      );
+      final itemsData = ItemInsights.fromJson(
+        _safeParseJsonResponse(results[3], "items"),
+      );
+      final peakHoursData = PeakHoursData.fromJson(
+        _safeParseJsonResponse(results[4], "peak-hours"),
+      );
+      final paymentsData = PaymentAnalytics.fromJson(
+        _safeParseJsonResponse(results[5], "payments"),
+      );
 
       _overview = overviewData;
       _salesTimeline = salesData;
@@ -680,28 +803,36 @@ class AdminAnalyticsProvider extends ChangeNotifier {
 
     try {
       final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-      final headers = {
-        if (token != null) "Authorization": "Bearer $token",
-      };
+      final headers = {if (token != null) "Authorization": "Bearer $token"};
 
       String queryParams = "timeframe=$_selectedTimeframe";
       if (_selectedTimeframe == 'custom' && _customRange != null) {
-        final s = "${_customRange!.start.year}-${_customRange!.start.month.toString().padLeft(2, '0')}-${_customRange!.start.day.toString().padLeft(2, '0')}";
-        final e = "${_customRange!.end.year}-${_customRange!.end.month.toString().padLeft(2, '0')}-${_customRange!.end.day.toString().padLeft(2, '0')}";
+        final s =
+            "${_customRange!.start.year}-${_customRange!.start.month.toString().padLeft(2, '0')}-${_customRange!.start.day.toString().padLeft(2, '0')}";
+        final e =
+            "${_customRange!.end.year}-${_customRange!.end.month.toString().padLeft(2, '0')}-${_customRange!.end.day.toString().padLeft(2, '0')}";
         queryParams += "&startDate=$s&endDate=$e";
       }
 
       final activeClient = customClient ?? http.Client();
-      var res = await activeClient.get(
-        Uri.parse("${ApiConfig.baseUrl}/order/analytics/export?$queryParams"),
-        headers: headers,
-      ).timeout(const Duration(seconds: 15));
+      var res = await activeClient
+          .get(
+            Uri.parse(
+              "${ApiConfig.baseUrl}/order/analytics/export?$queryParams",
+            ),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 404) {
-        final altRes = await activeClient.get(
-          Uri.parse("${ApiConfig.baseUrl}/admin/analytics/export?$queryParams"),
-          headers: headers,
-        ).timeout(const Duration(seconds: 15));
+        final altRes = await activeClient
+            .get(
+              Uri.parse(
+                "${ApiConfig.baseUrl}/admin/analytics/export?$queryParams",
+              ),
+              headers: headers,
+            )
+            .timeout(const Duration(seconds: 15));
         if (altRes.statusCode != 404) {
           res = altRes;
         }
@@ -709,7 +840,8 @@ class AdminAnalyticsProvider extends ChangeNotifier {
 
       final contentType = res.headers['content-type']?.toLowerCase() ?? '';
       final bodyTrimmed = res.body.trim();
-      final isHtml = contentType.contains('text/html') ||
+      final isHtml =
+          contentType.contains('text/html') ||
           bodyTrimmed.startsWith('<!DOCTYPE') ||
           bodyTrimmed.startsWith('<!doctype') ||
           bodyTrimmed.startsWith('<html');
@@ -741,16 +873,24 @@ class AdminAnalyticsProvider extends ChangeNotifier {
         }
       } else {
         if (isHtml) {
-          debugPrint("[Serveo Analytics] CSV Export returned HTML (HTTP ${res.statusCode}).");
-          throw Exception("Unable to load CSV export. The server returned an unexpected response.");
+          debugPrint(
+            "[Serveo Analytics] CSV Export returned HTML (HTTP ${res.statusCode}).",
+          );
+          throw Exception(
+            "Unable to load CSV export. The server returned an unexpected response.",
+          );
         }
-        throw Exception("Failed to generate CSV export (HTTP ${res.statusCode})");
+        throw Exception(
+          "Failed to generate CSV export (HTTP ${res.statusCode})",
+        );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("CSV Export Error: ${e.toString().replaceFirst("Exception: ", "")}"),
+            content: Text(
+              "CSV Export Error: ${e.toString().replaceFirst("Exception: ", "")}",
+            ),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -763,10 +903,14 @@ class AdminAnalyticsProvider extends ChangeNotifier {
 
   /// Safely decodes a JSON HTTP response, gracefully detecting and handling HTML/error responses
   /// without triggering FormatSyntaxError / FormatException crashes.
-  static Map<String, dynamic> _safeParseJsonResponse(http.Response res, String endpointName) {
+  static Map<String, dynamic> _safeParseJsonResponse(
+    http.Response res,
+    String endpointName,
+  ) {
     final contentType = res.headers['content-type']?.toLowerCase() ?? '';
     final bodyTrimmed = res.body.trim();
-    final isHtml = contentType.contains('text/html') ||
+    final isHtml =
+        contentType.contains('text/html') ||
         bodyTrimmed.startsWith('<!DOCTYPE') ||
         bodyTrimmed.startsWith('<!doctype') ||
         bodyTrimmed.startsWith('<html');
@@ -803,10 +947,14 @@ class AdminAnalyticsProvider extends ChangeNotifier {
       if (decoded is Map<String, dynamic>) {
         return decoded;
       }
-      throw Exception("Unexpected data structure received from '$endpointName'.");
+      throw Exception(
+        "Unexpected data structure received from '$endpointName'.",
+      );
     } catch (e) {
       if (e is FormatException) {
-        debugPrint("[Serveo Analytics] JSON parsing failed for '$endpointName': $e");
+        debugPrint(
+          "[Serveo Analytics] JSON parsing failed for '$endpointName': $e",
+        );
         throw Exception(
           "Unable to load analytics. The server returned an unexpected response. Please try again or contact support.",
         );

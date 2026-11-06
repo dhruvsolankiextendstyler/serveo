@@ -64,11 +64,15 @@ class _ServeoTextBoxState extends State<ServeoTextBox> {
         isDark: isDark,
         hintText: widget.hint,
         labelText: widget.label,
-        prefixIcon: widget.icon != null ? Icon(widget.icon, color: iconColor, size: 20) : null,
+        prefixIcon: widget.icon != null
+            ? Icon(widget.icon, color: iconColor, size: 20)
+            : null,
         suffixIcon: widget.obscure
             ? IconButton(
                 icon: Icon(
-                  _isObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  _isObscured
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
                   color: isDark ? Colors.white54 : const Color(0xFF9CA3AF),
                   size: 20,
                 ),

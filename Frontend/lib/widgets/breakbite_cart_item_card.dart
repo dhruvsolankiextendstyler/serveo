@@ -53,9 +53,15 @@ class CartItemCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: iconBg,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.yellow.withValues(alpha: 0.5)),
+                        border: Border.all(
+                          color: Colors.yellow.withValues(alpha: 0.5),
+                        ),
                       ),
-                      child: const Icon(Icons.fastfood, color: Colors.yellow, size: 28),
+                      child: const Icon(
+                        Icons.fastfood,
+                        color: Colors.yellow,
+                        size: 28,
+                      ),
                     ),
                   )
                 : Container(
@@ -64,9 +70,15 @@ class CartItemCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: iconBg,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.yellow.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: Colors.yellow.withValues(alpha: 0.5),
+                      ),
                     ),
-                    child: const Icon(Icons.fastfood, color: Colors.yellow, size: 28),
+                    child: const Icon(
+                      Icons.fastfood,
+                      color: Colors.yellow,
+                      size: 28,
+                    ),
                   ),
           ),
 
@@ -90,7 +102,11 @@ class CartItemCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     item.selectedCustomizations
-                        .map((c) => c.price > 0 ? "${c.optionName} (+₹${c.price})" : c.optionName)
+                        .map(
+                          (c) => c.price > 0
+                              ? "${c.optionName} (+₹${c.price})"
+                              : c.optionName,
+                        )
                         .join(" • "),
                     style: TextStyle(
                       fontSize: 11,
@@ -154,7 +170,11 @@ class CartItemCard extends StatelessWidget {
   }
 
   // Helper widget to keep the main tree clean
-  Widget _buildIconButton({Key? key, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildIconButton({
+    Key? key,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       key: key,
       onTap: onTap,

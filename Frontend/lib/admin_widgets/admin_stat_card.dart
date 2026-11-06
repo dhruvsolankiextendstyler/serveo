@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
-class AdminStatCard extends StatelessWidget{
+class AdminStatCard extends StatelessWidget {
   final String title, count;
   final Color color;
-  const AdminStatCard({super.key, required this.title, required this.count, required this.color});
+  const AdminStatCard({
+    super.key,
+    required this.title,
+    required this.count,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,9 +22,23 @@ class AdminStatCard extends StatelessWidget{
         ),
         child: Column(
           children: [
-            Text(count, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+            Text(
+              count,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(title, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),

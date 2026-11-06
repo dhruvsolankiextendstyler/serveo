@@ -32,6 +32,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
   late TextEditingController _pauseReasonController;
 
   List<String> _selectedDays = [];
+  List<OperatingDaySchedule> _dailySchedules = [];
   bool _isPaused = false;
   bool _initialized = false;
 
@@ -44,6 +45,35 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
     "Saturday",
     "Sunday"
   ];
+
+  TimeOfDay _parseTimeOfDay(String timeStr) {
+    try {
+      final parts = timeStr.trim().split(':');
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (_) {
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
+  }
+
+  String _formatTimeOfDay24(TimeOfDay time) {
+    final h = time.hour.toString().padLeft(2, '0');
+    final m = time.minute.toString().padLeft(2, '0');
+    return "$h:$m";
+  }
+
+  String _formatTimeOfDay12(TimeOfDay time) {
+    final period = time.hour >= 12 ? 'PM' : 'AM';
+    final hour12 = time.hour == 0 ? 12 : (time.hour > 12 ? time.hour - 12 : time.hour);
+    final h = hour12.toString().padLeft(2, '0');
+    final m = time.minute.toString().padLeft(2, '0');
+    return "$h:$m $period";
+  }
+
+  String _formatString12(String timeStr) {
+    return _formatTimeOfDay12(_parseTimeOfDay(timeStr));
+  }
 
   @override
   void initState() {
@@ -91,9 +121,131 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
       _announcementController.text = cfg.announcement;
       _pauseReasonController.text = cfg.pauseReason;
       _selectedDays = List<String>.from(cfg.operatingDays);
+
+      if (cfg.schedule.isNotEmpty) {
+        _dailySchedules = List<OperatingDaySchedule>.from(cfg.schedule);
+      } else {
+        _dailySchedules = _allDays.map((day) => OperatingDaySchedule(
+          day: day,
+          isOpen: cfg.operatingDays.contains(day),
+          openTime: cfg.openingTime,
+          closeTime: cfg.closingTime,
+        )).toList();
+      }
+
       _isPaused = cfg.isOrderAcceptancePaused;
       _initialized = true;
     });
+  }
+
+  Future<void> _pickGeneralTime({required bool isOpening, required bool isDark}) async {
+    final currentStr = isOpening ? _openTimeController.text : _closeTimeController.text;
+    final initial = _parseTimeOfDay(currentStr);
+
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+      helpText: isOpening ? "SELECT OPENING TIME" : "SELECT CLOSING TIME",
+      builder: (ctx, child) {
+        return Theme(
+          data: Theme.of(ctx).copyWith(
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: Colors.yellow,
+                    onPrimary: Colors.black,
+                    surface: Color(0xFF1E1E1E),
+                    onSurface: Colors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: Color(0xFFD97706),
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Color(0xFF1F2937),
+                  ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final formatted24 = _formatTimeOfDay24(picked);
+      setState(() {
+        if (isOpening) {
+          _openTimeController.text = formatted24;
+        } else {
+          _closeTimeController.text = formatted24;
+        }
+      });
+    }
+  }
+
+  Future<void> _pickTimeForDay({
+    required int dayIndex,
+    required bool isOpening,
+    required bool isDark,
+  }) async {
+    final schedule = _dailySchedules[dayIndex];
+    final currentStr = isOpening ? schedule.openTime : schedule.closeTime;
+    final initial = _parseTimeOfDay(currentStr);
+
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+      helpText: isOpening ? "SELECT ${schedule.day.toUpperCase()} OPENING TIME" : "SELECT ${schedule.day.toUpperCase()} CLOSING TIME",
+      builder: (ctx, child) {
+        return Theme(
+          data: Theme.of(ctx).copyWith(
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: Colors.yellow,
+                    onPrimary: Colors.black,
+                    surface: Color(0xFF1E1E1E),
+                    onSurface: Colors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: Color(0xFFD97706),
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Color(0xFF1F2937),
+                  ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final formatted24 = _formatTimeOfDay24(picked);
+      setState(() {
+        _dailySchedules[dayIndex] = isOpening
+            ? schedule.copyWith(openTime: formatted24)
+            : schedule.copyWith(closeTime: formatted24);
+
+        if (dayIndex == 0 || schedule.day == "Monday") {
+          if (isOpening) _openTimeController.text = formatted24;
+          else _closeTimeController.text = formatted24;
+        }
+      });
+    }
+  }
+
+  void _applyHoursToAllDays(String openTime, String closeTime) {
+    setState(() {
+      _dailySchedules = _dailySchedules.map((s) {
+        return s.copyWith(openTime: openTime, closeTime: closeTime);
+      }).toList();
+      _openTimeController.text = openTime;
+      _closeTimeController.text = closeTime;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Applied $openTime — $closeTime to all days!"),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -116,6 +268,13 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
 
   void _handleSaveSettings() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Sync selectedDays from daily schedules
+    final activeDays = _dailySchedules.where((s) => s.isOpen).map((s) => s.day).toList();
+    if (activeDays.isNotEmpty) {
+      _selectedDays = activeDays;
+    }
+
     if (_selectedDays.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -133,6 +292,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
       'openingTime': _openTimeController.text.trim(),
       'closingTime': _closeTimeController.text.trim(),
       'operatingDays': _selectedDays,
+      'schedule': _dailySchedules.map((s) => s.toJson()).toList(),
       'defaultEstimatedPrepTime': int.tryParse(_prepTimeController.text.trim()) ?? 20,
       'currency': 'INR',
       'contact': {
@@ -156,13 +316,20 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Restaurant business settings saved successfully!"),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      // Reload admin settings & refresh public info to guarantee synchronization
+      await provider.fetchAdminSettings();
+      await provider.fetchPublicInfo(identifier: provider.config.slug);
+
+      if (mounted) {
+        _syncControllers(provider.config);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Restaurant business settings saved successfully!"),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -615,91 +782,268 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Operating Hours & Schedule",
-            style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            "Orders outside operating hours are blocked on both frontend and backend.",
-            style: TextStyle(color: subtextColor, fontSize: 12),
-          ),
-          const SizedBox(height: 14),
-
           Row(
             children: [
-              Expanded(
-                child: TextFormField(
-                  key: const Key('admin_opening_time_input'),
-                  controller: _openTimeController,
-                  decoration: AppTheme.inputDecoration(
-                    isDark: isDark,
-                    labelText: "Opening Time (24h) *",
-                    hintText: "09:00",
-                  ),
-                  validator: (v) {
-                    final regex = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
-                    if (v == null || !regex.hasMatch(v.trim())) {
-                      return "Format: HH:mm (e.g. 09:00)";
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextFormField(
-                  key: const Key('admin_closing_time_input'),
-                  controller: _closeTimeController,
-                  decoration: AppTheme.inputDecoration(
-                    isDark: isDark,
-                    labelText: "Closing Time (24h) *",
-                    hintText: "22:00",
-                  ),
-                  validator: (v) {
-                    final regex = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
-                    if (v == null || !regex.hasMatch(v.trim())) {
-                      return "Format: HH:mm (e.g. 22:00)";
-                    }
-                    return null;
-                  },
-                ),
+              const Icon(Icons.schedule, color: Color(0xFFD97706), size: 22),
+              const SizedBox(width: 8),
+              Text(
+                "Operating Hours & Schedule",
+                style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-
+          const SizedBox(height: 6),
           Text(
-            "Operating Days",
+            "Tap any time field to open the clock-style time picker. Changes are saved to MongoDB and instantly govern online ordering availability.",
+            style: TextStyle(color: subtextColor, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+
+          // Default / Quick Hours Header
+          Text(
+            "Default Operating Hours",
             style: TextStyle(color: textColor, fontWeight: FontWeight.w600, fontSize: 13),
           ),
           const SizedBox(height: 8),
 
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _allDays.map((day) {
-              final isSelected = _selectedDays.contains(day);
-              return FilterChip(
-                label: Text(day.substring(0, 3)),
-                selected: isSelected,
-                selectedColor: Colors.yellow,
-                checkmarkColor: Colors.black,
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.black : textColor,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => _pickGeneralTime(isOpening: true, isDark: isDark),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusInput),
+                  child: IgnorePointer(
+                    child: TextFormField(
+                      key: const Key('admin_opening_time_input'),
+                      controller: _openTimeController,
+                      readOnly: true,
+                      decoration: AppTheme.inputDecoration(
+                        isDark: isDark,
+                        labelText: "Opening Time (24h) *",
+                        hintText: "09:00",
+                        prefixIcon: const Icon(Icons.access_time_rounded, size: 20, color: Color(0xFFD97706)),
+                      ),
+                      validator: (v) {
+                        final regex = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
+                        if (v == null || !regex.hasMatch(v.trim())) {
+                          return "Format: HH:mm (e.g. 09:00)";
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
                 ),
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedDays.add(day);
-                    } else {
-                      _selectedDays.remove(day);
-                    }
-                  });
-                },
-              );
-            }).toList(),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _pickGeneralTime(isOpening: false, isDark: isDark),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusInput),
+                  child: IgnorePointer(
+                    child: TextFormField(
+                      key: const Key('admin_closing_time_input'),
+                      controller: _closeTimeController,
+                      readOnly: true,
+                      decoration: AppTheme.inputDecoration(
+                        isDark: isDark,
+                        labelText: "Closing Time (24h) *",
+                        hintText: "22:00",
+                        prefixIcon: const Icon(Icons.access_time_rounded, size: 20, color: Color(0xFFD97706)),
+                      ),
+                      validator: (v) {
+                        final regex = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
+                        if (v == null || !regex.hasMatch(v.trim())) {
+                          return "Format: HH:mm (e.g. 22:00)";
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => _applyHoursToAllDays(
+                _openTimeController.text.trim(),
+                _closeTimeController.text.trim(),
+              ),
+              icon: const Icon(Icons.sync, size: 16, color: Color(0xFFD97706)),
+              label: const Text(
+                "Apply to all days",
+                style: TextStyle(color: Color(0xFFD97706), fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Daily Operating Hours List
+          Text(
+            "Daily Operating Hours (Clock-Style)",
+            style: TextStyle(color: textColor, fontWeight: FontWeight.w600, fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF141414) : const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: border),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _dailySchedules.length,
+              separatorBuilder: (_, __) => Divider(color: border, height: 1),
+              itemBuilder: (context, index) {
+                final schedule = _dailySchedules[index];
+                final isOpen = schedule.isOpen;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                schedule.day,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isOpen
+                                      ? Colors.green.withValues(alpha: 0.15)
+                                      : Colors.redAccent.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  isOpen ? "Open" : "Closed",
+                                  style: TextStyle(
+                                    color: isOpen ? Colors.green : Colors.redAccent,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Switch.adaptive(
+                            value: isOpen,
+                            activeThumbColor: Colors.yellow,
+                            onChanged: (val) {
+                              setState(() {
+                                _dailySchedules[index] = schedule.copyWith(isOpen: val);
+                                if (val) {
+                                  if (!_selectedDays.contains(schedule.day)) {
+                                    _selectedDays.add(schedule.day);
+                                  }
+                                } else {
+                                  _selectedDays.remove(schedule.day);
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      if (isOpen) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            // Opening Time Button
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _pickTimeForDay(dayIndex: index, isOpening: true, isDark: isDark),
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: border),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFFD97706)),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          _formatString12(schedule.openTime),
+                                          style: TextStyle(
+                                            color: textColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                "to",
+                                style: TextStyle(color: subtextColor, fontSize: 12),
+                              ),
+                            ),
+                            // Closing Time Button
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _pickTimeForDay(dayIndex: index, isOpening: false, isDark: isDark),
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: border),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFFD97706)),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          _formatString12(schedule.closeTime),
+                                          style: TextStyle(
+                                            color: textColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
           const SizedBox(height: 14),
 

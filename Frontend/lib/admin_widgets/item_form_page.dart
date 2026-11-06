@@ -15,7 +15,8 @@ class ItemFormPage extends StatefulWidget {
   final String? initialImageName;
   final String? initialCategory;
   final Item? editingItem;
-  final Future<http.Response> Function(http.BaseRequest request)? mockSubmitHandler;
+  final Future<http.Response> Function(http.BaseRequest request)?
+  mockSubmitHandler;
 
   const ItemFormPage({
     super.key,
@@ -94,7 +95,10 @@ class _ItemFormPageState extends State<ItemFormPage> {
       if (bytes[0] == 0x42 && bytes[1] == 0x4d) return true; // BMP
     }
     if (bytes.length >= 8) {
-      if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4e && bytes[3] == 0x47) {
+      if (bytes[0] == 0x89 &&
+          bytes[1] == 0x50 &&
+          bytes[2] == 0x4e &&
+          bytes[3] == 0x47) {
         return true; // PNG
       }
       final brand = String.fromCharCodes(bytes.sublist(4, 8));
@@ -117,7 +121,8 @@ class _ItemFormPageState extends State<ItemFormPage> {
       // Check max size (5 MB limit)
       if (bytes.lengthInBytes > 5 * 1024 * 1024) {
         setState(() {
-          _validationError = "Image exceeds 5MB limit. Please select a smaller photo.";
+          _validationError =
+              "Image exceeds 5MB limit. Please select a smaller photo.";
         });
         return;
       }
@@ -125,7 +130,8 @@ class _ItemFormPageState extends State<ItemFormPage> {
       // Check supported image format
       if (!_isSupportedImageFormat(pickedFile.name, bytes)) {
         setState(() {
-          _validationError = "Unsupported image format. Allowed: JPG, PNG, HEIC, WebP, GIF, BMP.";
+          _validationError =
+              "Unsupported image format. Allowed: JPG, PNG, HEIC, WebP, GIF, BMP.";
         });
         return;
       }
@@ -179,9 +185,14 @@ class _ItemFormPageState extends State<ItemFormPage> {
               ListTile(
                 key: const Key('pick_from_gallery_tile'),
                 leading: const Icon(Icons.photo_library, color: Colors.yellow),
-                title: const Text("Photo Gallery", style: TextStyle(color: Colors.white)),
-                subtitle: const Text("Select existing photo from device",
-                    style: TextStyle(color: Colors.white60, fontSize: 12)),
+                title: const Text(
+                  "Photo Gallery",
+                  style: TextStyle(color: Colors.white),
+                ),
+                subtitle: const Text(
+                  "Select existing photo from device",
+                  style: TextStyle(color: Colors.white60, fontSize: 12),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickImage(ImageSource.gallery);
@@ -190,9 +201,14 @@ class _ItemFormPageState extends State<ItemFormPage> {
               ListTile(
                 key: const Key('pick_from_camera_tile'),
                 leading: const Icon(Icons.camera_alt, color: Colors.yellow),
-                title: const Text("Camera", style: TextStyle(color: Colors.white)),
-                subtitle: const Text("Take a fresh photo of the dish",
-                    style: TextStyle(color: Colors.white60, fontSize: 12)),
+                title: const Text(
+                  "Camera",
+                  style: TextStyle(color: Colors.white),
+                ),
+                subtitle: const Text(
+                  "Take a fresh photo of the dish",
+                  style: TextStyle(color: Colors.white60, fontSize: 12),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickImage(ImageSource.camera);
@@ -213,7 +229,9 @@ class _ItemFormPageState extends State<ItemFormPage> {
           message,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: isError ? const Color(0xFFDC2626) : const Color(0xFF059669),
+        backgroundColor: isError
+            ? const Color(0xFFDC2626)
+            : const Color(0xFF059669),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 3),
@@ -261,10 +279,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
 
       if (_imageBytes != null) {
         // Multipart request with optional food image
-        final request = http.MultipartRequest(
-          method,
-          Uri.parse(endpoint),
-        );
+        final request = http.MultipartRequest(method, Uri.parse(endpoint));
 
         if (token != null) {
           request.headers['Authorization'] = 'Bearer $token';
@@ -274,11 +289,13 @@ class _ItemFormPageState extends State<ItemFormPage> {
         request.fields['itemPrice'] = price;
         request.fields['category'] = cat;
 
-        request.files.add(http.MultipartFile.fromBytes(
-          'image',
-          _imageBytes!,
-          filename: _imageName ?? 'food_image.jpg',
-        ));
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'image',
+            _imageBytes!,
+            filename: _imageName ?? 'food_image.jpg',
+          ),
+        );
 
         if (widget.mockSubmitHandler != null) {
           response = await widget.mockSubmitHandler!(request);
@@ -324,7 +341,8 @@ class _ItemFormPageState extends State<ItemFormPage> {
 
       final contentType = response.headers['content-type']?.toLowerCase() ?? '';
       final bodyTrimmed = response.body.trim();
-      final isHtml = contentType.contains('text/html') ||
+      final isHtml =
+          contentType.contains('text/html') ||
           bodyTrimmed.startsWith('<!DOCTYPE') ||
           bodyTrimmed.startsWith('<!doctype') ||
           bodyTrimmed.startsWith('<html');
@@ -348,13 +366,21 @@ class _ItemFormPageState extends State<ItemFormPage> {
           }
         } catch (_) {}
 
-        final message = decoded['message']?.toString() ??
-            (_isEditing ? "Item updated successfully" : "Item Created Succssfully");
+        final message =
+            decoded['message']?.toString() ??
+            (_isEditing
+                ? "Item updated successfully"
+                : "Item Created Succssfully");
 
         if (message == "Item Exists!") {
           _showToast("An item named '$name' already exists!", isError: true);
         } else {
-          _showToast(_isEditing ? "Item Updated Successfully!" : "Item Added Successfully!", isError: false);
+          _showToast(
+            _isEditing
+                ? "Item Updated Successfully!"
+                : "Item Added Successfully!",
+            isError: false,
+          );
           if (!_isEditing) {
             // Clear form fields on add only after confirmed server creation
             itemName.clear();
@@ -367,10 +393,12 @@ class _ItemFormPageState extends State<ItemFormPage> {
           }
         }
       } else {
-        String errorMsg = "Failed to ${_isEditing ? 'update' : 'add'} item (${response.statusCode})";
+        String errorMsg =
+            "Failed to ${_isEditing ? 'update' : 'add'} item (${response.statusCode})";
         try {
           final decoded = jsonDecode(response.body);
-          if (decoded is Map && (decoded['error'] != null || decoded['message'] != null)) {
+          if (decoded is Map &&
+              (decoded['error'] != null || decoded['message'] != null)) {
             errorMsg = (decoded['error'] ?? decoded['message']).toString();
           }
         } catch (_) {}
@@ -378,7 +406,10 @@ class _ItemFormPageState extends State<ItemFormPage> {
       }
     } catch (e) {
       if (mounted) {
-        _showToast("Failed to ${_isEditing ? 'update' : 'add'} item: $e", isError: true);
+        _showToast(
+          "Failed to ${_isEditing ? 'update' : 'add'} item: $e",
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
@@ -407,24 +438,26 @@ class _ItemFormPageState extends State<ItemFormPage> {
                   padding: const EdgeInsets.symmetric(vertical: 30),
                   decoration: const BoxDecoration(
                     color: Color(0xFFD99058), // Toasted Bun Color
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(80)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(80),
+                    ),
                     boxShadow: [
-                      BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
                     ],
                   ),
                   child: Text(
                     _isEditing ? "Edit Item" : "Add Item",
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineLarge
-                        ?.copyWith(color: Colors.white),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineLarge?.copyWith(color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
                 ),
-                Container(
-                  height: 20,
-                  color: Colors.yellow,
-                ),
+                Container(height: 20, color: Colors.yellow),
 
                 // --- THE "FILLINGS" (TextFields + Optional Food Image) ---
                 Container(
@@ -446,19 +479,33 @@ class _ItemFormPageState extends State<ItemFormPage> {
                       ),
                       const SizedBox(height: 10),
                       DropdownButtonFormField<String>(
-                        initialValue: category.text.isNotEmpty ? category.text : null,
+                        initialValue: category.text.isNotEmpty
+                            ? category.text
+                            : null,
                         hint: const Text(
                           "Select Category",
-                          style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF9CA3AF),
+                          ),
                         ),
-                        dropdownColor: Theme.of(context).brightness == Brightness.dark
+                        dropdownColor:
+                            Theme.of(context).brightness == Brightness.dark
                             ? AppTheme.darkSurface
                             : AppTheme.lightSurface,
-                        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFD97706)),
+                        icon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Color(0xFFD97706),
+                        ),
                         decoration: AppTheme.inputDecoration(
-                          isDark: Theme.of(context).brightness == Brightness.dark,
+                          isDark:
+                              Theme.of(context).brightness == Brightness.dark,
                           hintText: "Select Category",
-                          prefixIcon: const Icon(Icons.category, color: Color(0xFFD97706), size: 20),
+                          prefixIcon: const Icon(
+                            Icons.category,
+                            color: Color(0xFFD97706),
+                            size: 20,
+                          ),
                         ),
                         style: TextStyle(
                           color: Theme.of(context).brightness == Brightness.dark
@@ -466,21 +513,24 @@ class _ItemFormPageState extends State<ItemFormPage> {
                               : const Color(0xFF1F2937),
                           fontSize: 14,
                         ),
-                        items: [
-                          "Burgers",
-                          "Pizza",
-                          "Sandwiches",
-                          "Snacks",
-                          "Beverages",
-                          "Desserts",
-                          "Thali",
-                          "South Indian"
-                        ]
-                            .map((label) => DropdownMenuItem(
-                                  value: label,
-                                  child: Text(label),
-                                ))
-                            .toList(),
+                        items:
+                            [
+                                  "Burgers",
+                                  "Pizza",
+                                  "Sandwiches",
+                                  "Snacks",
+                                  "Beverages",
+                                  "Desserts",
+                                  "Thali",
+                                  "South Indian",
+                                ]
+                                .map(
+                                  (label) => DropdownMenuItem(
+                                    value: label,
+                                    child: Text(label),
+                                  ),
+                                )
+                                .toList(),
                         onChanged: (value) {
                           if (value != null) {
                             category.text = value;
@@ -509,8 +559,11 @@ class _ItemFormPageState extends State<ItemFormPage> {
                               children: [
                                 const Row(
                                   children: [
-                                    Icon(Icons.add_photo_alternate_outlined,
-                                        color: Colors.yellow, size: 18),
+                                    Icon(
+                                      Icons.add_photo_alternate_outlined,
+                                      color: Colors.yellow,
+                                      size: 18,
+                                    ),
                                     SizedBox(width: 6),
                                     Text(
                                       "Food Image",
@@ -524,11 +577,16 @@ class _ItemFormPageState extends State<ItemFormPage> {
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white12,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.white24, width: 0.5),
+                                    border: Border.all(
+                                      color: Colors.white24,
+                                      width: 0.5,
+                                    ),
                                   ),
                                   child: const Text(
                                     "OPTIONAL",
@@ -545,7 +603,10 @@ class _ItemFormPageState extends State<ItemFormPage> {
                             const SizedBox(height: 4),
                             const Text(
                               "JPEG, PNG, HEIC, WebP, GIF, BMP (Max 5MB)",
-                              style: TextStyle(color: Colors.white60, fontSize: 11),
+                              style: TextStyle(
+                                color: Colors.white60,
+                                fontSize: 11,
+                              ),
                             ),
                             const SizedBox(height: 10),
 
@@ -558,18 +619,26 @@ class _ItemFormPageState extends State<ItemFormPage> {
                                   color: Colors.red.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                      color: Colors.redAccent.withValues(alpha: 0.5)),
+                                    color: Colors.redAccent.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.error_outline,
-                                        color: Colors.redAccent, size: 16),
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: Colors.redAccent,
+                                      size: 16,
+                                    ),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
                                         _validationError!,
                                         style: const TextStyle(
-                                            color: Colors.redAccent, fontSize: 11),
+                                          color: Colors.redAccent,
+                                          fontSize: 11,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -584,20 +653,27 @@ class _ItemFormPageState extends State<ItemFormPage> {
                                 borderRadius: BorderRadius.circular(10),
                                 child: Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 20,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.black26,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: Colors.yellow.withValues(alpha: 0.35),
+                                      color: Colors.yellow.withValues(
+                                        alpha: 0.35,
+                                      ),
                                       style: BorderStyle.solid,
                                       width: 1,
                                     ),
                                   ),
                                   child: const Column(
                                     children: [
-                                      Icon(Icons.add_photo_alternate_rounded,
-                                          color: Colors.yellow, size: 36),
+                                      Icon(
+                                        Icons.add_photo_alternate_rounded,
+                                        color: Colors.yellow,
+                                        size: 36,
+                                      ),
                                       SizedBox(height: 8),
                                       Text(
                                         "Select Food Photo",
@@ -611,7 +687,9 @@ class _ItemFormPageState extends State<ItemFormPage> {
                                       Text(
                                         "Tap to choose from Gallery or Camera",
                                         style: TextStyle(
-                                            color: Colors.white54, fontSize: 11),
+                                          color: Colors.white54,
+                                          fontSize: 11,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -632,50 +710,67 @@ class _ItemFormPageState extends State<ItemFormPage> {
                                           height: 135,
                                           width: double.infinity,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) =>
-                                              Container(
-                                            height: 135,
-                                            width: double.infinity,
-                                            color: Colors.black38,
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                const Icon(
-                                                    Icons.photo_library_outlined,
-                                                    color: Colors.yellow,
-                                                    size: 34),
-                                                const SizedBox(height: 6),
-                                                Text(
-                                                  _imageName ?? "HEIC Food Image",
-                                                  style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 12),
+                                          errorBuilder:
+                                              (
+                                                context,
+                                                error,
+                                                stackTrace,
+                                              ) => Container(
+                                                height: 135,
+                                                width: double.infinity,
+                                                color: Colors.black38,
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons
+                                                          .photo_library_outlined,
+                                                      color: Colors.yellow,
+                                                      size: 34,
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    Text(
+                                                      _imageName ??
+                                                          "HEIC Food Image",
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 2),
+                                                    const Text(
+                                                      "HEIC format converted to JPEG on upload",
+                                                      style: TextStyle(
+                                                        color: Colors.white70,
+                                                        fontSize: 10,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                                const SizedBox(height: 2),
-                                                const Text(
-                                                  "HEIC format converted to JPEG on upload",
-                                                  style: TextStyle(
-                                                      color: Colors.white70,
-                                                      fontSize: 10),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                              ),
                                         ),
                                         Positioned(
                                           top: 8,
                                           right: 8,
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 7, vertical: 3),
+                                              horizontal: 7,
+                                              vertical: 3,
+                                            ),
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withValues(alpha: 0.65),
-                                              borderRadius: BorderRadius.circular(6),
+                                              color: Colors.black.withValues(
+                                                alpha: 0.65,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
                                             child: Text(
-                                              _formatFileSize(_imageSizeBytes ?? 0),
+                                              _formatFileSize(
+                                                _imageSizeBytes ?? 0,
+                                              ),
                                               style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 10,
@@ -702,38 +797,66 @@ class _ItemFormPageState extends State<ItemFormPage> {
                                     children: [
                                       Expanded(
                                         child: OutlinedButton.icon(
-                                          key: const Key('replace_food_image_button'),
+                                          key: const Key(
+                                            'replace_food_image_button',
+                                          ),
                                           onPressed: _showImageSourceDialog,
-                                          icon: const Icon(Icons.refresh,
-                                              size: 14, color: Colors.yellow),
-                                          label: const Text("Replace",
-                                              style: TextStyle(
-                                                  color: Colors.yellow, fontSize: 12)),
+                                          icon: const Icon(
+                                            Icons.refresh,
+                                            size: 14,
+                                            color: Colors.yellow,
+                                          ),
+                                          label: const Text(
+                                            "Replace",
+                                            style: TextStyle(
+                                              color: Colors.yellow,
+                                              fontSize: 12,
+                                            ),
+                                          ),
                                           style: OutlinedButton.styleFrom(
-                                            side: const BorderSide(color: Colors.yellow),
-                                            padding:
-                                                const EdgeInsets.symmetric(vertical: 8),
+                                            side: const BorderSide(
+                                              color: Colors.yellow,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 8,
+                                            ),
                                             shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(8)),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
                                         ),
                                       ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: OutlinedButton.icon(
-                                          key: const Key('remove_food_image_button'),
+                                          key: const Key(
+                                            'remove_food_image_button',
+                                          ),
                                           onPressed: _removeImage,
-                                          icon: const Icon(Icons.delete_outline,
-                                              size: 14, color: Colors.redAccent),
-                                          label: const Text("Remove",
-                                              style: TextStyle(
-                                                  color: Colors.redAccent, fontSize: 12)),
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            size: 14,
+                                            color: Colors.redAccent,
+                                          ),
+                                          label: const Text(
+                                            "Remove",
+                                            style: TextStyle(
+                                              color: Colors.redAccent,
+                                              fontSize: 12,
+                                            ),
+                                          ),
                                           style: OutlinedButton.styleFrom(
-                                            side: const BorderSide(color: Colors.redAccent),
-                                            padding:
-                                                const EdgeInsets.symmetric(vertical: 8),
+                                            side: const BorderSide(
+                                              color: Colors.redAccent,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 8,
+                                            ),
                                             shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(8)),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -751,8 +874,9 @@ class _ItemFormPageState extends State<ItemFormPage> {
                 // --- BOTTOM BUN (Submit Button) ---
                 Material(
                   color: const Color(0xFFA66D42),
-                  borderRadius:
-                      const BorderRadius.vertical(bottom: Radius.circular(30)),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(30),
+                  ),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     key: const Key('add_item_submit_button'),
@@ -769,11 +893,15 @@ class _ItemFormPageState extends State<ItemFormPage> {
                                   width: 18,
                                   height: 18,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white),
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
                                 ),
                                 SizedBox(width: 10),
                                 Text(
-                                  _isEditing ? "Updating Item..." : "Adding Item...",
+                                  _isEditing
+                                      ? "Updating Item..."
+                                      : "Adding Item...",
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class ServeoButton extends StatelessWidget{
+class ServeoButton extends StatelessWidget {
   final String child;
   final VoidCallback onPressed;
 
@@ -9,14 +9,14 @@ class ServeoButton extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-        onPressed: onPressed,
-        child: Text(
-            child,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.black
-            ),
+      onPressed: onPressed,
+      child: Text(
+        child,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
         ),
+      ),
     );
   }
 }

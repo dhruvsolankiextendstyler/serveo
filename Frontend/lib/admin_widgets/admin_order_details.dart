@@ -17,7 +17,10 @@ class AdminOrderDetailsPage extends StatefulWidget {
 class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
   bool _isProcessingAction = false;
 
-  Future<void> _handleVerifyPayment(bool confirm, {String? rejectionReason}) async {
+  Future<void> _handleVerifyPayment(
+    bool confirm, {
+    String? rejectionReason,
+  }) async {
     if (_isProcessingAction) return;
 
     setState(() => _isProcessingAction = true);
@@ -46,7 +49,9 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Failed to process payment verification. Please try again."),
+            content: Text(
+              "Failed to process payment verification. Please try again.",
+            ),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -54,7 +59,10 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text("Error: $e"),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     } finally {
@@ -79,7 +87,9 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: dialogBg,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+              ),
               title: const Text(
                 "Reject Payment Verification",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -99,18 +109,23 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                       "Incorrect amount transferred",
                       "UTR / Reference ID mismatch",
                       "Other reason",
-                    ].map((reason) => RadioListTile<String>(
-                          value: reason,
-                          groupValue: currentSelection,
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(reason, style: const TextStyle(fontSize: 13)),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setDialogState(() => currentSelection = val);
-                            }
-                          },
-                        )),
+                    ].map(
+                      (reason) => RadioListTile<String>(
+                        value: reason,
+                        groupValue: currentSelection,
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          reason,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() => currentSelection = val);
+                          }
+                        },
+                      ),
+                    ),
                     if (currentSelection == "Other reason") ...[
                       const SizedBox(height: 8),
                       TextField(
@@ -139,8 +154,8 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                   onPressed: () {
                     final finalReason = currentSelection == "Other reason"
                         ? (customController.text.trim().isNotEmpty
-                            ? customController.text.trim()
-                            : "Payment verification rejected by admin")
+                              ? customController.text.trim()
+                              : "Payment verification rejected by admin")
                         : currentSelection;
                     Navigator.pop(dialogCtx, finalReason);
                   },
@@ -171,7 +186,10 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text("Error: $e"),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     } finally {
@@ -192,7 +210,9 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF6B7280);
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final dividerColor = isDark ? Colors.white24 : const Color(0xFFE5E7EB);
@@ -202,17 +222,29 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
         : currentOrder.id;
 
     Color statusBadgeColor = Colors.grey;
-    if (currentOrder.status == 'Processing' || currentOrder.status == 'Pending' || currentOrder.status == 'Accepted') statusBadgeColor = Colors.orange;
+    if (currentOrder.status == 'Processing' ||
+        currentOrder.status == 'Pending' ||
+        currentOrder.status == 'Accepted')
+      statusBadgeColor = Colors.orange;
     if (currentOrder.status == 'Preparing') statusBadgeColor = Colors.blue;
-    if (currentOrder.status == 'Completed' || currentOrder.status == 'Ready' || currentOrder.status == 'Collected') statusBadgeColor = Colors.green;
-    if (currentOrder.status == 'Payment Rejected' || currentOrder.status == 'Cancelled') statusBadgeColor = Colors.redAccent;
-    if (currentOrder.isUpi && currentOrder.isAwaitingVerification) statusBadgeColor = Colors.amber;
+    if (currentOrder.status == 'Completed' ||
+        currentOrder.status == 'Ready' ||
+        currentOrder.status == 'Collected')
+      statusBadgeColor = Colors.green;
+    if (currentOrder.status == 'Payment Rejected' ||
+        currentOrder.status == 'Cancelled')
+      statusBadgeColor = Colors.redAccent;
+    if (currentOrder.isUpi && currentOrder.isAwaitingVerification)
+      statusBadgeColor = Colors.amber;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           "Order Details",
-          style: TextStyle(fontWeight: FontWeight.bold, color: primaryTextColor),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: primaryTextColor,
+          ),
         ),
       ),
       body: SafeArea(
@@ -261,11 +293,20 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                                 ],
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: statusBadgeColor.withValues(alpha: 0.15),
+                                  color: statusBadgeColor.withValues(
+                                    alpha: 0.15,
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: statusBadgeColor.withValues(alpha: 0.4)),
+                                  border: Border.all(
+                                    color: statusBadgeColor.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
                                 ),
                                 child: Text(
                                   currentOrder.status.toUpperCase(),
@@ -281,11 +322,18 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today_outlined, size: 14, color: secondaryTextColor),
+                              Icon(
+                                Icons.calendar_today_outlined,
+                                size: 14,
+                                color: secondaryTextColor,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 "Placed: ${currentOrder.formattedPlacementTime}",
-                                style: TextStyle(color: secondaryTextColor, fontSize: 13),
+                                style: TextStyle(
+                                  color: secondaryTextColor,
+                                  fontSize: 13,
+                                ),
                               ),
                             ],
                           ),
@@ -307,12 +355,18 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.person_pin_rounded, color: Color(0xFFD97706), size: 20),
+                              const Icon(
+                                Icons.person_pin_rounded,
+                                color: Color(0xFFD97706),
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 "CUSTOMER INFORMATION",
                                 style: TextStyle(
-                                  color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                                  color: isDark
+                                      ? Colors.yellow
+                                      : const Color(0xFFD97706),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.0,
@@ -336,7 +390,8 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                             textColor: primaryTextColor,
                             secondaryTextColor: secondaryTextColor,
                           ),
-                          if (currentOrder.customerEmail.isNotEmpty && currentOrder.customerEmail != 'N/A') ...[
+                          if (currentOrder.customerEmail.isNotEmpty &&
+                              currentOrder.customerEmail != 'N/A') ...[
                             const SizedBox(height: 10),
                             _buildDetailRow(
                               icon: Icons.email_outlined,
@@ -364,12 +419,18 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.account_balance_wallet_outlined, color: Color(0xFFD97706), size: 20),
+                              const Icon(
+                                Icons.account_balance_wallet_outlined,
+                                color: Color(0xFFD97706),
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 "PAYMENT INFORMATION",
                                 style: TextStyle(
-                                  color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                                  color: isDark
+                                      ? Colors.yellow
+                                      : const Color(0xFFD97706),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.0,
@@ -379,11 +440,15 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                           ),
                           const SizedBox(height: 14),
                           _buildDetailRow(
-                            icon: currentOrder.isUpi ? Icons.qr_code_2_rounded : Icons.payments_outlined,
+                            icon: currentOrder.isUpi
+                                ? Icons.qr_code_2_rounded
+                                : Icons.payments_outlined,
                             label: "Payment Method",
                             value: currentOrder.isUpi
                                 ? "UPI (GPay / PhonePe / QR)"
-                                : (currentOrder.isCod ? "Cash on Delivery (COD)" : "Card (Demo)"),
+                                : (currentOrder.isCod
+                                      ? "Cash on Delivery (COD)"
+                                      : "Card (Demo)"),
                             textColor: primaryTextColor,
                             secondaryTextColor: secondaryTextColor,
                           ),
@@ -394,7 +459,9 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                             value: currentOrder.paymentStatus,
                             badgeColor: currentOrder.isAwaitingVerification
                                 ? Colors.amber
-                                : (currentOrder.isVerified ? Colors.green : Colors.blue),
+                                : (currentOrder.isVerified
+                                      ? Colors.green
+                                      : Colors.blue),
                             textColor: primaryTextColor,
                             secondaryTextColor: secondaryTextColor,
                           ),
@@ -403,7 +470,8 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                             _buildDetailRow(
                               icon: Icons.history,
                               label: "Verification Attempt",
-                              value: "Attempt #${currentOrder.attemptCount} (Resubmitted)",
+                              value:
+                                  "Attempt #${currentOrder.attemptCount} (Resubmitted)",
                               badgeColor: Colors.amber,
                               textColor: primaryTextColor,
                               secondaryTextColor: secondaryTextColor,
@@ -411,7 +479,9 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                           ],
                           if (currentOrder.isRejected &&
                               currentOrder.paymentRejectionReason != null &&
-                              currentOrder.paymentRejectionReason!.isNotEmpty) ...[
+                              currentOrder
+                                  .paymentRejectionReason!
+                                  .isNotEmpty) ...[
                             const SizedBox(height: 10),
                             _buildDetailRow(
                               icon: Icons.cancel_outlined,
@@ -422,7 +492,8 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                               secondaryTextColor: secondaryTextColor,
                             ),
                           ],
-                          if (currentOrder.isUpi && currentOrder.paymentClaimedAt != null) ...[
+                          if (currentOrder.isUpi &&
+                              currentOrder.paymentClaimedAt != null) ...[
                             const SizedBox(height: 10),
                             _buildDetailRow(
                               icon: Icons.access_time,
@@ -442,7 +513,8 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                               secondaryTextColor: secondaryTextColor,
                             ),
                           ],
-                          if (currentOrder.verifiedBy != null && currentOrder.verifiedBy!.isNotEmpty) ...[
+                          if (currentOrder.verifiedBy != null &&
+                              currentOrder.verifiedBy!.isNotEmpty) ...[
                             const SizedBox(height: 10),
                             _buildDetailRow(
                               icon: Icons.admin_panel_settings_outlined,
@@ -471,12 +543,18 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.history_edu_rounded, color: Color(0xFFD97706), size: 20),
+                                const Icon(
+                                  Icons.history_edu_rounded,
+                                  color: Color(0xFFD97706),
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   "PAYMENT VERIFICATION HISTORY (${currentOrder.verificationAttempts.length})",
                                   style: TextStyle(
-                                    color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                                    color: isDark
+                                        ? Colors.yellow
+                                        : const Color(0xFFD97706),
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1.0,
@@ -488,27 +566,38 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                             ...currentOrder.verificationAttempts.map((attempt) {
                               final num = attempt['attemptNumber'] ?? '?';
                               final status = attempt['status'] ?? 'Pending';
-                              final isCurrent = attempt == currentOrder.latestAttempt;
-                              final reason = attempt['rejectionReason']?.toString();
+                              final isCurrent =
+                                  attempt == currentOrder.latestAttempt;
+                              final reason = attempt['rejectionReason']
+                                  ?.toString();
                               final subTime = attempt['submittedAt'] != null
-                                  ? attempt['submittedAt'].toString().replaceFirst('T', ' ').substring(0, 16)
+                                  ? attempt['submittedAt']
+                                        .toString()
+                                        .replaceFirst('T', ' ')
+                                        .substring(0, 16)
                                   : 'N/A';
                               final revBy = attempt['reviewedBy']?.toString();
 
                               Color statusColor = Colors.amber;
-                              if (status == 'Approved') statusColor = Colors.green;
-                              if (status == 'Rejected') statusColor = Colors.redAccent;
+                              if (status == 'Approved')
+                                statusColor = Colors.green;
+                              if (status == 'Rejected')
+                                statusColor = Colors.redAccent;
 
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF9FAFB),
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.03)
+                                      : const Color(0xFFF9FAFB),
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
                                     color: isCurrent
                                         ? statusColor.withValues(alpha: 0.5)
-                                        : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+                                        : (isDark
+                                              ? Colors.white12
+                                              : const Color(0xFFE5E7EB)),
                                     width: isCurrent ? 1.5 : 1.0,
                                   ),
                                 ),
@@ -516,7 +605,8 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           "Attempt #$num ${isCurrent ? '(Latest)' : ''}",
@@ -527,11 +617,22 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                                           ),
                                         ),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: statusColor.withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(4),
-                                            border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                                            color: statusColor.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                            border: Border.all(
+                                              color: statusColor.withValues(
+                                                alpha: 0.4,
+                                              ),
+                                            ),
                                           ),
                                           child: Text(
                                             status.toUpperCase(),
@@ -547,14 +648,21 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                                     const SizedBox(height: 4),
                                     Text(
                                       "Submitted: $subTime",
-                                      style: TextStyle(fontSize: 11, color: secondaryTextColor),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: secondaryTextColor,
+                                      ),
                                     ),
                                     if (revBy != null && revBy.isNotEmpty)
                                       Text(
                                         "Reviewed By: $revBy",
-                                        style: TextStyle(fontSize: 11, color: secondaryTextColor),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: secondaryTextColor,
+                                        ),
                                       ),
-                                    if (reason != null && reason.isNotEmpty) ...[
+                                    if (reason != null &&
+                                        reason.isNotEmpty) ...[
                                       const SizedBox(height: 4),
                                       Text(
                                         "Reason: $reason",
@@ -591,12 +699,18 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.timer_outlined, color: Color(0xFFD97706), size: 20),
+                                  const Icon(
+                                    Icons.timer_outlined,
+                                    color: Color(0xFFD97706),
+                                    size: 20,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     "ESTIMATED PREP TIME",
                                     style: TextStyle(
-                                      color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                                      color: isDark
+                                          ? Colors.yellow
+                                          : const Color(0xFFD97706),
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 1.0,
@@ -606,11 +720,18 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                               ),
                               if (currentOrder.estimatedPrepTime != null)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.green.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                                    border: Border.all(
+                                      color: Colors.green.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
                                   ),
                                   child: Text(
                                     "~${currentOrder.estimatedPrepTime} mins",
@@ -626,32 +747,55 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                           const SizedBox(height: 10),
                           Text(
                             "Adjust estimated kitchen preparation time displayed to customer:",
-                            style: TextStyle(color: secondaryTextColor, fontSize: 12),
+                            style: TextStyle(
+                              color: secondaryTextColor,
+                              fontSize: 12,
+                            ),
                           ),
                           const SizedBox(height: 10),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: [10, 15, 20, 25, 30, 45].map((mins) {
-                              final isSelected = currentOrder.estimatedPrepTime == mins;
+                              final isSelected =
+                                  currentOrder.estimatedPrepTime == mins;
                               return OutlinedButton(
                                 style: OutlinedButton.styleFrom(
                                   backgroundColor: isSelected
-                                      ? (isDark ? Colors.yellow.withValues(alpha: 0.2) : const Color(0xFFFEF3C7))
+                                      ? (isDark
+                                            ? Colors.yellow.withValues(
+                                                alpha: 0.2,
+                                              )
+                                            : const Color(0xFFFEF3C7))
                                       : Colors.transparent,
                                   side: BorderSide(
-                                    color: isSelected ? const Color(0xFFD97706) : borderColor,
+                                    color: isSelected
+                                        ? const Color(0xFFD97706)
+                                        : borderColor,
                                   ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                                 onPressed: () async {
-                                  final messenger = ScaffoldMessenger.of(context);
-                                  final success = await orderProvider.updateEstimatedPrepTime(currentOrder.id, mins);
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
+                                  final success = await orderProvider
+                                      .updateEstimatedPrepTime(
+                                        currentOrder.id,
+                                        mins,
+                                      );
                                   if (mounted && success) {
                                     messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text("Estimated prep time set to $mins mins"),
+                                        content: Text(
+                                          "Estimated prep time set to $mins mins",
+                                        ),
                                         backgroundColor: Colors.green,
                                         duration: const Duration(seconds: 2),
                                       ),
@@ -662,10 +806,14 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                                   "$mins mins",
                                   style: TextStyle(
                                     color: isSelected
-                                        ? (isDark ? Colors.yellow : const Color(0xFFD97706))
+                                        ? (isDark
+                                              ? Colors.yellow
+                                              : const Color(0xFFD97706))
                                         : primaryTextColor,
                                     fontSize: 12,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
                                 ),
                               );
@@ -689,12 +837,18 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.restaurant_menu_rounded, color: Color(0xFFD97706), size: 20),
+                              const Icon(
+                                Icons.restaurant_menu_rounded,
+                                color: Color(0xFFD97706),
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 "ORDERED ITEMS (${currentOrder.orderItems.length})",
                                 style: TextStyle(
-                                  color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                                  color: isDark
+                                      ? Colors.yellow
+                                      : const Color(0xFFD97706),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.0,
@@ -704,25 +858,42 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                           ),
                           const SizedBox(height: 12),
                           ...currentOrder.orderItems.map((item) {
-                            final itemName = item['itemName']?.toString() ?? 'Item';
-                            final quantity = int.tryParse(item['quantity']?.toString() ?? '1') ?? 1;
-                            final price = int.tryParse(item['itemPrice']?.toString() ?? '0') ?? 0;
+                            final itemName =
+                                item['itemName']?.toString() ?? 'Item';
+                            final quantity =
+                                int.tryParse(
+                                  item['quantity']?.toString() ?? '1',
+                                ) ??
+                                1;
+                            final price =
+                                int.tryParse(
+                                  item['itemPrice']?.toString() ?? '0',
+                                ) ??
+                                0;
                             final lineTotal = quantity * price;
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 8),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF9FAFB),
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.04)
+                                    : const Color(0xFFF9FAFB),
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+                                border: Border.all(
+                                  color: isDark
+                                      ? Colors.white12
+                                      : const Color(0xFFE5E7EB),
+                                ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           itemName,
@@ -732,31 +903,62 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        if (item['selectedCustomizations'] is List &&
-                                            (item['selectedCustomizations'] as List).isNotEmpty) ...[
+                                        if (item['selectedCustomizations']
+                                                is List &&
+                                            (item['selectedCustomizations']
+                                                    as List)
+                                                .isNotEmpty) ...[
                                           const SizedBox(height: 3),
                                           Wrap(
                                             spacing: 6,
                                             runSpacing: 2,
-                                            children: (item['selectedCustomizations'] as List).map((c) {
-                                              final opt = c['optionName']?.toString() ?? '';
-                                              final cPrice = int.tryParse(c['price']?.toString() ?? '0') ?? 0;
-                                              return Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: isDark ? Colors.white12 : const Color(0xFFE5E7EB),
-                                                  borderRadius: BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  cPrice > 0 ? "$opt (+₹$cPrice)" : opt,
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: secondaryTextColor,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              );
-                                            }).toList(),
+                                            children:
+                                                (item['selectedCustomizations']
+                                                        as List)
+                                                    .map((c) {
+                                                      final opt =
+                                                          c['optionName']
+                                                              ?.toString() ??
+                                                          '';
+                                                      final cPrice =
+                                                          int.tryParse(
+                                                            c['price']
+                                                                    ?.toString() ??
+                                                                '0',
+                                                          ) ??
+                                                          0;
+                                                      return Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 6,
+                                                              vertical: 2,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: isDark
+                                                              ? Colors.white12
+                                                              : const Color(
+                                                                  0xFFE5E7EB,
+                                                                ),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                4,
+                                                              ),
+                                                        ),
+                                                        child: Text(
+                                                          cPrice > 0
+                                                              ? "$opt (+₹$cPrice)"
+                                                              : opt,
+                                                          style: TextStyle(
+                                                            fontSize: 11,
+                                                            color:
+                                                                secondaryTextColor,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    })
+                                                    .toList(),
                                           ),
                                         ],
                                         const SizedBox(height: 2),
@@ -788,11 +990,18 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
                             children: [
                               Text(
                                 "Subtotal",
-                                style: TextStyle(color: secondaryTextColor, fontSize: 14),
+                                style: TextStyle(
+                                  color: secondaryTextColor,
+                                  fontSize: 14,
+                                ),
                               ),
                               Text(
                                 "₹${currentOrder.totalAmount}",
-                                style: TextStyle(color: primaryTextColor, fontSize: 14, fontWeight: FontWeight.w600),
+                                style: TextStyle(
+                                  color: primaryTextColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
                           ),
@@ -871,11 +1080,16 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
               ? Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: badgeColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: badgeColor.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Text(
                       value,
@@ -905,7 +1119,10 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
       return const SizedBox(
         height: 52,
         child: Center(
-          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.yellow),
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: Colors.yellow,
+          ),
         ),
       );
     }
@@ -923,11 +1140,17 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
               icon: const Icon(Icons.check_circle_outline, color: Colors.white),
               label: const Text(
                 "Confirm Payment Received",
-                style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -937,14 +1160,24 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
             height: 44,
             child: OutlinedButton.icon(
               onPressed: _showRejectionDialog,
-              icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 18),
+              icon: const Icon(
+                Icons.cancel_outlined,
+                color: Colors.redAccent,
+                size: 18,
+              ),
               label: const Text(
                 "Payment Not Received / Reject Claim",
-                style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.redAccent),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -953,19 +1186,27 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
     }
 
     // Standard Preparation workflow for COD or verified UPI
-    if (order.status == 'Processing' || order.status == 'Pending' || order.status == 'Accepted') {
+    if (order.status == 'Processing' ||
+        order.status == 'Pending' ||
+        order.status == 'Accepted') {
       return SizedBox(
         width: double.infinity,
         height: 52,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           onPressed: () => _handleUpdateStatus("Preparing"),
           child: const Text(
             "ACCEPT & COOK",
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       );
@@ -976,12 +1217,18 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           onPressed: () => _handleUpdateStatus("Completed"),
           child: const Text(
             "MARK AS READY",
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       );
@@ -1001,7 +1248,11 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
             SizedBox(width: 8),
             Text(
               "Order Ready for Pickup",
-              style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 15),
+              style: TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
             ),
           ],
         ),
@@ -1017,7 +1268,11 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
         ),
         child: const Text(
           "Order Collected",
-          style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 15),
+          style: TextStyle(
+            color: Colors.grey,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
         ),
       );
     } else if (order.status == 'Payment Rejected') {
@@ -1036,7 +1291,11 @@ class _AdminOrderDetailsPageState extends State<AdminOrderDetailsPage> {
             SizedBox(width: 8),
             Text(
               "Payment Claim Rejected",
-              style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15),
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
             ),
           ],
         ),

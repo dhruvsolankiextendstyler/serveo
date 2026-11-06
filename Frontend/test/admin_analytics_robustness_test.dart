@@ -18,7 +18,8 @@ void main() {
         // Since _safeParseJsonResponse is static, we test it through the provider's error handling contract
         final body = htmlResponse.body.trim();
         final contentType = htmlResponse.headers['content-type'] ?? '';
-        final isHtml = contentType.contains('text/html') || body.startsWith('<!DOCTYPE');
+        final isHtml =
+            contentType.contains('text/html') || body.startsWith('<!DOCTYPE');
 
         expect(isHtml, isTrue);
 
@@ -30,7 +31,9 @@ void main() {
       } catch (e) {
         expect(
           e.toString(),
-          contains("Unable to load analytics. The server returned an unexpected response."),
+          contains(
+            "Unable to load analytics. The server returned an unexpected response.",
+          ),
         );
         // Crucially, it must NEVER throw a FormatSyntaxError or FormatException
         expect(e is FormatException, isFalse);

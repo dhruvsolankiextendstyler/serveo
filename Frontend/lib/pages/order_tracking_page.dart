@@ -23,7 +23,8 @@ class OrderTrackingPage extends StatefulWidget {
   State<OrderTrackingPage> createState() => _OrderTrackingPageState();
 }
 
-class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindingObserver {
+class _OrderTrackingPageState extends State<OrderTrackingPage>
+    with WidgetsBindingObserver {
   Order? _order;
   bool _isLoading = false;
   String? _errorMessage;
@@ -53,7 +54,8 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       _isBackgrounded = true;
       _stopPolling();
     } else if (state == AppLifecycleState.resumed) {
@@ -111,7 +113,8 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
           _errorMessage = null;
         });
 
-        if (freshOrder.status == 'Completed' || freshOrder.status == 'Collected') {
+        if (freshOrder.status == 'Completed' ||
+            freshOrder.status == 'Collected') {
           _loadExistingFeedback(freshOrder.id);
         }
 
@@ -122,7 +125,8 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
       } else if (_order == null) {
         setState(() {
           _isLoading = false;
-          _errorMessage = "Unable to load order tracking details. Please try again.";
+          _errorMessage =
+              "Unable to load order tracking details. Please try again.";
         });
       }
     } catch (e) {
@@ -169,69 +173,97 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
       body: _isLoading && _order == null
           ? const Center(child: ServeoSpinner())
           : _errorMessage != null && _order == null
-              ? _buildErrorView(isDark)
-              : _order == null
-                  ? _buildEmptyState(isDark)
-                  : RefreshIndicator(
-                      onRefresh: () => _fetchLiveStatus(),
-                      color: const Color(0xFFD97706),
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // 1. Order Header Card (ID, Time, Status)
-                            _buildOrderHeaderCard(_order!, cardBg, borderColor, primaryTextColor, isDark),
-                            const SizedBox(height: 16),
-
-                            // 2a. Payment Rejected Action Banner
-                            if (_order!.isPaymentRejected) ...[
-                              _buildPaymentRejectedBanner(_order!, isDark),
-                              const SizedBox(height: 16),
-                            ] else if (_order!.isCancelled) ...[
-                              // 2b. Cancelled State Banner
-                              _buildTerminalBanner(_order!, isDark),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // 2c. Estimated Preparation Time Card (Feature 1)
-                            if (!_order!.isTerminal && !_order!.isPaymentRejected) ...[
-                              _buildEstimatedPrepTimeCard(_order!, cardBg, borderColor, isDark),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // 3. Visual Timeline of Order Progress
-                            _buildProgressTimelineCard(_order!, cardBg, borderColor, isDark),
-                            const SizedBox(height: 16),
-
-                            // 4. Pickup Receipt CTA (When Ready or Completed)
-                            if (_order!.status == 'Ready' || _order!.status == 'Completed') ...[
-                              _buildPickupReceiptBanner(_order!),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // 5. Payment Details Card
-                            _buildPaymentSummaryCard(_order!, cardBg, borderColor, isDark),
-                            const SizedBox(height: 16),
-
-                            // 6. Ordered Items Card
-                            _buildOrderedItemsCard(_order!, cardBg, borderColor, isDark),
-                            const SizedBox(height: 16),
-
-                            // 7. Customer Meal Feedback Card (Feature 4)
-                            if (_order!.status == 'Completed' || _order!.status == 'Collected') ...[
-                              _buildFeedbackCard(cardBg, borderColor, isDark),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // 7. Navigation Actions
-                            _buildNavigationActions(context, isDark),
-                            const SizedBox(height: 24),
-                          ],
-                        ),
-                      ),
+          ? _buildErrorView(isDark)
+          : _order == null
+          ? _buildEmptyState(isDark)
+          : RefreshIndicator(
+              onRefresh: () => _fetchLiveStatus(),
+              color: const Color(0xFFD97706),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 1. Order Header Card (ID, Time, Status)
+                    _buildOrderHeaderCard(
+                      _order!,
+                      cardBg,
+                      borderColor,
+                      primaryTextColor,
+                      isDark,
                     ),
+                    const SizedBox(height: 16),
+
+                    // 2a. Payment Rejected Action Banner
+                    if (_order!.isPaymentRejected) ...[
+                      _buildPaymentRejectedBanner(_order!, isDark),
+                      const SizedBox(height: 16),
+                    ] else if (_order!.isCancelled) ...[
+                      // 2b. Cancelled State Banner
+                      _buildTerminalBanner(_order!, isDark),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // 2c. Estimated Preparation Time Card (Feature 1)
+                    if (!_order!.isTerminal && !_order!.isPaymentRejected) ...[
+                      _buildEstimatedPrepTimeCard(
+                        _order!,
+                        cardBg,
+                        borderColor,
+                        isDark,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // 3. Visual Timeline of Order Progress
+                    _buildProgressTimelineCard(
+                      _order!,
+                      cardBg,
+                      borderColor,
+                      isDark,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 4. Pickup Receipt CTA (When Ready or Completed)
+                    if (_order!.status == 'Ready' ||
+                        _order!.status == 'Completed') ...[
+                      _buildPickupReceiptBanner(_order!),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // 5. Payment Details Card
+                    _buildPaymentSummaryCard(
+                      _order!,
+                      cardBg,
+                      borderColor,
+                      isDark,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 6. Ordered Items Card
+                    _buildOrderedItemsCard(
+                      _order!,
+                      cardBg,
+                      borderColor,
+                      isDark,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 7. Customer Meal Feedback Card (Feature 4)
+                    if (_order!.status == 'Completed' ||
+                        _order!.status == 'Collected') ...[
+                      _buildFeedbackCard(cardBg, borderColor, isDark),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // 7. Navigation Actions
+                    _buildNavigationActions(context, isDark),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
@@ -270,7 +302,11 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                     ),
                     const SizedBox(width: 6),
                     IconButton(
-                      icon: const Icon(Icons.copy, size: 16, color: Colors.grey),
+                      icon: const Icon(
+                        Icons.copy,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                       tooltip: "Copy Order ID",
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -370,7 +406,10 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
       decoration: BoxDecoration(
         color: Colors.redAccent.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(
+          color: Colors.redAccent.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,7 +422,11 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                   color: Colors.redAccent.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 24),
+                child: const Icon(
+                  Icons.cancel_outlined,
+                  color: Colors.redAccent,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 10),
               const Expanded(
@@ -398,7 +441,8 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               ),
             ],
           ),
-          if (order.paymentRejectionReason != null && order.paymentRejectionReason!.isNotEmpty) ...[
+          if (order.paymentRejectionReason != null &&
+              order.paymentRejectionReason!.isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
@@ -406,7 +450,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               decoration: BoxDecoration(
                 color: isDark ? Colors.black26 : Colors.white70,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: Colors.redAccent.withValues(alpha: 0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,14 +502,24 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                   _fetchLiveStatus();
                 });
               },
-              icon: const Icon(Icons.replay_rounded, color: Colors.white, size: 18),
+              icon: const Icon(
+                Icons.replay_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
               label: const Text(
                 "Request Verification Again",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),
@@ -514,7 +570,12 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
     );
   }
 
-  Widget _buildEstimatedPrepTimeCard(Order order, Color cardBg, Color borderColor, bool isDark) {
+  Widget _buildEstimatedPrepTimeCard(
+    Order order,
+    Color cardBg,
+    Color borderColor,
+    bool isDark,
+  ) {
     final prepMinutes = order.estimatedPrepTime ?? 15;
     final readyAt = order.estimatedReadyAt;
     String readyAtStr = "";
@@ -545,7 +606,11 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               color: Colors.amber.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.timer_outlined, color: Color(0xFFD97706), size: 26),
+            child: const Icon(
+              Icons.timer_outlined,
+              color: Color(0xFFD97706),
+              size: 26,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -564,11 +629,16 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: const Text(
                         "ESTIMATE",
@@ -623,9 +693,25 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
     final status = order.status;
 
     final bool isPlacedDone = true;
-    final bool isAcceptedDone = ["Accepted", "Processing", "Preparing", "Ready", "Completed", "Collected"].contains(status);
-    final bool isPreparingDone = ["Preparing", "Ready", "Completed", "Collected"].contains(status);
-    final bool isReadyDone = ["Ready", "Completed", "Collected"].contains(status);
+    final bool isAcceptedDone = [
+      "Accepted",
+      "Processing",
+      "Preparing",
+      "Ready",
+      "Completed",
+      "Collected",
+    ].contains(status);
+    final bool isPreparingDone = [
+      "Preparing",
+      "Ready",
+      "Completed",
+      "Collected",
+    ].contains(status);
+    final bool isReadyDone = [
+      "Ready",
+      "Completed",
+      "Collected",
+    ].contains(status);
     final bool isCollectedDone = status == "Collected";
 
     return Container(
@@ -665,13 +751,13 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               title: isUpiVerified
                   ? "UPI Payment Confirmed"
                   : isUpiRejected
-                      ? "UPI Claim Not Confirmed"
-                      : "Awaiting UPI Verification",
+                  ? "UPI Claim Not Confirmed"
+                  : "Awaiting UPI Verification",
               subtitle: isUpiVerified
                   ? "Admin verified payment reference"
                   : isUpiRejected
-                      ? "Admin could not verify UPI transaction"
-                      : "Manager is verifying your payment declaration",
+                  ? "Admin could not verify UPI transaction"
+                  : "Manager is verifying your payment declaration",
               timestamp: order.paymentVerifiedAt != null
                   ? "${order.paymentVerifiedAt!.hour.toString().padLeft(2, '0')}:${order.paymentVerifiedAt!.minute.toString().padLeft(2, '0')}"
                   : null,
@@ -688,7 +774,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
             title: "Order Accepted",
             subtitle: "Kitchen acknowledged order details",
             isCompleted: isAcceptedDone,
-            isActive: status == "Accepted" || (status == "Processing" && !isUpiAwaiting),
+            isActive:
+                status == "Accepted" ||
+                (status == "Processing" && !isUpiAwaiting),
             icon: Icons.thumb_up_alt_outlined,
             isDark: isDark,
           ),
@@ -774,7 +862,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               Container(
                 width: 2,
                 height: 38,
-                color: isCompleted ? Colors.green.withValues(alpha: 0.5) : (isDark ? Colors.white12 : Colors.black12),
+                color: isCompleted
+                    ? Colors.green.withValues(alpha: 0.5)
+                    : (isDark ? Colors.white12 : Colors.black12),
               ),
           ],
         ),
@@ -792,14 +882,18 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                     style: TextStyle(
                       color: isDark ? Colors.white : const Color(0xFF111827),
                       fontSize: 14,
-                      fontWeight: isActive || isCompleted ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: isActive || isCompleted
+                          ? FontWeight.bold
+                          : FontWeight.w500,
                     ),
                   ),
                   if (timestamp != null)
                     Text(
                       timestamp,
                       style: TextStyle(
-                        color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+                        color: isDark
+                            ? Colors.white38
+                            : const Color(0xFF9CA3AF),
                         fontSize: 11,
                       ),
                     ),
@@ -875,12 +969,17 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               icon: const Icon(Icons.qr_code, color: Colors.black),
               label: const Text(
                 "SHOW PICKUP RECEIPT",
-                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.yellow,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),
@@ -966,7 +1065,8 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               ),
             ],
           ),
-          if (order.paymentMethod.toUpperCase() == 'UPI' && order.paymentStatus == 'Awaiting Verification') ...[
+          if (order.paymentMethod.toUpperCase() == 'UPI' &&
+              order.paymentStatus == 'Awaiting Verification') ...[
             const SizedBox(height: 8),
             Text(
               "Note: Your UPI payment claim has been submitted. Restaurant staff will verify it against the counter account before completing pickup.",
@@ -1032,43 +1132,61 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                         Text(
                           itemName,
                           style: TextStyle(
-                            color: isDark ? Colors.white : const Color(0xFF1F2937),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF1F2937),
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         if (item['selectedCustomizations'] is List &&
-                            (item['selectedCustomizations'] as List).isNotEmpty) ...[
+                            (item['selectedCustomizations'] as List)
+                                .isNotEmpty) ...[
                           const SizedBox(height: 3),
                           Wrap(
                             spacing: 6,
                             runSpacing: 2,
-                            children: (item['selectedCustomizations'] as List).map<Widget>((c) {
-                              final opt = c['optionName']?.toString() ?? '';
-                              final cPrice = int.tryParse(c['price']?.toString() ?? '0') ?? 0;
-                              return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: isDark ? Colors.white12 : const Color(0xFFE5E7EB),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  cPrice > 0 ? "$opt (+₹$cPrice)" : opt,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                            children: (item['selectedCustomizations'] as List)
+                                .map<Widget>((c) {
+                                  final opt = c['optionName']?.toString() ?? '';
+                                  final cPrice =
+                                      int.tryParse(
+                                        c['price']?.toString() ?? '0',
+                                      ) ??
+                                      0;
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? Colors.white12
+                                          : const Color(0xFFE5E7EB),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      cPrice > 0 ? "$opt (+₹$cPrice)" : opt,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isDark
+                                            ? Colors.white70
+                                            : const Color(0xFF6B7280),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  );
+                                })
+                                .toList(),
                           ),
                         ],
                         const SizedBox(height: 2),
                         Text(
                           "₹$price × $quantity",
                           style: TextStyle(
-                            color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                            color: isDark
+                                ? Colors.white60
+                                : const Color(0xFF6B7280),
                             fontSize: 12,
                           ),
                         ),
@@ -1087,7 +1205,10 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               );
             },
           ),
-          Divider(color: isDark ? Colors.white24 : const Color(0xFFE5E7EB), height: 24),
+          Divider(
+            color: isDark ? Colors.white24 : const Color(0xFFE5E7EB),
+            height: 24,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1128,7 +1249,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               icon: const Icon(Icons.receipt_long, size: 16),
               label: const Text("View Itemized Digital Receipt"),
               style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
@@ -1142,18 +1265,22 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
     if (_existingFeedback != null || _isLoadingFeedback) return;
     _isLoadingFeedback = true;
     try {
-      final feedback = await context.read<OrderProvider>().getOrderFeedback(orderId);
+      final feedback = await context.read<OrderProvider>().getOrderFeedback(
+        orderId,
+      );
       if (mounted && feedback != null) {
         setState(() => _existingFeedback = feedback);
       }
-    } catch (_) {} finally {
+    } catch (_) {
+    } finally {
       _isLoadingFeedback = false;
     }
   }
 
   Widget _buildFeedbackCard(Color cardBg, Color borderColor, bool isDark) {
     if (_existingFeedback != null) {
-      final rating = int.tryParse(_existingFeedback!['rating']?.toString() ?? '5') ?? 5;
+      final rating =
+          int.tryParse(_existingFeedback!['rating']?.toString() ?? '5') ?? 5;
       final comment = _existingFeedback!['comment']?.toString() ?? '';
       return Container(
         padding: const EdgeInsets.all(16),
@@ -1167,7 +1294,11 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
           children: [
             Row(
               children: [
-                const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.green,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   "Your Feedback Submitted",
@@ -1218,7 +1349,11 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
         children: [
           Row(
             children: [
-              const Icon(Icons.rate_review_outlined, color: Color(0xFFD97706), size: 20),
+              const Icon(
+                Icons.rate_review_outlined,
+                color: Color(0xFFD97706),
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 "How was your meal?",
@@ -1240,7 +1375,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                   setState(() => _selectedRating = starNum);
                 },
                 icon: Icon(
-                  starNum <= _selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
+                  starNum <= _selectedRating
+                      ? Icons.star_rounded
+                      : Icons.star_outline_rounded,
                   color: Colors.amber,
                   size: 32,
                 ),
@@ -1251,23 +1388,38 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: ["Delicious", "Fast Service", "Hot & Fresh", "Good Portion", "Clean Packaging"].map((tag) {
-              final isSelected = _selectedFeedbackTags.contains(tag);
-              return FilterChip(
-                label: Text(tag, style: TextStyle(fontSize: 11, color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87))),
-                selected: isSelected,
-                selectedColor: Colors.yellow,
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedFeedbackTags.add(tag);
-                    } else {
-                      _selectedFeedbackTags.remove(tag);
-                    }
-                  });
-                },
-              );
-            }).toList(),
+            children:
+                [
+                  "Delicious",
+                  "Fast Service",
+                  "Hot & Fresh",
+                  "Good Portion",
+                  "Clean Packaging",
+                ].map((tag) {
+                  final isSelected = _selectedFeedbackTags.contains(tag);
+                  return FilterChip(
+                    label: Text(
+                      tag,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isSelected
+                            ? Colors.black
+                            : (isDark ? Colors.white70 : Colors.black87),
+                      ),
+                    ),
+                    selected: isSelected,
+                    selectedColor: Colors.yellow,
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedFeedbackTags.add(tag);
+                        } else {
+                          _selectedFeedbackTags.remove(tag);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 10),
           TextField(
@@ -1310,8 +1462,14 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(success ? "Thank you for your feedback!" : "Unable to submit feedback."),
-                            backgroundColor: success ? Colors.green : Colors.redAccent,
+                            content: Text(
+                              success
+                                  ? "Thank you for your feedback!"
+                                  : "Unable to submit feedback.",
+                            ),
+                            backgroundColor: success
+                                ? Colors.green
+                                : Colors.redAccent,
                           ),
                         );
                       }
@@ -1319,11 +1477,26 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.yellow,
                 foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: _isSubmittingFeedback
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                  : const Text("Submit Feedback", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
+                    )
+                  : const Text(
+                      "Submit Feedback",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -1339,13 +1512,17 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const OrderHistoryPage()),
+                MaterialPageRoute(
+                  builder: (context) => const OrderHistoryPage(),
+                ),
               );
             },
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
               side: BorderSide(color: isDark ? Colors.white30 : Colors.black26),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: Text(
               "Order History",
@@ -1366,7 +1543,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               backgroundColor: Colors.yellow,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text(
               "Back to Menu",
@@ -1410,9 +1589,14 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.yellow,
                 foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              child: const Text("Retry", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                "Retry",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -1424,7 +1608,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> with WidgetsBindi
     return Center(
       child: Text(
         "Order not found",
-        style: TextStyle(color: isDark ? Colors.white70 : const Color(0xFF6B7280)),
+        style: TextStyle(
+          color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+        ),
       ),
     );
   }

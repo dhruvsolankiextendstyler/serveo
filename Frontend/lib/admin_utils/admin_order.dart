@@ -52,18 +52,28 @@ class AdminOrder {
     String formattedDate = '';
     if (json['createdAt'] != null) {
       final str = json['createdAt'].toString();
-      formattedDate = str.length >= 16 ? str.replaceFirst('T', ' ').substring(0, 16) : str;
+      formattedDate = str.length >= 16
+          ? str.replaceFirst('T', ' ').substring(0, 16)
+          : str;
     }
 
     // Safely extract customer details from either embedded customerDetails or populated userId
-    final userMap = json['userId'] is Map ? json['userId'] as Map<String, dynamic> : null;
-    final customerMap = json['customerDetails'] is Map ? json['customerDetails'] as Map<String, dynamic> : null;
+    final userMap = json['userId'] is Map
+        ? json['userId'] as Map<String, dynamic>
+        : null;
+    final customerMap = json['customerDetails'] is Map
+        ? json['customerDetails'] as Map<String, dynamic>
+        : null;
 
-    final String cName = customerMap?['fullName'] ?? userMap?['fullName'] ?? 'Customer';
-    final String cPhone = customerMap?['phoneNumber'] ?? userMap?['phoneNumber'] ?? 'N/A';
+    final String cName =
+        customerMap?['fullName'] ?? userMap?['fullName'] ?? 'Customer';
+    final String cPhone =
+        customerMap?['phoneNumber'] ?? userMap?['phoneNumber'] ?? 'N/A';
     final String cEmail = customerMap?['email'] ?? userMap?['email'] ?? 'N/A';
 
-    final String userIdString = userMap != null ? (userMap['_id']?.toString() ?? '') : (json['userId']?.toString() ?? '');
+    final String userIdString = userMap != null
+        ? (userMap['_id']?.toString() ?? '')
+        : (json['userId']?.toString() ?? '');
 
     final pClaimed = json['paymentClaimedAt'] != null
         ? DateTime.tryParse(json['paymentClaimedAt'].toString())
@@ -102,7 +112,9 @@ class AdminOrder {
       paymentStatus: json['paymentStatus']?.toString() ?? 'Pending',
       paymentRejectionReason: json['paymentRejectionReason']?.toString(),
       verificationAttempts: parsedAttempts,
-      estimatedPrepTime: int.tryParse(json['estimatedPrepTime']?.toString() ?? ''),
+      estimatedPrepTime: int.tryParse(
+        json['estimatedPrepTime']?.toString() ?? '',
+      ),
       estimatedReadyAt: eReady,
       paymentClaimedAt: pClaimed,
       paymentVerifiedAt: pVerified,
@@ -112,16 +124,23 @@ class AdminOrder {
 
   bool get isUpi => paymentMethod.toUpperCase() == 'UPI';
   bool get isCod => paymentMethod.toUpperCase() == 'COD';
-  bool get isAwaitingVerification => paymentStatus == 'Awaiting Verification' || status == 'Pending Verification';
+  bool get isAwaitingVerification =>
+      paymentStatus == 'Awaiting Verification' ||
+      status == 'Pending Verification';
   bool get isVerified => paymentStatus == 'Verified';
-  bool get isRejected => paymentStatus == 'Rejected' || status == 'Payment Rejected';
-  int get attemptCount => verificationAttempts.isNotEmpty ? verificationAttempts.length : (isAwaitingVerification || isRejected ? 1 : 0);
+  bool get isRejected =>
+      paymentStatus == 'Rejected' || status == 'Payment Rejected';
+  int get attemptCount => verificationAttempts.isNotEmpty
+      ? verificationAttempts.length
+      : (isAwaitingVerification || isRejected ? 1 : 0);
   bool get isResubmitted => attemptCount > 1;
-  Map<String, dynamic>? get latestAttempt => verificationAttempts.isNotEmpty ? verificationAttempts.last : null;
+  Map<String, dynamic>? get latestAttempt =>
+      verificationAttempts.isNotEmpty ? verificationAttempts.last : null;
 
   /// Formats order placement time in Asia/Kolkata timezone (UTC+5:30)
   /// e.g. "7:42 PM" for today's orders or "21 Oct, 7:42 PM" for older dates.
-  String get formattedPlacementTime => _formatTimeKolkata(createdAt, fallback: orderDate);
+  String get formattedPlacementTime =>
+      _formatTimeKolkata(createdAt, fallback: orderDate);
 
   /// Formats full order placement date and time in Asia/Kolkata (e.g. "27 Oct 2026, 12:30 AM")
   String get formattedDateTimeKolkata {
@@ -138,7 +157,20 @@ class AdminOrder {
     final minute = kolkataTime.minute.toString().padLeft(2, '0');
     final timeStr = '$hour:$minute $period';
 
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     final monthName = months[kolkataTime.month - 1];
     return '${kolkataTime.day} $monthName ${kolkataTime.year}, $timeStr';
   }
@@ -151,27 +183,21 @@ class AdminOrder {
         final name = (item['itemName'] ?? item['name'] ?? 'Item').toString();
         final qty = int.tryParse(item['quantity']?.toString() ?? '1') ?? 1;
         final price = int.tryParse(item['itemPrice']?.toString() ?? '0') ?? 0;
-        list.add({
-          'itemName': name,
-          'quantity': qty,
-          'itemPrice': price,
-        });
+        list.add({'itemName': name, 'quantity': qty, 'itemPrice': price});
       } else if (item is String && item.isNotEmpty) {
-        list.add({
-          'itemName': item,
-          'quantity': 1,
-          'itemPrice': 0,
-        });
+        list.add({'itemName': item, 'quantity': 1, 'itemPrice': 0});
       }
     }
     return list;
   }
 
   /// Formats payment claim time in Asia/Kolkata timezone
-  String get formattedClaimTime => _formatTimeKolkata(paymentClaimedAt, fallback: 'N/A');
+  String get formattedClaimTime =>
+      _formatTimeKolkata(paymentClaimedAt, fallback: 'N/A');
 
   /// Formats payment verification time in Asia/Kolkata timezone
-  String get formattedVerifiedTime => _formatTimeKolkata(paymentVerifiedAt, fallback: 'N/A');
+  String get formattedVerifiedTime =>
+      _formatTimeKolkata(paymentVerifiedAt, fallback: 'N/A');
 
   static String _formatTimeKolkata(DateTime? dt, {required String fallback}) {
     if (dt == null) return fallback;
@@ -179,7 +205,9 @@ class AdminOrder {
     // Convert to Asia/Kolkata (UTC + 5:30)
     final utc = dt.toUtc();
     final kolkataTime = utc.add(const Duration(hours: 5, minutes: 30));
-    final nowKolkata = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
+    final nowKolkata = DateTime.now().toUtc().add(
+      const Duration(hours: 5, minutes: 30),
+    );
 
     int hour = kolkataTime.hour;
     final period = hour >= 12 ? 'PM' : 'AM';
@@ -188,7 +216,8 @@ class AdminOrder {
     final minute = kolkataTime.minute.toString().padLeft(2, '0');
     final timeStr = '$hour:$minute $period';
 
-    final isToday = kolkataTime.year == nowKolkata.year &&
+    final isToday =
+        kolkataTime.year == nowKolkata.year &&
         kolkataTime.month == nowKolkata.month &&
         kolkataTime.day == nowKolkata.day;
 
@@ -196,7 +225,20 @@ class AdminOrder {
       return timeStr;
     }
 
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     final monthName = months[kolkataTime.month - 1];
     return '${kolkataTime.day} $monthName, $timeStr';
   }

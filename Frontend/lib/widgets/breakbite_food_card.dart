@@ -95,7 +95,10 @@ class ServeoFoodCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: isDark ? Colors.black45 : Colors.white70,
                     borderRadius: BorderRadius.circular(10),
@@ -129,7 +132,8 @@ class ServeoFoodCard extends StatelessWidget {
         fullUrl,
         height: 135,
         width: double.infinity,
-        fit: BoxFit.cover, // Ensures images fit their containers without stretching or distorting
+        fit: BoxFit
+            .cover, // Ensures images fit their containers without stretching or distorting
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
@@ -139,7 +143,10 @@ class ServeoFoodCard extends StatelessWidget {
               child: SizedBox(
                 width: 22,
                 height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.yellow),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.yellow,
+                ),
               ),
             ),
           );
@@ -165,7 +172,8 @@ class ServeoFoodCard extends StatelessWidget {
         height: 135,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildFallbackBanner(isDark),
+        errorBuilder: (context, error, stackTrace) =>
+            _buildFallbackBanner(isDark),
       );
     }
 
@@ -186,10 +194,7 @@ class ServeoFoodCard extends StatelessWidget {
         child: Container(
           width: 6,
           height: 6,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
       ),
     );
@@ -206,8 +211,8 @@ class ServeoFoodCard extends StatelessWidget {
     final borderColor = currentQty > 0
         ? Colors.yellow
         : (isSoldOut
-            ? (isDark ? Colors.white10 : const Color(0xFFE5E7EB))
-            : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)));
+              ? (isDark ? Colors.white10 : const Color(0xFFE5E7EB))
+              : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)));
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
     final descTextColor = isDark ? Colors.white60 : const Color(0xFF6B7280);
     final priceColor = isDark ? Colors.yellow : const Color(0xFFD97706);
@@ -229,14 +234,14 @@ class ServeoFoodCard extends StatelessWidget {
                 ),
               ]
             : (isDark
-                ? null
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]),
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,7 +251,9 @@ class ServeoFoodCard extends StatelessWidget {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
                 child: _buildFoodImage(isDark),
               ),
               if (isSoldOut)
@@ -254,7 +261,10 @@ class ServeoFoodCard extends StatelessWidget {
                   top: 10,
                   left: 10,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(6),
@@ -282,11 +292,16 @@ class ServeoFoodCard extends StatelessWidget {
                   top: 10,
                   right: 10,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.75),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.yellow.withValues(alpha: 0.7)),
+                      border: Border.all(
+                        color: Colors.yellow.withValues(alpha: 0.7),
+                      ),
                     ),
                     child: const Text(
                       "CUSTOMIZABLE",
@@ -350,32 +365,43 @@ class ServeoFoodCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "₹${item.itemPrice}",
-                      style: TextStyle(
-                        color: priceColor,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Text(
+                        "₹${item.itemPrice}",
+                        style: TextStyle(
+                          color: priceColor,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 8),
 
                     // Controls
                     if (isSoldOut)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
                         decoration: BoxDecoration(
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.06)
                               : const Color(0xFFF3F4F6),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+                            color: isDark
+                                ? Colors.white10
+                                : const Color(0xFFE5E7EB),
                           ),
                         ),
                         child: Text(
                           "Unavailable",
                           style: TextStyle(
-                            color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+                            color: isDark
+                                ? Colors.white38
+                                : const Color(0xFF9CA3AF),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -384,7 +410,11 @@ class ServeoFoodCard extends StatelessWidget {
                     else if (currentQty == 0)
                       ElevatedButton.icon(
                         onPressed: () => item.hasCustomizations
-                            ? _showCustomizationBottomSheet(context, item, orderProvider)
+                            ? _showCustomizationBottomSheet(
+                                context,
+                                item,
+                                orderProvider,
+                              )
                             : orderProvider.addToCart(item, context),
                         icon: Icon(
                           item.hasCustomizations ? Icons.tune : Icons.add,
@@ -406,7 +436,10 @@ class ServeoFoodCard extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
                           visualDensity: VisualDensity.compact,
                         ),
                       )
@@ -420,15 +453,27 @@ class ServeoFoodCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             InkWell(
-                              onTap: () => orderProvider.decrementQuantity(item),
-                              borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                              onTap: () =>
+                                  orderProvider.decrementQuantity(item),
+                              borderRadius: const BorderRadius.horizontal(
+                                left: Radius.circular(8),
+                              ),
                               child: const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                child: Icon(Icons.remove, color: Colors.black, size: 16),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 6,
+                                ),
+                                child: Icon(
+                                  Icons.remove,
+                                  color: Colors.black,
+                                  size: 16,
+                                ),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                               child: Text(
                                 "$currentQty",
                                 style: const TextStyle(
@@ -440,12 +485,25 @@ class ServeoFoodCard extends StatelessWidget {
                             ),
                             InkWell(
                               onTap: () => item.hasCustomizations
-                                  ? _showCustomizationBottomSheet(context, item, orderProvider)
+                                  ? _showCustomizationBottomSheet(
+                                      context,
+                                      item,
+                                      orderProvider,
+                                    )
                                   : orderProvider.addToCart(item, context),
-                              borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                              borderRadius: const BorderRadius.horizontal(
+                                right: Radius.circular(8),
+                              ),
                               child: const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                child: Icon(Icons.add, color: Colors.black, size: 16),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 6,
+                                ),
+                                child: Icon(
+                                  Icons.add,
+                                  color: Colors.black,
+                                  size: 16,
+                                ),
                               ),
                             ),
                           ],
@@ -461,10 +519,7 @@ class ServeoFoodCard extends StatelessWidget {
     );
 
     if (isSoldOut) {
-      return Opacity(
-        opacity: 0.65,
-        child: cardBody,
-      );
+      return Opacity(opacity: 0.65, child: cardBody);
     }
     return cardBody;
   }
@@ -493,7 +548,7 @@ class ServeoFoodCard extends StatelessWidget {
                 customizationName: group.name,
                 optionName: firstOpt.name,
                 price: firstOpt.price,
-              )
+              ),
             ];
           }
         }
@@ -512,7 +567,12 @@ class ServeoFoodCard extends StatelessWidget {
 
             return Container(
               color: bg,
-              padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(modalCtx).viewInsets.bottom + 20),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                MediaQuery.of(modalCtx).viewInsets.bottom + 20,
+              ),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -542,12 +602,15 @@ class ServeoFoodCard extends StatelessWidget {
                       "Base Price: ₹${item.itemPrice}",
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                        color: isDark
+                            ? Colors.white60
+                            : const Color(0xFF6B7280),
                       ),
                     ),
                     Divider(color: borderColor, height: 24),
                     ...item.customizations.map((group) {
-                      final currentGroupSelected = selectedMap[group.name] ?? [];
+                      final currentGroupSelected =
+                          selectedMap[group.name] ?? [];
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -564,9 +627,14 @@ class ServeoFoodCard extends StatelessWidget {
                               if (group.required) ...[
                                 const SizedBox(width: 6),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: Colors.redAccent.withValues(alpha: 0.15),
+                                    color: Colors.redAccent.withValues(
+                                      alpha: 0.15,
+                                    ),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Text(
@@ -583,8 +651,12 @@ class ServeoFoodCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           ...group.options.map((opt) {
-                            final isSelected = currentGroupSelected.any((s) => s.optionName == opt.name);
-                            final priceText = opt.price > 0 ? " (+₹${opt.price})" : " (Free)";
+                            final isSelected = currentGroupSelected.any(
+                              (s) => s.optionName == opt.name,
+                            );
+                            final priceText = opt.price > 0
+                                ? " (+₹${opt.price})"
+                                : " (Free)";
 
                             if (group.isSingle) {
                               return RadioListTile<String>(
@@ -593,7 +665,10 @@ class ServeoFoodCard extends StatelessWidget {
                                 activeColor: const Color(0xFFD97706),
                                 title: Text(
                                   "${opt.name}$priceText",
-                                  style: TextStyle(fontSize: 13, color: textColor),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: textColor,
+                                  ),
                                 ),
                                 value: opt.name,
                                 groupValue: currentGroupSelected.isNotEmpty
@@ -606,7 +681,7 @@ class ServeoFoodCard extends StatelessWidget {
                                         customizationName: group.name,
                                         optionName: opt.name,
                                         price: opt.price,
-                                      )
+                                      ),
                                     ];
                                   });
                                 },
@@ -618,20 +693,30 @@ class ServeoFoodCard extends StatelessWidget {
                                 activeColor: const Color(0xFFD97706),
                                 title: Text(
                                   "${opt.name}$priceText",
-                                  style: TextStyle(fontSize: 13, color: textColor),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: textColor,
+                                  ),
                                 ),
                                 value: isSelected,
                                 onChanged: (val) {
                                   setModalState(() {
-                                    final list = List<SelectedCustomization>.from(selectedMap[group.name] ?? []);
+                                    final list =
+                                        List<SelectedCustomization>.from(
+                                          selectedMap[group.name] ?? [],
+                                        );
                                     if (val == true) {
-                                      list.add(SelectedCustomization(
-                                        customizationName: group.name,
-                                        optionName: opt.name,
-                                        price: opt.price,
-                                      ));
+                                      list.add(
+                                        SelectedCustomization(
+                                          customizationName: group.name,
+                                          optionName: opt.name,
+                                          price: opt.price,
+                                        ),
+                                      );
                                     } else {
-                                      list.removeWhere((s) => s.optionName == opt.name);
+                                      list.removeWhere(
+                                        (s) => s.optionName == opt.name,
+                                      );
                                     }
                                     selectedMap[group.name] = list;
                                   });
@@ -654,7 +739,9 @@ class ServeoFoodCard extends StatelessWidget {
                               "Item Subtotal",
                               style: TextStyle(
                                 fontSize: 11,
-                                color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                                color: isDark
+                                    ? Colors.white60
+                                    : const Color(0xFF6B7280),
                               ),
                             ),
                             Text(
@@ -670,21 +757,31 @@ class ServeoFoodCard extends StatelessWidget {
                         ElevatedButton.icon(
                           onPressed: () {
                             for (final g in item.customizations) {
-                              if (g.required && (selectedMap[g.name] == null || selectedMap[g.name]!.isEmpty)) {
+                              if (g.required &&
+                                  (selectedMap[g.name] == null ||
+                                      selectedMap[g.name]!.isEmpty)) {
                                 ScaffoldMessenger.of(modalCtx).showSnackBar(
                                   SnackBar(
-                                    content: Text("Please select an option for '${g.name}'"),
+                                    content: Text(
+                                      "Please select an option for '${g.name}'",
+                                    ),
                                     backgroundColor: Colors.redAccent,
                                   ),
                                 );
                                 return;
                               }
                             }
-                            final customized = item.copyWith(selectedCustomizations: flatList);
+                            final customized = item.copyWith(
+                              selectedCustomizations: flatList,
+                            );
                             orderProvider.addToCart(customized, context);
                             Navigator.pop(modalCtx);
                           },
-                          icon: const Icon(Icons.add_shopping_cart, color: Colors.black, size: 18),
+                          icon: const Icon(
+                            Icons.add_shopping_cart,
+                            color: Colors.black,
+                            size: 18,
+                          ),
                           label: const Text(
                             "Add to Tray",
                             style: TextStyle(
@@ -695,8 +792,13 @@ class ServeoFoodCard extends StatelessWidget {
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.yellow,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
                       ],

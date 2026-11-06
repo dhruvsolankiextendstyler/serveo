@@ -51,15 +51,21 @@ class MenuProvider extends ChangeNotifier {
   Future<void> fetchCampaigns({String? restaurantId, Client? client}) async {
     try {
       final httpClient = client ?? http.Client();
-      final targetId = (restaurantId != null && restaurantId.isNotEmpty) ? restaurantId : "default";
-      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/$targetId/campaigns/active");
+      final targetId = (restaurantId != null && restaurantId.isNotEmpty)
+          ? restaurantId
+          : "default";
+      final url = Uri.parse(
+        "${ApiConfig.baseUrl}/restaurant/$targetId/campaigns/active",
+      );
       final response = await httpClient.get(url);
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         final list = decoded['campaigns'];
         if (list is List) {
-          _activeCampaigns = list.map((e) => Map<String, dynamic>.from(e)).toList();
+          _activeCampaigns = list
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
           notifyListeners();
         }
       }
@@ -68,16 +74,28 @@ class MenuProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> recordCampaignClick(String campaignId, {String? restaurantId, Client? client}) async {
+  Future<void> recordCampaignClick(
+    String campaignId, {
+    String? restaurantId,
+    Client? client,
+  }) async {
     try {
       final httpClient = client ?? http.Client();
-      final targetId = (restaurantId != null && restaurantId.isNotEmpty) ? restaurantId : "default";
-      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/$targetId/campaigns/$campaignId/click");
+      final targetId = (restaurantId != null && restaurantId.isNotEmpty)
+          ? restaurantId
+          : "default";
+      final url = Uri.parse(
+        "${ApiConfig.baseUrl}/restaurant/$targetId/campaigns/$campaignId/click",
+      );
       await httpClient.post(url);
     } catch (_) {}
   }
 
-  Future<void> fetchRecommendations({String? restaurantId, Client? client, String? overrideToken}) async {
+  Future<void> fetchRecommendations({
+    String? restaurantId,
+    Client? client,
+    String? overrideToken,
+  }) async {
     try {
       String? token = overrideToken;
       if (token == null) {
@@ -94,14 +112,13 @@ class MenuProvider extends ChangeNotifier {
 
       final response = await httpClient.get(
         url,
-        headers: {
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+        headers: {if (token != null) 'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        _recommendationReason = decoded['reason']?.toString() ?? "Popular items ready to order";
+        _recommendationReason =
+            decoded['reason']?.toString() ?? "Popular items ready to order";
         final list = decoded['recommendations'];
         if (list is List) {
           _recommendedItems = list.map((json) => Item.fromJson(json)).toList();

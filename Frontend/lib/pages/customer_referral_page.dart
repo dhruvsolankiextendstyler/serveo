@@ -69,7 +69,10 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
       final refUrl = Uri.parse(
         "${ApiConfig.baseUrl}/user/referral${restId != null && restId.isNotEmpty ? '?restaurantId=$restId' : ''}",
       );
-      final refRes = await http.get(refUrl, headers: {'Authorization': 'Bearer $token'});
+      final refRes = await http.get(
+        refUrl,
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
       if (refRes.statusCode == 200) {
         final data = jsonDecode(refRes.body);
@@ -84,13 +87,20 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
 
         final rawList = data['referrals'];
         if (rawList is List) {
-          _referralHistory = rawList.map((e) => Map<String, dynamic>.from(e)).toList();
+          _referralHistory = rawList
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
         }
       }
 
       // 2. Fetch Notification Preferences
-      final notifUrl = Uri.parse("${ApiConfig.baseUrl}/user/notification-preferences");
-      final notifRes = await http.get(notifUrl, headers: {'Authorization': 'Bearer $token'});
+      final notifUrl = Uri.parse(
+        "${ApiConfig.baseUrl}/user/notification-preferences",
+      );
+      final notifRes = await http.get(
+        notifUrl,
+        headers: {'Authorization': 'Bearer $token'},
+      );
       if (notifRes.statusCode == 200) {
         final pData = jsonDecode(notifRes.body);
         final prefs = pData['preferences'];
@@ -145,7 +155,8 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
       if (res.statusCode == 200) {
         setState(() {
           _applySuccess = true;
-          _applyResultMsg = data['message'] ?? "Referral code applied successfully!";
+          _applyResultMsg =
+              data['message'] ?? "Referral code applied successfully!";
           _inputCodeController.clear();
         });
       } else {
@@ -171,17 +182,16 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
       if (user == null) return;
       final token = await user.getIdToken();
 
-      final url = Uri.parse("${ApiConfig.baseUrl}/user/notification-preferences");
+      final url = Uri.parse(
+        "${ApiConfig.baseUrl}/user/notification-preferences",
+      );
       await http.patch(
         url,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          "orders": orders,
-          "promotional": promo,
-        }),
+        body: jsonEncode({"orders": orders, "promotional": promo}),
       );
     } catch (_) {
     } finally {
@@ -198,12 +208,17 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF6B7280);
 
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text("Refer & Earn", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Refer & Earn",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.yellow))
@@ -218,17 +233,26 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: isDark
-                            ? [const Color(0xFFB45309).withValues(alpha: 0.35), const Color(0xFF1E1E1E)]
+                            ? [
+                                const Color(0xFFB45309).withValues(alpha: 0.35),
+                                const Color(0xFF1E1E1E),
+                              ]
                             : [const Color(0xFFFDE68A), Colors.amber.shade50],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: const Color(0xFFD97706).withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Column(
                       children: [
-                        const Icon(Icons.card_giftcard, size: 48, color: Color(0xFFD97706)),
+                        const Icon(
+                          Icons.card_giftcard,
+                          size: 48,
+                          color: Color(0xFFD97706),
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           "Invite Friends, Earn Rewards!",
@@ -253,9 +277,14 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
 
                         // Code Card
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF141414) : Colors.white,
+                            color: isDark
+                                ? const Color(0xFF141414)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: const Color(0xFFD97706)),
                           ),
@@ -267,11 +296,17 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                                 children: [
                                   Text(
                                     "YOUR CODE",
-                                    style: TextStyle(fontSize: 10, color: secondaryTextColor, letterSpacing: 1),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: secondaryTextColor,
+                                      letterSpacing: 1,
+                                    ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    _referralCode.isNotEmpty ? _referralCode : "LOADING...",
+                                    _referralCode.isNotEmpty
+                                        ? _referralCode
+                                        : "LOADING...",
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -284,10 +319,16 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                               ElevatedButton.icon(
                                 onPressed: _referralCode.isNotEmpty
                                     ? () {
-                                        Clipboard.setData(ClipboardData(text: _referralCode));
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        Clipboard.setData(
+                                          ClipboardData(text: _referralCode),
+                                        );
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
-                                            content: Text("Referral code copied to clipboard!"),
+                                            content: Text(
+                                              "Referral code copied to clipboard!",
+                                            ),
                                             backgroundColor: Color(0xFF16A34A),
                                             duration: Duration(seconds: 2),
                                           ),
@@ -299,7 +340,9 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFD97706),
                                   foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                               ),
                             ],
@@ -368,7 +411,10 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                         const SizedBox(height: 4),
                         Text(
                           "Enter a friend's code before your first order to get $_refereeBonus bonus points on completion.",
-                          style: TextStyle(fontSize: 12, color: secondaryTextColor),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: secondaryTextColor,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -376,32 +422,56 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                             Expanded(
                               child: TextField(
                                 controller: _inputCodeController,
-                                textCapitalization: TextCapitalization.characters,
-                                style: TextStyle(color: primaryTextColor, fontSize: 13),
+                                textCapitalization:
+                                    TextCapitalization.characters,
+                                style: TextStyle(
+                                  color: primaryTextColor,
+                                  fontSize: 13,
+                                ),
                                 decoration: AppTheme.inputDecoration(
                                   isDark: isDark,
                                   hintText: "Enter friend's code",
                                   isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(width: 10),
                             ElevatedButton(
-                              onPressed: _isSubmittingCode ? null : _applyFriendCode,
+                              onPressed: _isSubmittingCode
+                                  ? null
+                                  : _applyFriendCode,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFD97706),
                                 foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusInput,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
                               ),
                               child: _isSubmittingCode
                                   ? const SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
                                     )
-                                  : const Text("Apply", style: TextStyle(fontWeight: FontWeight.bold)),
+                                  : const Text(
+                                      "Apply",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                             ),
                           ],
                         ),
@@ -410,8 +480,12 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                           Row(
                             children: [
                               Icon(
-                                _applySuccess ? Icons.check_circle : Icons.error_outline,
-                                color: _applySuccess ? const Color(0xFF16A34A) : Colors.redAccent,
+                                _applySuccess
+                                    ? Icons.check_circle
+                                    : Icons.error_outline,
+                                color: _applySuccess
+                                    ? const Color(0xFF16A34A)
+                                    : Colors.redAccent,
                                 size: 16,
                               ),
                               const SizedBox(width: 6),
@@ -419,7 +493,9 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                                 child: Text(
                                   _applyResultMsg!,
                                   style: TextStyle(
-                                    color: _applySuccess ? const Color(0xFF16A34A) : Colors.redAccent,
+                                    color: _applySuccess
+                                        ? const Color(0xFF16A34A)
+                                        : Colors.redAccent,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -447,7 +523,11 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.notifications_active_outlined, color: Color(0xFFD97706), size: 20),
+                            const Icon(
+                              Icons.notifications_active_outlined,
+                              color: Color(0xFFD97706),
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               "Notification Preferences",
@@ -462,24 +542,37 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                         const SizedBox(height: 6),
                         Text(
                           "Choose which notifications you wish to receive from Serveo:",
-                          style: TextStyle(fontSize: 12, color: secondaryTextColor),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: secondaryTextColor,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         SwitchListTile.adaptive(
                           contentPadding: EdgeInsets.zero,
                           title: Text(
                             "Order Status Updates",
-                            style: TextStyle(color: primaryTextColor, fontSize: 14, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: primaryTextColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                           subtitle: Text(
                             "Preparation, ready for pickup, and payment receipts",
-                            style: TextStyle(color: secondaryTextColor, fontSize: 11),
+                            style: TextStyle(
+                              color: secondaryTextColor,
+                              fontSize: 11,
+                            ),
                           ),
                           value: _orderNotifs,
                           activeColor: Colors.yellow,
                           onChanged: (val) {
                             setState(() => _orderNotifs = val);
-                            _saveNotificationPreferences(_orderNotifs, _promoNotifs);
+                            _saveNotificationPreferences(
+                              _orderNotifs,
+                              _promoNotifs,
+                            );
                           },
                         ),
                         const Divider(),
@@ -487,17 +580,27 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
                           contentPadding: EdgeInsets.zero,
                           title: Text(
                             "Promotions & Special Offers",
-                            style: TextStyle(color: primaryTextColor, fontSize: 14, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: primaryTextColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                           subtitle: Text(
                             "Weekend coupons, festival discounts, and loyalty reward milestones",
-                            style: TextStyle(color: secondaryTextColor, fontSize: 11),
+                            style: TextStyle(
+                              color: secondaryTextColor,
+                              fontSize: 11,
+                            ),
                           ),
                           value: _promoNotifs,
                           activeColor: Colors.yellow,
                           onChanged: (val) {
                             setState(() => _promoNotifs = val);
-                            _saveNotificationPreferences(_orderNotifs, _promoNotifs);
+                            _saveNotificationPreferences(
+                              _orderNotifs,
+                              _promoNotifs,
+                            );
                           },
                         ),
                       ],
@@ -521,7 +624,9 @@ class _CustomerReferralPageState extends State<CustomerReferralPage> {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF6B7280);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),

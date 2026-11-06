@@ -32,7 +32,10 @@ void main() {
       });
 
       expect(orderWithoutTimestamp.createdAt, isNull);
-      expect(() => orderWithoutTimestamp.formattedPlacementTime, returnsNormally);
+      expect(
+        () => orderWithoutTimestamp.formattedPlacementTime,
+        returnsNormally,
+      );
     });
 
     test('Handles invalid timestamp strings without crashing', () {

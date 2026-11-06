@@ -287,6 +287,15 @@ async function testBackendOrderRejectionWhenDisabled() {
 
   // Resume orders
   restaurantA.isOrderAcceptancePaused = false;
+  restaurantA.openingTime = "00:00";
+  restaurantA.closingTime = "23:59";
+  if (Array.isArray(restaurantA.schedule)) {
+    restaurantA.schedule.forEach(s => {
+      s.isOpen = true;
+      s.openTime = "00:00";
+      s.closeTime = "23:59";
+    });
+  }
 
   // Now place order when open
   const validRes = await addOrderController(req);

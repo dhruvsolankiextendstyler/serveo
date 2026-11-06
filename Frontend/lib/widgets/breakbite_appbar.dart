@@ -9,11 +9,21 @@ import 'serveo_glass_container.dart';
 class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
+  final bool isSearchActive;
+  final TextEditingController? searchController;
+  final VoidCallback? onSearchOpen;
+  final VoidCallback? onSearchClose;
+  final ValueChanged<String>? onSearchChanged;
 
   const ServeoAppBar({
     super.key,
     this.title = "Serveo",
     this.actions,
+    this.isSearchActive = false,
+    this.searchController,
+    this.onSearchOpen,
+    this.onSearchClose,
+    this.onSearchChanged,
   });
 
   void _showNotificationCenter(BuildContext context) {
@@ -250,48 +260,75 @@ class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     final List<Widget> headerActions = [];
 
-    // Notification bell with badge
-    headerActions.add(
-      Stack(
-        alignment: Alignment.center,
-        children: [
+    if (isSearchActive) {
+      if (searchController != null && searchController!.text.isNotEmpty) {
+        headerActions.add(
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            tooltip: "Notifications",
-            onPressed: () => _showNotificationCenter(context),
+            key: const Key('appbar_search_clear_btn'),
+            icon: const Icon(Icons.close),
+            tooltip: "Clear",
+            onPressed: () {
+              searchController!.clear();
+              onSearchChanged?.call('');
+            },
           ),
-          if (unreadNotifs > 0)
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.redAccent,
-                  shape: BoxShape.circle,
-                ),
-                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                child: Text(
-                  unreadNotifs > 9 ? "9+" : "$unreadNotifs",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+        );
+      }
+    } else {
+      if (onSearchOpen != null) {
+        headerActions.add(
+          IconButton(
+            key: const Key('appbar_search_toggle_btn'),
+            icon: const Icon(Icons.search),
+            tooltip: "Search dishes",
+            onPressed: onSearchOpen,
+          ),
+        );
+      }
+
+      // Notification bell with badge
+      headerActions.add(
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined),
+              tooltip: "Notifications",
+              onPressed: () => _showNotificationCenter(context),
+            ),
+            if (unreadNotifs > 0)
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.redAccent,
+                    shape: BoxShape.circle,
                   ),
-                  textAlign: TextAlign.center,
+                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                  child: Text(
+                    unreadNotifs > 9 ? "9+" : "$unreadNotifs",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-            ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
 
     if (actions != null) {
       headerActions.addAll(actions!);
     }
 
     // Desktop/wide screens: place theme toggle in the top-right header area
-    if (isDesktop) {
+    if (isDesktop && !isSearchActive) {
       headerActions.add(
         IconButton(
           icon: Icon(
@@ -315,37 +352,83 @@ class ServeoAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       elevation: 0,
       scrolledUnderElevation: 0,
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.yellow.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: customLogoUrl != null && customLogoUrl.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.network(
-                      customLogoUrl,
-                      width: 20,
-                      height: 20,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.fastfood_outlined, color: Colors.yellow, size: 20),
+      leading: isSearchActive
+          ? IconButton(
+              key: const Key('appbar_search_back_btn'),
+              icon: const Icon(Icons.arrow_back),
+              tooltip: "Back",
+              onPressed: onSearchClose,
+            )
+          : null,
+      title: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: isSearchActive
+            ? Container(
+                key: const ValueKey('appbar_search_active'),
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.darkInputFill : AppTheme.lightInputFill,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? AppTheme.darkInputBorder : AppTheme.lightInputBorder,
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: TextField(
+                  key: const Key('appbar_search_textfield'),
+                  controller: searchController,
+                  autofocus: true,
+                  onChanged: onSearchChanged,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                    fontSize: 14,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Search dishes, snacks & drinks...",
+                    hintStyle: TextStyle(
+                      color: isDark ? AppTheme.darkInputHint : AppTheme.lightInputHint,
+                      fontSize: 13,
                     ),
-                  )
-                : const Icon(Icons.fastfood_outlined, color: Colors.yellow, size: 20),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            displayTitle,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              )
+            : Row(
+                key: const ValueKey('appbar_brand_title'),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.yellow.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: customLogoUrl != null && customLogoUrl.isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.network(
+                              customLogoUrl,
+                              width: 20,
+                              height: 20,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const Icon(Icons.fastfood_outlined, color: Colors.yellow, size: 20),
+                            ),
+                          )
+                        : const Icon(Icons.fastfood_outlined, color: Colors.yellow, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    displayTitle,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
       ),
       actions: headerActions.isNotEmpty ? headerActions : null,
     );

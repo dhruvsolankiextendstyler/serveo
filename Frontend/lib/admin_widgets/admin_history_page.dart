@@ -41,7 +41,8 @@ class _HistoryPageState extends State<HistoryPage> {
       if (_selectedFilter == 'Collected') return order.status == 'Collected';
       if (_selectedFilter == 'Completed') return order.status == 'Completed';
       if (_selectedFilter == 'Cancelled') {
-        return order.status == 'Cancelled' || order.status == 'Payment Rejected';
+        return order.status == 'Cancelled' ||
+            order.status == 'Payment Rejected';
       }
       return order.status == _selectedFilter;
     }).toList();
@@ -49,7 +50,9 @@ class _HistoryPageState extends State<HistoryPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF4B5563);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF4B5563);
     final mutedTextColor = isDark ? Colors.white38 : const Color(0xFF9CA3AF);
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final dividerColor = isDark ? Colors.white10 : const Color(0xFFF3F4F6);
@@ -69,19 +72,29 @@ class _HistoryPageState extends State<HistoryPage> {
                   const SizedBox(width: 8),
                   _buildFilterChip(
                     'Collected',
-                    allHistoryOrders.where((o) => o.status == 'Collected').length,
+                    allHistoryOrders
+                        .where((o) => o.status == 'Collected')
+                        .length,
                     isDark,
                   ),
                   const SizedBox(width: 8),
                   _buildFilterChip(
                     'Completed',
-                    allHistoryOrders.where((o) => o.status == 'Completed').length,
+                    allHistoryOrders
+                        .where((o) => o.status == 'Completed')
+                        .length,
                     isDark,
                   ),
                   const SizedBox(width: 8),
                   _buildFilterChip(
                     'Cancelled',
-                    allHistoryOrders.where((o) => o.status == 'Cancelled' || o.status == 'Payment Rejected').length,
+                    allHistoryOrders
+                        .where(
+                          (o) =>
+                              o.status == 'Cancelled' ||
+                              o.status == 'Payment Rejected',
+                        )
+                        .length,
                     isDark,
                   ),
                 ],
@@ -133,14 +146,18 @@ class _HistoryPageState extends State<HistoryPage> {
       ),
       selected: isSelected,
       selectedColor: activeColor,
-      backgroundColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF3F4F6),
+      backgroundColor: isDark
+          ? const Color(0xFF2A2A2A)
+          : const Color(0xFFF3F4F6),
       checkmarkColor: isDark ? Colors.black : Colors.white,
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: isSelected ? activeColor : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+          color: isSelected
+              ? activeColor
+              : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
         ),
       ),
       onSelected: (_) {
@@ -161,7 +178,8 @@ class _HistoryPageState extends State<HistoryPage> {
   }) {
     final items = order.parsedOrderItems;
     final statusColor = _getStatusColor(order.status);
-    final hasCustomer = order.customerName.isNotEmpty &&
+    final hasCustomer =
+        order.customerName.isNotEmpty &&
         order.customerName != 'Customer' &&
         order.customerName != 'N/A';
 
@@ -231,11 +249,16 @@ class _HistoryPageState extends State<HistoryPage> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         order.status,
@@ -255,7 +278,11 @@ class _HistoryPageState extends State<HistoryPage> {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(Icons.person_outline, size: 14, color: secondaryTextColor),
+                      Icon(
+                        Icons.person_outline,
+                        size: 14,
+                        color: secondaryTextColor,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -325,7 +352,11 @@ class _HistoryPageState extends State<HistoryPage> {
                 ] else ...[
                   Text(
                     "No items detailed",
-                    style: TextStyle(color: mutedTextColor, fontSize: 13, fontStyle: FontStyle.italic),
+                    style: TextStyle(
+                      color: mutedTextColor,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
 
@@ -370,7 +401,9 @@ class _HistoryPageState extends State<HistoryPage> {
                         Text(
                           "Total: ₹${order.totalAmount}",
                           style: TextStyle(
-                            color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                            color: isDark
+                                ? Colors.yellow
+                                : const Color(0xFFD97706),
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),

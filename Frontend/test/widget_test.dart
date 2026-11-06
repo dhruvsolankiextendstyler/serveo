@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/widgets/breakbite_textbox.dart';
 
 void main() {
-  testWidgets('ServeoTextBox displays hint and text correctly', (WidgetTester tester) async {
+  testWidgets('ServeoTextBox displays hint and text correctly', (
+    WidgetTester tester,
+  ) async {
     final controller = TextEditingController();
 
     await tester.pumpWidget(

@@ -41,15 +41,16 @@ class _AdminReportPageState extends State<AdminReportPage> {
       context: context,
       firstDate: DateTime(2024, 1, 1),
       lastDate: now,
-      initialDateRange: _analyticsProvider.customRange ??
+      initialDateRange:
+          _analyticsProvider.customRange ??
           DateTimeRange(start: now.subtract(const Duration(days: 7)), end: now),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: const Color(0xFFD97706),
-                  onPrimary: Colors.white,
-                ),
+              primary: const Color(0xFFD97706),
+              onPrimary: Colors.white,
+            ),
           ),
           child: child!,
         );
@@ -65,9 +66,14 @@ class _AdminReportPageState extends State<AdminReportPage> {
     showGlassDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+        ),
         backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text("Net Sales Definition", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Net Sales Definition",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         content: const Text(
           "Net sales represents collected revenue after discounts, refunds, and adjustments.\n\n"
           "Note: The current database schema does not track promotional discounts or processed refunds, "
@@ -77,8 +83,11 @@ class _AdminReportPageState extends State<AdminReportPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Understood", style: TextStyle(color: Color(0xFFD97706))),
-          )
+            child: const Text(
+              "Understood",
+              style: TextStyle(color: Color(0xFFD97706)),
+            ),
+          ),
         ],
       ),
     );
@@ -91,7 +100,9 @@ class _AdminReportPageState extends State<AdminReportPage> {
       child: Consumer<AdminAnalyticsProvider>(
         builder: (context, provider, _) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
-          final bgColor = isDark ? const Color(0xFF121212) : const Color(0xFFF9FAFB);
+          final bgColor = isDark
+              ? const Color(0xFF121212)
+              : const Color(0xFFF9FAFB);
 
           return Scaffold(
             backgroundColor: bgColor,
@@ -121,7 +132,10 @@ class _AdminReportPageState extends State<AdminReportPage> {
                   if (provider.errorMessage != null)
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         child: _buildErrorBanner(provider),
                       ),
                     ),
@@ -143,26 +157,39 @@ class _AdminReportPageState extends State<AdminReportPage> {
                     if (provider.overview!.totalOrders == 0)
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           child: Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFEF3C7),
+                              color: isDark
+                                  ? const Color(0xFF1E1E1E)
+                                  : const Color(0xFFFEF3C7),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isDark ? Colors.white12 : const Color(0xFFFDE68A),
+                                color: isDark
+                                    ? Colors.white12
+                                    : const Color(0xFFFDE68A),
                               ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 20),
+                                const Icon(
+                                  Icons.info_outline,
+                                  color: Color(0xFFD97706),
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     "No orders recorded for ${provider.overview!.selectedRange.label}. Select Yesterday, Last 7 Days, or This Month to view historical data.",
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: isDark ? Colors.white70 : const Color(0xFF92400E),
+                                      color: isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF92400E),
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -180,7 +207,9 @@ class _AdminReportPageState extends State<AdminReportPage> {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: ServeoSalesChart(timelineData: provider.salesTimeline!),
+                          child: ServeoSalesChart(
+                            timelineData: provider.salesTimeline!,
+                          ),
                         ),
                       ),
 
@@ -191,7 +220,10 @@ class _AdminReportPageState extends State<AdminReportPage> {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: _buildOrderPerformanceCard(provider.orderPerformance!, isDark),
+                          child: _buildOrderPerformanceCard(
+                            provider.orderPerformance!,
+                            isDark,
+                          ),
                         ),
                       ),
 
@@ -202,7 +234,10 @@ class _AdminReportPageState extends State<AdminReportPage> {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: _buildPaymentAnalyticsCard(provider.paymentAnalytics!, isDark),
+                          child: _buildPaymentAnalyticsCard(
+                            provider.paymentAnalytics!,
+                            isDark,
+                          ),
                         ),
                       ),
 
@@ -213,7 +248,9 @@ class _AdminReportPageState extends State<AdminReportPage> {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: ServeoPeakHoursChart(data: provider.peakHours!),
+                          child: ServeoPeakHoursChart(
+                            data: provider.peakHours!,
+                          ),
                         ),
                       ),
 
@@ -224,7 +261,11 @@ class _AdminReportPageState extends State<AdminReportPage> {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: _buildMenuItemsCard(provider.itemInsights!, provider, isDark),
+                          child: _buildMenuItemsCard(
+                            provider.itemInsights!,
+                            provider,
+                            isDark,
+                          ),
                         ),
                       ),
 
@@ -244,16 +285,21 @@ class _AdminReportPageState extends State<AdminReportPage> {
                                     ? Icons.cloud_off_outlined
                                     : Icons.bar_chart_outlined,
                                 size: 56,
-                                color: isDark ? Colors.white38 : Colors.grey.shade400,
+                                color: isDark
+                                    ? Colors.white38
+                                    : Colors.grey.shade400,
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                provider.errorMessage ?? "No analytics data available",
+                                provider.errorMessage ??
+                                    "No analytics data available",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white70 : Colors.black87,
+                                  color: isDark
+                                      ? Colors.white70
+                                      : Colors.black87,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -262,7 +308,9 @@ class _AdminReportPageState extends State<AdminReportPage> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: isDark ? Colors.white38 : Colors.black54,
+                                  color: isDark
+                                      ? Colors.white38
+                                      : Colors.black54,
                                 ),
                               ),
                               const SizedBox(height: 20),
@@ -273,8 +321,13 @@ class _AdminReportPageState extends State<AdminReportPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFD97706),
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
                               ),
                             ],
@@ -330,28 +383,49 @@ class _AdminReportPageState extends State<AdminReportPage> {
           children: [
             // Export CSV Button
             ElevatedButton.icon(
-              onPressed: provider.isExporting ? null : () => provider.exportCsv(context),
+              onPressed: provider.isExporting
+                  ? null
+                  : () => provider.exportCsv(context),
               icon: provider.isExporting
                   ? const SizedBox(
                       width: 14,
                       height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
-                  : const Icon(Icons.file_download_outlined, size: 16, color: Colors.black),
+                  : const Icon(
+                      Icons.file_download_outlined,
+                      size: 16,
+                      color: Colors.black,
+                    ),
               label: Text(
                 provider.isExporting ? "Exporting..." : "Export CSV",
-                style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.yellow,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
             const SizedBox(width: 6),
             // Refresh Button
             IconButton(
-              icon: Icon(Icons.refresh, color: isDark ? Colors.white70 : const Color(0xFF4B5563)),
+              icon: Icon(
+                Icons.refresh,
+                color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+              ),
               tooltip: "Refresh metrics",
               onPressed: provider.isLoading ? null : () => provider.refresh(),
             ),
@@ -387,8 +461,8 @@ class _AdminReportPageState extends State<AdminReportPage> {
                   color: isSelected
                       ? Colors.black
                       : isDark
-                          ? Colors.white70
-                          : const Color(0xFF4B5563),
+                      ? Colors.white70
+                      : const Color(0xFF4B5563),
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 ),
@@ -399,7 +473,9 @@ class _AdminReportPageState extends State<AdminReportPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
-                  color: isSelected ? Colors.yellow : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+                  color: isSelected
+                      ? Colors.yellow
+                      : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
                 ),
               ),
               onSelected: (selected) {
@@ -416,11 +492,19 @@ class _AdminReportPageState extends State<AdminReportPage> {
     );
   }
 
-  Widget _buildSelectedRangeSubtitle(AdminAnalyticsProvider provider, bool isDark) {
-    final label = provider.overview?.selectedRange.label ?? provider.selectedTimeframe;
+  Widget _buildSelectedRangeSubtitle(
+    AdminAnalyticsProvider provider,
+    bool isDark,
+  ) {
+    final label =
+        provider.overview?.selectedRange.label ?? provider.selectedTimeframe;
     return Row(
       children: [
-        const Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFFD97706)),
+        const Icon(
+          Icons.calendar_today_outlined,
+          size: 14,
+          color: Color(0xFFD97706),
+        ),
         const SizedBox(width: 6),
         Text(
           "$label • Timezone: Asia/Kolkata (IST)",
@@ -454,7 +538,13 @@ class _AdminReportPageState extends State<AdminReportPage> {
           ),
           TextButton(
             onPressed: () => provider.refresh(),
-            child: const Text("Retry", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Retry",
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -568,7 +658,9 @@ class _AdminReportPageState extends State<AdminReportPage> {
                 title: "Pending UPI Verification",
                 value: "${o.pendingUpiVerifications}",
                 icon: Icons.verified_user_outlined,
-                iconColor: o.pendingUpiVerifications > 0 ? Colors.amber : Colors.grey,
+                iconColor: o.pendingUpiVerifications > 0
+                    ? Colors.amber
+                    : Colors.grey,
                 isAlert: o.pendingUpiVerifications > 0,
                 isDark: isDark,
               ),
@@ -594,8 +686,8 @@ class _AdminReportPageState extends State<AdminReportPage> {
     final borderColor = isAlert
         ? Colors.amber.withValues(alpha: 0.8)
         : isDark
-            ? Colors.white12
-            : const Color(0xFFE5E7EB);
+        ? Colors.white12
+        : const Color(0xFFE5E7EB);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -610,7 +702,7 @@ class _AdminReportPageState extends State<AdminReportPage> {
                   color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
       ),
       child: Column(
@@ -629,12 +721,17 @@ class _AdminReportPageState extends State<AdminReportPage> {
               ),
               if (infoAction != null)
                 IconButton(
-                  icon: const Icon(Icons.info_outline, size: 16, color: Colors.grey),
+                  icon: const Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: infoAction,
                 ),
-              if (pctChange != null) _buildComparisonBadge(pctChange, prevLabel),
+              if (pctChange != null)
+                _buildComparisonBadge(pctChange, prevLabel),
             ],
           ),
           const SizedBox(height: 10),
@@ -665,8 +762,12 @@ class _AdminReportPageState extends State<AdminReportPage> {
   Widget _buildComparisonBadge(double pct, String? prevLabel) {
     final isUp = pct > 0;
     final isZero = pct == 0.0;
-    final color = isZero ? Colors.grey : (isUp ? Colors.green : Colors.redAccent);
-    final icon = isZero ? Icons.remove : (isUp ? Icons.arrow_upward : Icons.arrow_downward);
+    final color = isZero
+        ? Colors.grey
+        : (isUp ? Colors.green : Colors.redAccent);
+    final icon = isZero
+        ? Icons.remove
+        : (isUp ? Icons.arrow_upward : Icons.arrow_downward);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -681,7 +782,11 @@ class _AdminReportPageState extends State<AdminReportPage> {
           const SizedBox(width: 2),
           Text(
             "${pct.abs()}%",
-            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -694,10 +799,20 @@ class _AdminReportPageState extends State<AdminReportPage> {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
 
-    final completed = (perf.statusBreakdown["Completed"] ?? 0) + (perf.statusBreakdown["Collected"] ?? 0);
-    final inPrep = (perf.statusBreakdown["Preparing"] ?? 0) + (perf.statusBreakdown["Ready"] ?? 0) + (perf.statusBreakdown["Accepted"] ?? 0);
-    final pending = (perf.statusBreakdown["Pending"] ?? 0) + (perf.statusBreakdown["Processing"] ?? 0) + (perf.statusBreakdown["Pending Verification"] ?? 0);
-    final cancelled = (perf.statusBreakdown["Cancelled"] ?? 0) + (perf.statusBreakdown["Payment Rejected"] ?? 0);
+    final completed =
+        (perf.statusBreakdown["Completed"] ?? 0) +
+        (perf.statusBreakdown["Collected"] ?? 0);
+    final inPrep =
+        (perf.statusBreakdown["Preparing"] ?? 0) +
+        (perf.statusBreakdown["Ready"] ?? 0) +
+        (perf.statusBreakdown["Accepted"] ?? 0);
+    final pending =
+        (perf.statusBreakdown["Pending"] ?? 0) +
+        (perf.statusBreakdown["Processing"] ?? 0) +
+        (perf.statusBreakdown["Pending Verification"] ?? 0);
+    final cancelled =
+        (perf.statusBreakdown["Cancelled"] ?? 0) +
+        (perf.statusBreakdown["Payment Rejected"] ?? 0);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -712,7 +827,7 @@ class _AdminReportPageState extends State<AdminReportPage> {
                   color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
       ),
       child: Column(
@@ -769,15 +884,31 @@ class _AdminReportPageState extends State<AdminReportPage> {
               child: Row(
                 children: [
                   if (completed > 0)
-                    Expanded(flex: completed, child: Container(color: Colors.green)),
+                    Expanded(
+                      flex: completed,
+                      child: Container(color: Colors.green),
+                    ),
                   if (inPrep > 0)
-                    Expanded(flex: inPrep, child: Container(color: Colors.amber)),
+                    Expanded(
+                      flex: inPrep,
+                      child: Container(color: Colors.amber),
+                    ),
                   if (pending > 0)
-                    Expanded(flex: pending, child: Container(color: Colors.blueAccent)),
+                    Expanded(
+                      flex: pending,
+                      child: Container(color: Colors.blueAccent),
+                    ),
                   if (cancelled > 0)
-                    Expanded(flex: cancelled, child: Container(color: Colors.redAccent)),
+                    Expanded(
+                      flex: cancelled,
+                      child: Container(color: Colors.redAccent),
+                    ),
                   if (perf.totalOrders == 0)
-                    Expanded(child: Container(color: isDark ? Colors.white10 : Colors.black12)),
+                    Expanded(
+                      child: Container(
+                        color: isDark ? Colors.white10 : Colors.black12,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -792,7 +923,11 @@ class _AdminReportPageState extends State<AdminReportPage> {
               _buildLegendItem("Completed ($completed)", Colors.green, isDark),
               _buildLegendItem("In Kitchen ($inPrep)", Colors.amber, isDark),
               _buildLegendItem("Queue ($pending)", Colors.blueAccent, isDark),
-              _buildLegendItem("Cancelled ($cancelled)", Colors.redAccent, isDark),
+              _buildLegendItem(
+                "Cancelled ($cancelled)",
+                Colors.redAccent,
+                isDark,
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -801,13 +936,19 @@ class _AdminReportPageState extends State<AdminReportPage> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF3F4F6),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.timer_outlined, size: 16, color: Color(0xFFD97706)),
+                const Icon(
+                  Icons.timer_outlined,
+                  size: 16,
+                  color: Color(0xFFD97706),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -818,7 +959,9 @@ class _AdminReportPageState extends State<AdminReportPage> {
                             ? "Avg Prep Time: ${perf.averagePrepTimeMinutes} mins (created → collected)"
                             : "Avg Prep Time: N/A",
                         style: TextStyle(
-                          color: isDark ? Colors.white : const Color(0xFF1F2937),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1F2937),
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -827,7 +970,9 @@ class _AdminReportPageState extends State<AdminReportPage> {
                       Text(
                         perf.prepTimeNote,
                         style: TextStyle(
-                          color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                          color: isDark
+                              ? Colors.white60
+                              : const Color(0xFF6B7280),
                           fontSize: 10,
                         ),
                       ),
@@ -887,7 +1032,11 @@ class _AdminReportPageState extends State<AdminReportPage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 4),
         Text(
           label,
@@ -919,7 +1068,7 @@ class _AdminReportPageState extends State<AdminReportPage> {
                   color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
       ),
       child: Column(
@@ -993,13 +1142,26 @@ class _AdminReportPageState extends State<AdminReportPage> {
               child: Row(
                 children: [
                   if (pay.upi.totalOrders > 0)
-                    Expanded(flex: pay.upi.totalOrders, child: Container(color: Colors.purpleAccent)),
+                    Expanded(
+                      flex: pay.upi.totalOrders,
+                      child: Container(color: Colors.purpleAccent),
+                    ),
                   if (pay.cod.totalOrders > 0)
-                    Expanded(flex: pay.cod.totalOrders, child: Container(color: Colors.teal)),
+                    Expanded(
+                      flex: pay.cod.totalOrders,
+                      child: Container(color: Colors.teal),
+                    ),
                   if (pay.card.totalOrders > 0)
-                    Expanded(flex: pay.card.totalOrders, child: Container(color: Colors.blueAccent)),
+                    Expanded(
+                      flex: pay.card.totalOrders,
+                      child: Container(color: Colors.blueAccent),
+                    ),
                   if (pay.grandTotalOrders == 0)
-                    Expanded(child: Container(color: isDark ? Colors.white10 : Colors.black12)),
+                    Expanded(
+                      child: Container(
+                        color: isDark ? Colors.white10 : Colors.black12,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1021,7 +1183,9 @@ class _AdminReportPageState extends State<AdminReportPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF9FAFB),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -1030,7 +1194,11 @@ class _AdminReportPageState extends State<AdminReportPage> {
         children: [
           Row(
             children: [
-              Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
               const SizedBox(width: 6),
               Text(
                 method,
@@ -1062,7 +1230,11 @@ class _AdminReportPageState extends State<AdminReportPage> {
             const SizedBox(height: 4),
             Text(
               "⚠ $pendingClaims unverified claim(s)",
-              style: const TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.amber,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
           if (rejectedClaims > 0) ...[
@@ -1079,7 +1251,11 @@ class _AdminReportPageState extends State<AdminReportPage> {
 
   // --- MENU ITEM INSIGHTS (BEST-SELLERS & UNDERPERFORMING) ---
 
-  Widget _buildMenuItemsCard(ItemInsights insights, AdminAnalyticsProvider provider, bool isDark) {
+  Widget _buildMenuItemsCard(
+    ItemInsights insights,
+    AdminAnalyticsProvider provider,
+    bool isDark,
+  ) {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
 
@@ -1099,7 +1275,7 @@ class _AdminReportPageState extends State<AdminReportPage> {
                   color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
       ),
       child: Column(
@@ -1124,12 +1300,20 @@ class _AdminReportPageState extends State<AdminReportPage> {
                 ),
                 child: Row(
                   children: [
-                    _buildSubTabButton("Best Sellers", !_showingUnderperforming, () {
-                      setState(() => _showingUnderperforming = false);
-                    }),
-                    _buildSubTabButton("Low Sales", _showingUnderperforming, () {
-                      setState(() => _showingUnderperforming = true);
-                    }),
+                    _buildSubTabButton(
+                      "Best Sellers",
+                      !_showingUnderperforming,
+                      () {
+                        setState(() => _showingUnderperforming = false);
+                      },
+                    ),
+                    _buildSubTabButton(
+                      "Low Sales",
+                      _showingUnderperforming,
+                      () {
+                        setState(() => _showingUnderperforming = true);
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -1154,10 +1338,21 @@ class _AdminReportPageState extends State<AdminReportPage> {
                   value: provider.itemSortBy,
                   underline: const SizedBox(),
                   borderRadius: BorderRadius.circular(AppTheme.radiusDropdown),
-                  dropdownColor: isDark ? const Color(0xFF252525) : Colors.white,
+                  dropdownColor: isDark
+                      ? const Color(0xFF252525)
+                      : Colors.white,
                   items: const [
-                    DropdownMenuItem(value: "quantity", child: Text("Qty Sold", style: TextStyle(fontSize: 12))),
-                    DropdownMenuItem(value: "salesValue", child: Text("Sales Value", style: TextStyle(fontSize: 12))),
+                    DropdownMenuItem(
+                      value: "quantity",
+                      child: Text("Qty Sold", style: TextStyle(fontSize: 12)),
+                    ),
+                    DropdownMenuItem(
+                      value: "salesValue",
+                      child: Text(
+                        "Sales Value",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
                   ],
                   onChanged: (v) {
                     if (v != null) provider.setItemSortBy(v);
@@ -1172,16 +1367,22 @@ class _AdminReportPageState extends State<AdminReportPage> {
                 child: Center(
                   child: Text(
                     "No items sold during this period",
-                    style: TextStyle(color: isDark ? Colors.white60 : const Color(0xFF6B7280), fontSize: 13),
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               )
             else
               Column(
-                children: List.generate(popular.length > 8 ? 8 : popular.length, (index) {
-                  final item = popular[index];
-                  return _buildPopularItemRow(index + 1, item, isDark);
-                }),
+                children: List.generate(
+                  popular.length > 8 ? 8 : popular.length,
+                  (index) {
+                    final item = popular[index];
+                    return _buildPopularItemRow(index + 1, item, isDark);
+                  },
+                ),
               ),
           ] else ...[
             // Underperforming items section
@@ -1199,16 +1400,22 @@ class _AdminReportPageState extends State<AdminReportPage> {
                 child: Center(
                   child: Text(
                     "Great news! Every active menu item has sales in this period.",
-                    style: TextStyle(color: isDark ? Colors.white60 : const Color(0xFF6B7280), fontSize: 13),
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               )
             else
               Column(
-                children: List.generate(underperforming.length > 8 ? 8 : underperforming.length, (index) {
-                  final item = underperforming[index];
-                  return _buildUnderperformingItemRow(item, isDark);
-                }),
+                children: List.generate(
+                  underperforming.length > 8 ? 8 : underperforming.length,
+                  (index) {
+                    final item = underperforming[index];
+                    return _buildUnderperformingItemRow(item, isDark);
+                  },
+                ),
               ),
           ],
         ],
@@ -1238,8 +1445,14 @@ class _AdminReportPageState extends State<AdminReportPage> {
   }
 
   Widget _buildPopularItemRow(int rank, PopularItem item, bool isDark) {
-    final rankBg = rank == 1 ? Colors.amber : (rank == 2 ? Colors.blueGrey : (rank == 3 ? Colors.brown : Colors.transparent));
-    final rankTextColor = rank <= 3 ? Colors.white : (isDark ? Colors.white60 : const Color(0xFF6B7280));
+    final rankBg = rank == 1
+        ? Colors.amber
+        : (rank == 2
+              ? Colors.blueGrey
+              : (rank == 3 ? Colors.brown : Colors.transparent));
+    final rankTextColor = rank <= 3
+        ? Colors.white
+        : (isDark ? Colors.white60 : const Color(0xFF6B7280));
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -1251,12 +1464,18 @@ class _AdminReportPageState extends State<AdminReportPage> {
             decoration: BoxDecoration(
               color: rankBg,
               shape: BoxShape.circle,
-              border: rank > 3 ? Border.all(color: isDark ? Colors.white24 : Colors.black12) : null,
+              border: rank > 3
+                  ? Border.all(color: isDark ? Colors.white24 : Colors.black12)
+                  : null,
             ),
             child: Center(
               child: Text(
                 "$rank",
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: rankTextColor),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: rankTextColor,
+                ),
               ),
             ),
           ),
@@ -1319,7 +1538,11 @@ class _AdminReportPageState extends State<AdminReportPage> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(Icons.inventory_2_outlined, size: 20, color: isDark ? Colors.white38 : Colors.black26),
+          Icon(
+            Icons.inventory_2_outlined,
+            size: 20,
+            color: isDark ? Colors.white38 : Colors.black26,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

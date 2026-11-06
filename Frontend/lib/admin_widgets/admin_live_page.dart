@@ -7,7 +7,7 @@ import 'package:frontend/admin_widgets/admin_order_card.dart';
 import 'package:frontend/admin_widgets/admin_stat_card.dart';
 import 'package:provider/provider.dart';
 
-class LivePage extends StatefulWidget{
+class LivePage extends StatefulWidget {
   const LivePage({super.key});
 
   @override
@@ -58,13 +58,19 @@ class _LivePageState extends State<LivePage> {
             children: [
               AdminStatCard(
                 title: "Processing",
-                count: liveOrders.where((o) => o.status == 'Processing').length.toString(),
+                count: liveOrders
+                    .where((o) => o.status == 'Processing')
+                    .length
+                    .toString(),
                 color: Colors.orange,
               ),
               const SizedBox(width: 10),
               AdminStatCard(
                 title: "Preparing",
-                count: liveOrders.where((o) => o.status == 'Preparing').length.toString(),
+                count: liveOrders
+                    .where((o) => o.status == 'Preparing')
+                    .length
+                    .toString(),
                 color: Colors.blue,
               ),
               const SizedBox(width: 10),
@@ -135,7 +141,8 @@ class _LivePageState extends State<LivePage> {
                         Text(
                           "No active orders right now",
                           style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
                                 ? Colors.white54
                                 : const Color(0xFF6B7280),
                             fontSize: 15,

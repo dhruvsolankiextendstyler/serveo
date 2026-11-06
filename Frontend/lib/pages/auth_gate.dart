@@ -20,7 +20,6 @@ class AuthGate extends StatelessWidget {
       // 1. Listen to the "Live Wire" of Authentication
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-
         // 2. Is Firebase still checking the disk? Show Spinner.
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -32,7 +31,7 @@ class AuthGate extends StatelessWidget {
         // 3. Is there a valid user logged in?
         if (snapshot.hasData) {
           final user = snapshot.data!;
-          if(user.email == "admin123@ad.in") {
+          if (user.email == "admin123@ad.in") {
             return ChangeNotifierProvider<AdminOrderProvider>(
               create: (_) => AdminOrderProvider()..fetchOrders(),
               child: AdminPage(),
@@ -41,15 +40,19 @@ class AuthGate extends StatelessWidget {
           final notificationService = NotificationService();
           notificationService.initNotifications();
 
-          final hasOrderProvider = Provider.of<OrderProvider?>(context, listen: false) != null;
-          final hasMenuProvider = Provider.of<MenuProvider?>(context, listen: false) != null;
+          final hasOrderProvider =
+              Provider.of<OrderProvider?>(context, listen: false) != null;
+          final hasMenuProvider =
+              Provider.of<MenuProvider?>(context, listen: false) != null;
 
           Widget dashboard = DashboardPage(uname: user.displayName ?? "User");
           if (!hasOrderProvider || !hasMenuProvider) {
             dashboard = MultiProvider(
               providers: [
                 if (!hasMenuProvider)
-                  ChangeNotifierProvider(create: (_) => MenuProvider()..fetchMenu()),
+                  ChangeNotifierProvider(
+                    create: (_) => MenuProvider()..fetchMenu(),
+                  ),
                 if (!hasOrderProvider)
                   ChangeNotifierProvider(create: (_) => OrderProvider()),
               ],

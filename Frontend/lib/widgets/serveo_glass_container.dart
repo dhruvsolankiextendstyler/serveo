@@ -37,14 +37,18 @@ class ServeoGlassContainer extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final r = borderRadius ?? BorderRadius.circular(AppTheme.radiusContainer);
 
-    final surfaceColor = color ?? (isDark ? AppTheme.darkGlassBackground : AppTheme.lightGlassBackground);
-    final surfaceBorder = border ??
+    final surfaceColor =
+        color ??
+        (isDark ? AppTheme.darkGlassBackground : AppTheme.lightGlassBackground);
+    final surfaceBorder =
+        border ??
         Border.all(
           color: isDark ? AppTheme.darkGlassBorder : AppTheme.lightGlassBorder,
           width: 1.0,
         );
 
-    final defaultShadow = boxShadow ??
+    final defaultShadow =
+        boxShadow ??
         [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
@@ -58,10 +62,7 @@ class ServeoGlassContainer extends StatelessWidget {
       height: height,
       margin: margin,
       alignment: alignment,
-      decoration: BoxDecoration(
-        borderRadius: r,
-        boxShadow: defaultShadow,
-      ),
+      decoration: BoxDecoration(borderRadius: r, boxShadow: defaultShadow),
       child: ClipRRect(
         borderRadius: r,
         child: BackdropFilter(
@@ -116,18 +117,26 @@ Future<T?> showGlassBottomSheet<T>({
     backgroundColor: Colors.transparent,
     barrierColor: barrierColor ?? Colors.black.withValues(alpha: 0.4),
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusBottomSheet)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppTheme.radiusBottomSheet),
+      ),
     ),
     builder: (ctx) {
       return BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Container(
           decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkGlassBackground : AppTheme.lightGlassBackground,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusBottomSheet)),
+            color: isDark
+                ? AppTheme.darkGlassBackground
+                : AppTheme.lightGlassBackground,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppTheme.radiusBottomSheet),
+            ),
             border: Border(
               top: BorderSide(
-                color: isDark ? AppTheme.darkGlassBorder : AppTheme.lightGlassBorder,
+                color: isDark
+                    ? AppTheme.darkGlassBorder
+                    : AppTheme.lightGlassBorder,
                 width: 1.0,
               ),
             ),
@@ -140,4 +149,3 @@ Future<T?> showGlassBottomSheet<T>({
 }
 
 typedef BreakBiteGlassContainer = ServeoGlassContainer;
-

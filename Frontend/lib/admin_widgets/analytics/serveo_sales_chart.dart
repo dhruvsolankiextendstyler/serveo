@@ -21,7 +21,9 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
 
-    if (timeline.isEmpty || widget.timelineData.totalRevenue == 0 && widget.timelineData.totalOrders == 0) {
+    if (timeline.isEmpty ||
+        widget.timelineData.totalRevenue == 0 &&
+            widget.timelineData.totalOrders == 0) {
       return Container(
         height: 220,
         decoration: BoxDecoration(
@@ -33,7 +35,11 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.bar_chart_rounded, size: 48, color: isDark ? Colors.white38 : Colors.black26),
+              Icon(
+                Icons.bar_chart_rounded,
+                size: 48,
+                color: isDark ? Colors.white38 : Colors.black26,
+              ),
               const SizedBox(height: 8),
               Text(
                 "No sales recorded for this period",
@@ -49,8 +55,11 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
       );
     }
 
-    final maxRevenue = timeline.map((e) => e.revenue).fold(0, (a, b) => math.max(a, b));
-    final selectedPoint = _selectedIndex != null && _selectedIndex! < timeline.length
+    final maxRevenue = timeline
+        .map((e) => e.revenue)
+        .fold(0, (a, b) => math.max(a, b));
+    final selectedPoint =
+        _selectedIndex != null && _selectedIndex! < timeline.length
         ? timeline[_selectedIndex!]
         : null;
 
@@ -67,7 +76,7 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
                   color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
       ),
       child: Column(
@@ -81,7 +90,9 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.timelineData.grouping == "hourly" ? "Hourly Sales Trend" : "Daily Sales Trend",
+                    widget.timelineData.grouping == "hourly"
+                        ? "Hourly Sales Trend"
+                        : "Daily Sales Trend",
                     style: TextStyle(
                       color: isDark ? Colors.white70 : const Color(0xFF4B5563),
                       fontSize: 13,
@@ -102,11 +113,16 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
               ),
               if (selectedPoint != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFD97706).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.4)),
+                    border: Border.all(
+                      color: const Color(0xFFD97706).withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -122,7 +138,9 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
                       Text(
                         "₹${selectedPoint.revenue} • ${selectedPoint.ordersCount} orders",
                         style: TextStyle(
-                          color: isDark ? Colors.white : const Color(0xFF1F2937),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1F2937),
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -150,14 +168,19 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
               builder: (context, constraints) {
                 final barCount = timeline.length;
                 final availableWidth = constraints.maxWidth;
-                final barWidth = math.max(4.0, math.min(22.0, (availableWidth / barCount) - 4));
+                final barWidth = math.max(
+                  4.0,
+                  math.min(22.0, (availableWidth / barCount) - 4),
+                );
 
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: List.generate(barCount, (index) {
                     final point = timeline[index];
-                    final heightFraction = maxRevenue > 0 ? (point.revenue / maxRevenue).clamp(0.04, 1.0) : 0.04;
+                    final heightFraction = maxRevenue > 0
+                        ? (point.revenue / maxRevenue).clamp(0.04, 1.0)
+                        : 0.04;
                     final isSelected = _selectedIndex == index;
 
                     return GestureDetector(
@@ -183,21 +206,37 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
                                   colors: isSelected
                                       ? [Colors.yellow, Colors.amber]
                                       : point.revenue > 0
-                                          ? [const Color(0xFFD97706), const Color(0xFFF59E0B)]
-                                          : [
-                                              isDark ? Colors.white10 : Colors.black12,
-                                              isDark ? Colors.white10 : Colors.black12,
-                                            ],
+                                      ? [
+                                          const Color(0xFFD97706),
+                                          const Color(0xFFF59E0B),
+                                        ]
+                                      : [
+                                          isDark
+                                              ? Colors.white10
+                                              : Colors.black12,
+                                          isDark
+                                              ? Colors.white10
+                                              : Colors.black12,
+                                        ],
                                 ),
-                                borderRadius: BorderRadius.circular(barWidth / 2),
-                                border: isSelected ? Border.all(color: Colors.white, width: 1.5) : null,
+                                borderRadius: BorderRadius.circular(
+                                  barWidth / 2,
+                                ),
+                                border: isSelected
+                                    ? Border.all(
+                                        color: Colors.white,
+                                        width: 1.5,
+                                      )
+                                    : null,
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                          color: Colors.amber.withValues(alpha: 0.6),
+                                          color: Colors.amber.withValues(
+                                            alpha: 0.6,
+                                          ),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
-                                        )
+                                        ),
                                       ]
                                     : null,
                               ),
@@ -215,10 +254,12 @@ class _ServeoSalesChartState extends State<ServeoSalesChart> {
                                   color: isSelected
                                       ? const Color(0xFFD97706)
                                       : isDark
-                                          ? Colors.white38
-                                          : const Color(0xFF9CA3AF),
+                                      ? Colors.white38
+                                      : const Color(0xFF9CA3AF),
                                   fontSize: 9,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               ),
                             ),

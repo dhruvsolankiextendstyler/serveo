@@ -45,14 +45,23 @@ void main() {
       expect(provider.isDark, isFalse);
     });
 
-    test('AppTheme brand colors and overlay styles are correctly configured', () {
-      expect(AppTheme.brandYellow, const Color(0xFFFFD600));
-      expect(AppTheme.darkBackground, const Color(0xFF121212));
-      expect(AppTheme.lightBackground, const Color(0xFFF7F8FA));
+    test(
+      'AppTheme brand colors and overlay styles are correctly configured',
+      () {
+        expect(AppTheme.brandYellow, const Color(0xFFFFD600));
+        expect(AppTheme.darkBackground, const Color(0xFF121212));
+        expect(AppTheme.lightBackground, const Color(0xFFF7F8FA));
 
-      expect(AppTheme.darkOverlayStyle.statusBarIconBrightness, Brightness.light);
-      expect(AppTheme.lightOverlayStyle.statusBarIconBrightness, Brightness.dark);
-    });
+        expect(
+          AppTheme.darkOverlayStyle.statusBarIconBrightness,
+          Brightness.light,
+        );
+        expect(
+          AppTheme.lightOverlayStyle.statusBarIconBrightness,
+          Brightness.dark,
+        );
+      },
+    );
   });
 
   group('PaymentPage & Demo Flow Tests', () {
@@ -60,7 +69,9 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    testWidgets('PaymentPage displays demo banner and mock payment methods', (tester) async {
+    testWidgets('PaymentPage displays demo banner and mock payment methods', (
+      tester,
+    ) async {
       final orderProvider = OrderProvider();
       final themeProvider = ThemeProvider();
 
@@ -70,9 +81,7 @@ void main() {
             ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
             ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
           ],
-          child: const MaterialApp(
-            home: PaymentPage(),
-          ),
+          child: const MaterialApp(home: PaymentPage()),
         ),
       );
 
@@ -84,7 +93,9 @@ void main() {
       // Demo experience notice
       expect(find.text("Demo Payment Experience"), findsOneWidget);
       expect(
-        find.textContaining("This is a simulated payment screen for shop demonstrations"),
+        find.textContaining(
+          "This is a simulated payment screen for shop demonstrations",
+        ),
         findsOneWidget,
       );
 
@@ -98,7 +109,9 @@ void main() {
       expect(find.text("Back to Cart"), findsOneWidget);
     });
 
-    testWidgets('Selecting mock payment option updates selection cleanly', (tester) async {
+    testWidgets('Selecting mock payment option updates selection cleanly', (
+      tester,
+    ) async {
       final orderProvider = OrderProvider();
       final themeProvider = ThemeProvider();
 
@@ -108,9 +121,7 @@ void main() {
             ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
             ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
           ],
-          child: const MaterialApp(
-            home: PaymentPage(),
-          ),
+          child: const MaterialApp(home: PaymentPage()),
         ),
       );
 
@@ -125,7 +136,9 @@ void main() {
   });
 
   group('CartPage Checkout Action Tests', () {
-    testWidgets('CartPage displays Proceed to Pay when items exist', (tester) async {
+    testWidgets('CartPage displays Proceed to Pay when items exist', (
+      tester,
+    ) async {
       final orderProvider = OrderProvider();
       final themeProvider = ThemeProvider();
 
@@ -145,9 +158,7 @@ void main() {
             ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
             ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
           ],
-          child: const MaterialApp(
-            home: CartPage(),
-          ),
+          child: const MaterialApp(home: CartPage()),
         ),
       );
 
@@ -159,7 +170,9 @@ void main() {
       expect(find.text("Confirm Order"), findsNothing);
     });
 
-    testWidgets('CartPage displays empty state when no items in cart', (tester) async {
+    testWidgets('CartPage displays empty state when no items in cart', (
+      tester,
+    ) async {
       final orderProvider = OrderProvider();
       final themeProvider = ThemeProvider();
 
@@ -169,9 +182,7 @@ void main() {
             ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
             ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
           ],
-          child: const MaterialApp(
-            home: CartPage(),
-          ),
+          child: const MaterialApp(home: CartPage()),
         ),
       );
 

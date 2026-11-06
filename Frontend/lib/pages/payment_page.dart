@@ -48,9 +48,9 @@ class _PaymentPageState extends State<PaymentPage> {
 
     if (orderProvider.orderItems.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Your cart is empty")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Your cart is empty")));
       Navigator.pop(context);
       return;
     }
@@ -110,7 +110,8 @@ class _PaymentPageState extends State<PaymentPage> {
           );
           return;
         } else {
-          final errorMsg = orderProvider.lastOrderError ??
+          final errorMsg =
+              orderProvider.lastOrderError ??
               "Failed to initiate UPI payment. Please try again.";
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -118,7 +119,9 @@ class _PaymentPageState extends State<PaymentPage> {
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 4),
-              action: (errorMsg.contains("sign in") || errorMsg.contains("Authentication"))
+              action:
+                  (errorMsg.contains("sign in") ||
+                      errorMsg.contains("Authentication"))
                   ? SnackBarAction(
                       label: "Sign In",
                       textColor: Colors.yellow,
@@ -169,7 +172,9 @@ class _PaymentPageState extends State<PaymentPage> {
 
             return AlertDialog(
               backgroundColor: dialogBg,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+              ),
               contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -180,7 +185,11 @@ class _PaymentPageState extends State<PaymentPage> {
                       color: Colors.green.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 54),
+                    child: const Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.green,
+                      size: 54,
+                    ),
                   ),
                   const SizedBox(height: 18),
                   Text(
@@ -194,11 +203,16 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: Colors.green.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: const Text(
                       "PAY CASH AT COUNTER",
@@ -234,23 +248,25 @@ class _PaymentPageState extends State<PaymentPage> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ChangeNotifierProvider.value(
-                                value: orderProvider,
-                                child: OrderTrackingPage(
-                                  orderId: createdOrder.id,
-                                  initialOrder: createdOrder,
-                                ),
-                              ),
+                              builder: (context) =>
+                                  ChangeNotifierProvider.value(
+                                    value: orderProvider,
+                                    child: OrderTrackingPage(
+                                      orderId: createdOrder.id,
+                                      initialOrder: createdOrder,
+                                    ),
+                                  ),
                             ),
                           );
                         } else {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ChangeNotifierProvider.value(
-                                value: orderProvider,
-                                child: const OrderHistoryPage(),
-                              ),
+                              builder: (context) =>
+                                  ChangeNotifierProvider.value(
+                                    value: orderProvider,
+                                    child: const OrderHistoryPage(),
+                                  ),
                             ),
                           );
                         }
@@ -258,11 +274,16 @@ class _PaymentPageState extends State<PaymentPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.yellow,
                         foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text(
                         "Track Order",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -284,7 +305,9 @@ class _PaymentPageState extends State<PaymentPage> {
                     child: Text(
                       "View Order History",
                       style: TextStyle(
-                        color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFF4B5563),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -314,7 +337,9 @@ class _PaymentPageState extends State<PaymentPage> {
 
             return AlertDialog(
               backgroundColor: dialogBg,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+              ),
               contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -325,7 +350,11 @@ class _PaymentPageState extends State<PaymentPage> {
                       color: Colors.green.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 54),
+                    child: const Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.green,
+                      size: 54,
+                    ),
                   ),
                   const SizedBox(height: 18),
                   Text(
@@ -339,11 +368,16 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.amber.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: Colors.amber.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: const Text(
                       "SIMULATED PAYMENT COMPLETED",
@@ -386,11 +420,16 @@ class _PaymentPageState extends State<PaymentPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.yellow,
                         foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text(
                         "View Order History",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -404,7 +443,9 @@ class _PaymentPageState extends State<PaymentPage> {
                     child: Text(
                       "Back to Menu",
                       style: TextStyle(
-                        color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFF4B5563),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -417,9 +458,9 @@ class _PaymentPageState extends State<PaymentPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error submitting order: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error submitting order: $e")));
       }
     } finally {
       if (mounted) {
@@ -439,7 +480,9 @@ class _PaymentPageState extends State<PaymentPage> {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF6B7280);
 
     return Scaffold(
       appBar: AppBar(
@@ -463,12 +506,18 @@ class _PaymentPageState extends State<PaymentPage> {
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.35)),
+                        border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.35),
+                        ),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 22),
+                          const Icon(
+                            Icons.info_outline,
+                            color: Color(0xFFD97706),
+                            size: 22,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -486,7 +535,9 @@ class _PaymentPageState extends State<PaymentPage> {
                                 Text(
                                   "This is a simulated payment screen for shop demonstrations. No real transactions or sensitive credentials are required.",
                                   style: TextStyle(
-                                    color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                                    color: isDark
+                                        ? Colors.white70
+                                        : const Color(0xFF4B5563),
                                     fontSize: 12,
                                     height: 1.35,
                                   ),
@@ -523,11 +574,17 @@ class _PaymentPageState extends State<PaymentPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                totalDiscount > 0 ? "Total Payable (Saved ₹${totalDiscount.round()})" : "Total Amount",
+                                totalDiscount > 0
+                                    ? "Total Payable (Saved ₹${totalDiscount.round()})"
+                                    : "Total Amount",
                                 style: TextStyle(
-                                  color: totalDiscount > 0 ? const Color(0xFF16A34A) : secondaryTextColor,
+                                  color: totalDiscount > 0
+                                      ? const Color(0xFF16A34A)
+                                      : secondaryTextColor,
                                   fontSize: 13,
-                                  fontWeight: totalDiscount > 0 ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: totalDiscount > 0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -578,7 +635,8 @@ class _PaymentPageState extends State<PaymentPage> {
                           borderRadius: BorderRadius.circular(14),
                           onTap: _isProcessing
                               ? null
-                              : () => setState(() => _selectedMethod = opt['id']),
+                              : () =>
+                                    setState(() => _selectedMethod = opt['id']),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
                             padding: const EdgeInsets.all(16),
@@ -586,15 +644,15 @@ class _PaymentPageState extends State<PaymentPage> {
                               color: cardBg,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: isSelected
-                                    ? Colors.yellow
-                                    : borderColor,
+                                color: isSelected ? Colors.yellow : borderColor,
                                 width: isSelected ? 2 : 1,
                               ),
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: Colors.yellow.withValues(alpha: 0.2),
+                                        color: Colors.yellow.withValues(
+                                          alpha: 0.2,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -609,14 +667,18 @@ class _PaymentPageState extends State<PaymentPage> {
                                     color: isSelected
                                         ? Colors.yellow.withValues(alpha: 0.2)
                                         : (isDark
-                                            ? Colors.white.withValues(alpha: 0.05)
-                                            : const Color(0xFFF3F4F6)),
+                                              ? Colors.white.withValues(
+                                                  alpha: 0.05,
+                                                )
+                                              : const Color(0xFFF3F4F6)),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
                                     opt['icon'] as IconData,
                                     color: isSelected
-                                        ? (isDark ? Colors.yellow : const Color(0xFFD97706))
+                                        ? (isDark
+                                              ? Colors.yellow
+                                              : const Color(0xFFD97706))
                                         : secondaryTextColor,
                                     size: 24,
                                   ),
@@ -624,7 +686,8 @@ class _PaymentPageState extends State<PaymentPage> {
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         opt['title'] as String,
@@ -730,7 +793,9 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                   const SizedBox(height: 8),
                   TextButton(
-                    onPressed: _isProcessing ? null : () => Navigator.pop(context),
+                    onPressed: _isProcessing
+                        ? null
+                        : () => Navigator.pop(context),
                     child: Text(
                       "Back to Cart",
                       style: TextStyle(

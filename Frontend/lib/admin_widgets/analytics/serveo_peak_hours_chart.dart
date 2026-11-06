@@ -14,9 +14,13 @@ class ServeoPeakHoursChart extends StatelessWidget {
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
 
     final hours = data.hourlyVolume;
-    final maxHourOrders = hours.map((e) => e.ordersCount).fold(0, (a, b) => math.max(a, b));
+    final maxHourOrders = hours
+        .map((e) => e.ordersCount)
+        .fold(0, (a, b) => math.max(a, b));
     final days = data.dayOfWeekVolume;
-    final maxDayOrders = days.map((e) => e.ordersCount).fold(0, (a, b) => math.max(a, b));
+    final maxDayOrders = days
+        .map((e) => e.ordersCount)
+        .fold(0, (a, b) => math.max(a, b));
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -31,7 +35,7 @@ class ServeoPeakHoursChart extends StatelessWidget {
                   color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
       ),
       child: Column(
@@ -50,7 +54,10 @@ class ServeoPeakHoursChart extends StatelessWidget {
               ),
               if (data.peakHour != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
@@ -58,7 +65,11 @@ class ServeoPeakHoursChart extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.flash_on, size: 14, color: Colors.blueAccent),
+                      const Icon(
+                        Icons.flash_on,
+                        size: 14,
+                        color: Colors.blueAccent,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         "Peak: ${data.peakHour!.label}",
@@ -91,8 +102,13 @@ class ServeoPeakHoursChart extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: hours.map((h) {
-                final isPeak = data.peakHour != null && data.peakHour!.hour == h.hour && h.ordersCount > 0;
-                final heightFraction = maxHourOrders > 0 ? (h.ordersCount / maxHourOrders).clamp(0.08, 1.0) : 0.08;
+                final isPeak =
+                    data.peakHour != null &&
+                    data.peakHour!.hour == h.hour &&
+                    h.ordersCount > 0;
+                final heightFraction = maxHourOrders > 0
+                    ? (h.ordersCount / maxHourOrders).clamp(0.08, 1.0)
+                    : 0.08;
 
                 return Tooltip(
                   message: "${h.label}: ${h.ordersCount} orders (₹${h.volume})",
@@ -106,10 +122,10 @@ class ServeoPeakHoursChart extends StatelessWidget {
                           color: isPeak
                               ? Colors.blueAccent
                               : h.ordersCount > 0
-                                  ? const Color(0xFFD97706)
-                                  : isDark
-                                      ? Colors.white10
-                                      : Colors.black12,
+                              ? const Color(0xFFD97706)
+                              : isDark
+                              ? Colors.white10
+                              : Colors.black12,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -117,7 +133,9 @@ class ServeoPeakHoursChart extends StatelessWidget {
                       Text(
                         h.hour % 6 == 0 ? "${h.hour}" : "",
                         style: TextStyle(
-                          color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+                          color: isDark
+                              ? Colors.white38
+                              : const Color(0xFF9CA3AF),
                           fontSize: 8,
                         ),
                       ),
@@ -142,15 +160,22 @@ class ServeoPeakHoursChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: days.map((d) {
-              final isPeak = data.peakDay != null && data.peakDay!.dayOfWeek == d.dayOfWeek && d.ordersCount > 0;
-              final heightFraction = maxDayOrders > 0 ? (d.ordersCount / maxDayOrders).clamp(0.1, 1.0) : 0.1;
+              final isPeak =
+                  data.peakDay != null &&
+                  data.peakDay!.dayOfWeek == d.dayOfWeek &&
+                  d.ordersCount > 0;
+              final heightFraction = maxDayOrders > 0
+                  ? (d.ordersCount / maxDayOrders).clamp(0.1, 1.0)
+                  : 0.1;
 
               return Column(
                 children: [
                   Text(
                     "${d.ordersCount}",
                     style: TextStyle(
-                      color: isPeak ? Colors.amber : (isDark ? Colors.white70 : const Color(0xFF4B5563)),
+                      color: isPeak
+                          ? Colors.amber
+                          : (isDark ? Colors.white70 : const Color(0xFF4B5563)),
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -163,10 +188,10 @@ class ServeoPeakHoursChart extends StatelessWidget {
                       color: isPeak
                           ? Colors.amber
                           : d.ordersCount > 0
-                              ? const Color(0xFFD97706).withValues(alpha: 0.8)
-                              : isDark
-                                  ? Colors.white10
-                                  : Colors.black12,
+                          ? const Color(0xFFD97706).withValues(alpha: 0.8)
+                          : isDark
+                          ? Colors.white10
+                          : Colors.black12,
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
@@ -174,7 +199,9 @@ class ServeoPeakHoursChart extends StatelessWidget {
                   Text(
                     d.dayName.substring(0, 3),
                     style: TextStyle(
-                      color: isPeak ? Colors.amber : (isDark ? Colors.white60 : const Color(0xFF6B7280)),
+                      color: isPeak
+                          ? Colors.amber
+                          : (isDark ? Colors.white60 : const Color(0xFF6B7280)),
                       fontSize: 10,
                       fontWeight: isPeak ? FontWeight.bold : FontWeight.w500,
                     ),

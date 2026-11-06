@@ -35,4 +35,3 @@ class ApiConfig {
     return '$baseUrl$cleanPath';
   }
 }
-

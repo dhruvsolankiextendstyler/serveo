@@ -16,9 +16,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   final themeProvider = ThemeProvider();
@@ -28,9 +26,13 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
-        ChangeNotifierProvider<RestaurantProvider>(create: (_) => RestaurantProvider()..fetchPublicInfo()),
+        ChangeNotifierProvider<RestaurantProvider>(
+          create: (_) => RestaurantProvider()..fetchPublicInfo(),
+        ),
         ChangeNotifierProvider<OrderProvider>(create: (_) => OrderProvider()),
-        ChangeNotifierProvider<MenuProvider>(create: (_) => MenuProvider()..fetchMenu()),
+        ChangeNotifierProvider<MenuProvider>(
+          create: (_) => MenuProvider()..fetchMenu(),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -38,7 +40,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
   const MyApp({super.key});
 
@@ -57,4 +60,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

@@ -98,7 +98,8 @@ class AppTheme {
   static const Color lightGlassBackground = Color(0xD9FFFFFF);
   static const Color lightGlassBorder = Color(0x1F000000);
 
-  static SystemUiOverlayStyle get darkOverlayStyle => const SystemUiOverlayStyle(
+  static SystemUiOverlayStyle get darkOverlayStyle =>
+      const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
@@ -107,7 +108,8 @@ class AppTheme {
         systemNavigationBarDividerColor: Colors.transparent,
       );
 
-  static SystemUiOverlayStyle get lightOverlayStyle => const SystemUiOverlayStyle(
+  static SystemUiOverlayStyle get lightOverlayStyle =>
+      const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
@@ -141,9 +143,19 @@ class AppTheme {
       errorText: errorText,
       filled: true,
       fillColor: fill,
-      hintStyle: TextStyle(color: hint, fontSize: 13, fontWeight: FontWeight.normal),
-      labelStyle: TextStyle(color: labelColor, fontSize: 13, fontWeight: FontWeight.w500),
-      contentPadding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      hintStyle: TextStyle(
+        color: hint,
+        fontSize: 13,
+        fontWeight: FontWeight.normal,
+      ),
+      labelStyle: TextStyle(
+        color: labelColor,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
+      contentPadding:
+          contentPadding ??
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusInput),
         borderSide: BorderSide(color: border),
@@ -175,11 +187,21 @@ class AppTheme {
     }
   }
 
-  static TextTheme _poppinsTextTheme(TextTheme base, {Color? bodyColor, Color? displayColor}) {
+  static TextTheme _poppinsTextTheme(
+    TextTheme base, {
+    Color? bodyColor,
+    Color? displayColor,
+  }) {
     if (_isTestEnvironment) {
-      return base.apply(fontFamily: 'Poppins', bodyColor: bodyColor, displayColor: displayColor);
+      return base.apply(
+        fontFamily: 'Poppins',
+        bodyColor: bodyColor,
+        displayColor: displayColor,
+      );
     }
-    return GoogleFonts.poppinsTextTheme(base).apply(bodyColor: bodyColor, displayColor: displayColor);
+    return GoogleFonts.poppinsTextTheme(
+      base,
+    ).apply(bodyColor: bodyColor, displayColor: displayColor);
   }
 
   static TextStyle _poppinsTextStyle(TextStyle base) {
@@ -228,9 +250,20 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: darkInputFill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        hintStyle: const TextStyle(color: darkInputHint, fontSize: 13, fontWeight: FontWeight.normal),
-        labelStyle: const TextStyle(color: darkTextSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 13,
+        ),
+        hintStyle: const TextStyle(
+          color: darkInputHint,
+          fontSize: 13,
+          fontWeight: FontWeight.normal,
+        ),
+        labelStyle: const TextStyle(
+          color: darkTextSecondary,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusInput),
           borderSide: const BorderSide(color: darkInputBorder),
@@ -241,7 +274,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusInput),
-          borderSide: const BorderSide(color: darkInputFocusedBorder, width: 1.5),
+          borderSide: const BorderSide(
+            color: darkInputFocusedBorder,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusInput),
@@ -255,31 +291,45 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: darkSurface,
         elevation: 16,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusDialog)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusDialog),
+        ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: darkSurface,
         elevation: 16,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(radiusBottomSheet))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(radiusBottomSheet),
+          ),
+        ),
         clipBehavior: Clip.antiAlias,
       ),
       cardTheme: CardThemeData(
         color: darkSurface,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusCard)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusCard),
+        ),
         margin: EdgeInsets.zero,
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusDropdown)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusDropdown),
+        ),
         elevation: 8,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: brandYellow,
           foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: _poppinsTextStyle(const TextStyle(fontWeight: FontWeight.bold)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: _poppinsTextStyle(
+            const TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );
@@ -324,9 +374,20 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: lightInputFill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        hintStyle: const TextStyle(color: lightInputHint, fontSize: 13, fontWeight: FontWeight.normal),
-        labelStyle: const TextStyle(color: lightTextSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 13,
+        ),
+        hintStyle: const TextStyle(
+          color: lightInputHint,
+          fontSize: 13,
+          fontWeight: FontWeight.normal,
+        ),
+        labelStyle: const TextStyle(
+          color: lightTextSecondary,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusInput),
           borderSide: const BorderSide(color: lightInputBorder),
@@ -337,7 +398,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusInput),
-          borderSide: const BorderSide(color: lightInputFocusedBorder, width: 1.5),
+          borderSide: const BorderSide(
+            color: lightInputFocusedBorder,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusInput),
@@ -351,31 +415,45 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: lightSurface,
         elevation: 16,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusDialog)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusDialog),
+        ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: lightSurface,
         elevation: 16,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(radiusBottomSheet))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(radiusBottomSheet),
+          ),
+        ),
         clipBehavior: Clip.antiAlias,
       ),
       cardTheme: CardThemeData(
         color: lightSurface,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusCard)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusCard),
+        ),
         margin: EdgeInsets.zero,
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: lightSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusDropdown)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusDropdown),
+        ),
         elevation: 8,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: brandYellow,
           foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: _poppinsTextStyle(const TextStyle(fontWeight: FontWeight.bold)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: _poppinsTextStyle(
+            const TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

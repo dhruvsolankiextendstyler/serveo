@@ -25,7 +25,8 @@ class DigitalReceiptPage extends StatefulWidget {
   State<DigitalReceiptPage> createState() => _DigitalReceiptPageState();
 }
 
-class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTickerProviderStateMixin {
+class _DigitalReceiptPageState extends State<DigitalReceiptPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   int _timeLeft = 120; // 2 Minutes validity for pickup token
   bool _isCollected = false;
@@ -116,7 +117,9 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
     buffer.writeln("=== SERVEO DIGITAL RECEIPT ===");
     buffer.writeln("Order ID: #${widget.orderId}");
     buffer.writeln("Date: ${widget.order?.orderDate ?? 'Recent'}");
-    buffer.writeln("Payment: ${widget.order?.paymentMethod ?? 'UPI'} - ${widget.order?.paymentStatus ?? 'Pending'}");
+    buffer.writeln(
+      "Payment: ${widget.order?.paymentMethod ?? 'UPI'} - ${widget.order?.paymentStatus ?? 'Pending'}",
+    );
     buffer.writeln("-------------------------------");
     for (final item in widget.items) {
       final name = item['itemName'] ?? item['name'] ?? 'Item';
@@ -167,7 +170,9 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF111827);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF6B7280);
 
     final shortOrderId = widget.orderId.length >= 4
         ? widget.orderId.substring(widget.orderId.length - 4)
@@ -206,13 +211,17 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
       paymentBadgeColor = Colors.purple;
     }
 
-    final isOrderReadyOrCompleted = widget.order?.status == 'Ready' ||
+    final isOrderReadyOrCompleted =
+        widget.order?.status == 'Ready' ||
         widget.order?.status == 'Completed' ||
         widget.order?.status == 'Collected';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Digital Receipt", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          "Digital Receipt",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
@@ -234,7 +243,9 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                   border: Border.all(color: borderColor),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.2 : 0.05,
+                      ),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -247,13 +258,21 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF9FAFB),
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.03)
+                            : const Color(0xFFF9FAFB),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
                         border: Border(bottom: BorderSide(color: borderColor)),
                       ),
                       child: Column(
                         children: [
-                          const Icon(Icons.restaurant_rounded, color: Color(0xFFD97706), size: 36),
+                          const Icon(
+                            Icons.restaurant_rounded,
+                            color: Color(0xFFD97706),
+                            size: 36,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             "SERVEO DINING",
@@ -267,16 +286,24 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                           const SizedBox(height: 4),
                           Text(
                             "Campus Food Ordering & Express Pickup",
-                            style: TextStyle(fontSize: 12, color: secondaryTextColor),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: secondaryTextColor,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           // Payment Badge
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: paymentBadgeColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: paymentBadgeColor.withValues(alpha: 0.4)),
+                              border: Border.all(
+                                color: paymentBadgeColor.withValues(alpha: 0.4),
+                              ),
                             ),
                             child: Text(
                               paymentBadgeText,
@@ -297,13 +324,31 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _buildReceiptRow("Order Number", "#$shortOrderId", primaryTextColor, isBold: true),
+                          _buildReceiptRow(
+                            "Order Number",
+                            "#$shortOrderId",
+                            primaryTextColor,
+                            isBold: true,
+                          ),
                           const SizedBox(height: 8),
-                          _buildReceiptRow("Full Order ID", widget.orderId, secondaryTextColor, isMonospace: true),
+                          _buildReceiptRow(
+                            "Full Order ID",
+                            widget.orderId,
+                            secondaryTextColor,
+                            isMonospace: true,
+                          ),
                           const SizedBox(height: 8),
-                          _buildReceiptRow("Date & Time", widget.order?.orderDate ?? "Recent", secondaryTextColor),
+                          _buildReceiptRow(
+                            "Date & Time",
+                            widget.order?.orderDate ?? "Recent",
+                            secondaryTextColor,
+                          ),
                           const SizedBox(height: 8),
-                          _buildReceiptRow("Payment Method", pMethod, secondaryTextColor),
+                          _buildReceiptRow(
+                            "Payment Method",
+                            pMethod,
+                            secondaryTextColor,
+                          ),
                           const Divider(height: 24),
 
                           // Items Header
@@ -323,9 +368,18 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
 
                           // Items List
                           ...widget.items.map((item) {
-                            final name = item['itemName'] ?? item['name'] ?? 'Item';
-                            final qty = int.tryParse(item['quantity']?.toString() ?? '1') ?? 1;
-                            final price = int.tryParse(item['itemPrice']?.toString() ?? '0') ?? 0;
+                            final name =
+                                item['itemName'] ?? item['name'] ?? 'Item';
+                            final qty =
+                                int.tryParse(
+                                  item['quantity']?.toString() ?? '1',
+                                ) ??
+                                1;
+                            final price =
+                                int.tryParse(
+                                  item['itemPrice']?.toString() ?? '0',
+                                ) ??
+                                0;
                             final lineTotal = qty * price;
                             final rawCusts = item['selectedCustomizations'];
 
@@ -335,7 +389,8 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Expanded(
                                         child: Text(
@@ -357,22 +412,37 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                                       ),
                                     ],
                                   ),
-                                  if (rawCusts is List && rawCusts.isNotEmpty) ...[
+                                  if (rawCusts is List &&
+                                      rawCusts.isNotEmpty) ...[
                                     const SizedBox(height: 3),
                                     Wrap(
                                       spacing: 6,
                                       runSpacing: 2,
                                       children: rawCusts.map<Widget>((c) {
-                                        final opt = c['optionName']?.toString() ?? '';
-                                        final cPrice = int.tryParse(c['price']?.toString() ?? '0') ?? 0;
+                                        final opt =
+                                            c['optionName']?.toString() ?? '';
+                                        final cPrice =
+                                            int.tryParse(
+                                              c['price']?.toString() ?? '0',
+                                            ) ??
+                                            0;
                                         return Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: isDark ? Colors.white10 : const Color(0xFFF3F4F6),
-                                            borderRadius: BorderRadius.circular(4),
+                                            color: isDark
+                                                ? Colors.white10
+                                                : const Color(0xFFF3F4F6),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
                                           child: Text(
-                                            cPrice > 0 ? "$opt (+₹$cPrice)" : opt,
+                                            cPrice > 0
+                                                ? "$opt (+₹$cPrice)"
+                                                : opt,
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: secondaryTextColor,
@@ -391,9 +461,17 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                           const Divider(height: 24),
 
                           // Financial Totals
-                          _buildReceiptRow("Subtotal", "₹$finalTotal", secondaryTextColor),
+                          _buildReceiptRow(
+                            "Subtotal",
+                            "₹$finalTotal",
+                            secondaryTextColor,
+                          ),
                           const SizedBox(height: 6),
-                          _buildReceiptRow("Taxes & Service Fees", "₹0 (Included)", secondaryTextColor),
+                          _buildReceiptRow(
+                            "Taxes & Service Fees",
+                            "₹0 (Included)",
+                            secondaryTextColor,
+                          ),
                           const Divider(height: 24),
                           _buildReceiptRow(
                             "Grand Total",
@@ -410,20 +488,31 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF9FAFB),
-                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.02)
+                            : const Color(0xFFF9FAFB),
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(16),
+                        ),
                         border: Border(top: BorderSide(color: borderColor)),
                       ),
                       child: Column(
                         children: [
                           Text(
                             "Thank you for dining with Serveo!",
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: secondaryTextColor),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: secondaryTextColor,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             "Please retain this receipt for your records or counter collection.",
-                            style: TextStyle(fontSize: 11, color: secondaryTextColor),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: secondaryTextColor,
+                            ),
                           ),
                         ],
                       ),
@@ -440,14 +529,22 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                   height: 48,
                   child: ElevatedButton.icon(
                     onPressed: () => _togglePickupToken(true),
-                    icon: const Icon(Icons.qr_code_scanner, color: Colors.black),
+                    icon: const Icon(
+                      Icons.qr_code_scanner,
+                      color: Colors.black,
+                    ),
                     label: const Text(
                       "Open Animated Pickup Token",
-                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.yellow,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
@@ -463,7 +560,9 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                   icon: const Icon(Icons.copy, size: 16),
                   label: const Text("Copy Text Summary"),
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -521,7 +620,12 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
               const SizedBox(height: 20),
               const Text(
                 "LIVE PICKUP TOKEN",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.black),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                  color: Colors.black,
+                ),
               ),
               const SizedBox(height: 30),
 
@@ -535,22 +639,42 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                     border: Border.all(color: Colors.black, width: 4),
                     color: Colors.white,
                   ),
-                  child: const Icon(Icons.lunch_dining, size: 72, color: Colors.black),
+                  child: const Icon(
+                    Icons.lunch_dining,
+                    size: 72,
+                    color: Colors.black,
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
 
-              const Text("ORDER ID", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black)),
+              const Text(
+                "ORDER ID",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
               Text(
                 "#${widget.orderId.length >= 4 ? widget.orderId.substring(widget.orderId.length - 4) : widget.orderId}",
-                style: const TextStyle(fontSize: 76, fontWeight: FontWeight.w900, height: 1.0, color: Colors.black),
+                style: const TextStyle(
+                  fontSize: 76,
+                  fontWeight: FontWeight.w900,
+                  height: 1.0,
+                  color: Colors.black,
+                ),
               ),
 
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                   "${widget.items.length} Items • Show to Counter Staff",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
 
@@ -558,7 +682,10 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
 
               // Countdown Timer
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(30),
@@ -570,7 +697,11 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                     const SizedBox(width: 8),
                     Text(
                       "Valid for $minutes:$seconds",
-                      style: const TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                   ],
                 ),
@@ -583,7 +714,11 @@ class _DigitalReceiptPageState extends State<DigitalReceiptPage> with SingleTick
                 icon: const Icon(Icons.receipt_long, color: Colors.black),
                 label: const Text(
                   "View Itemized Receipt",
-                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14),
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),

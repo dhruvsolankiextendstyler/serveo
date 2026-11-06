@@ -241,7 +241,41 @@ export async function updateAdminRestaurantSettingsController(req, res) {
 
     // 6. Schedule (Detailed per-day schedule)
     if (body.schedule !== undefined && Array.isArray(body.schedule)) {
-      restaurant.schedule = body.schedule.filter(s => validDays.includes(s.day));
+      restaurant.schedule = body.schedule
+        .filter(s => s && validDays.includes(s.day))
+        .map(s => ({
+          day: s.day,
+          isOpen: s.isOpen !== false,
+          openTime: timeRegex.test(String(s.openTime || "").trim())
+            ? String(s.openTime).trim()
+            : (restaurant.openingTime || "09:00"),
+          closeTime: timeRegex.test(String(s.closeTime || "").trim())
+            ? String(s.closeTime).trim()
+            : (restaurant.closingTime || "22:00"),
+        }));
+
+      // Synchronize operatingDays with all days marked open in schedule
+      restaurant.operatingDays = restaurant.schedule
+        .filter(s => s.isOpen)
+        .map(s => s.day);
+
+      // If openingTime or closingTime were not explicitly supplied, sync from first open day
+      const firstOpen = restaurant.schedule.find(s => s.isOpen);
+      if (firstOpen) {
+        if (body.openingTime === undefined) restaurant.openingTime = firstOpen.openTime;
+        if (body.closingTime === undefined) restaurant.closingTime = firstOpen.closeTime;
+      }
+    } else if (body.openingTime !== undefined || body.closingTime !== undefined || body.operatingDays !== undefined) {
+      // Synchronize schedule entries so they don't retain outdated hours
+      const activeDays = restaurant.operatingDays || validDays;
+      restaurant.schedule = validDays.map(day => {
+        return {
+          day,
+          isOpen: activeDays.includes(day),
+          openTime: restaurant.openingTime || "09:00",
+          closeTime: restaurant.closingTime || "22:00",
+        };
+      });
     }
 
     // 7. Currency & Locale

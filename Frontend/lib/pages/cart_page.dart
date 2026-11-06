@@ -22,9 +22,15 @@ class _CartPageState extends State<CartPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final restProvider = Provider.of<RestaurantProvider?>(context, listen: false);
+        final restProvider = Provider.of<RestaurantProvider?>(
+          context,
+          listen: false,
+        );
         final restId = restProvider?.config.id;
-        final orderProvider = Provider.of<OrderProvider?>(context, listen: false);
+        final orderProvider = Provider.of<OrderProvider?>(
+          context,
+          listen: false,
+        );
         orderProvider?.fetchLoyaltyInfo(restaurantId: restId);
       }
     });
@@ -51,7 +57,11 @@ class _CartPageState extends State<CartPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.shopping_basket_outlined, size: 72, color: Colors.grey),
+              const Icon(
+                Icons.shopping_basket_outlined,
+                size: 72,
+                color: Colors.grey,
+              ),
               const SizedBox(height: 16),
               const Text("Unable to load tray state."),
               const SizedBox(height: 12),
@@ -67,7 +77,9 @@ class _CartPageState extends State<CartPage> {
 
     final cartItems = orderProvider.orderItems;
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF6B7280);
 
     return Scaffold(
       appBar: AppBar(
@@ -85,10 +97,7 @@ class _CartPageState extends State<CartPage> {
             if (cartItems.isNotEmpty)
               Text(
                 "${cartItems.length} items in tray",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: secondaryTextColor,
-                ),
+                style: TextStyle(fontSize: 12, color: secondaryTextColor),
               ),
           ],
         ),
@@ -108,7 +117,12 @@ class _CartPageState extends State<CartPage> {
                         const SizedBox(height: 16),
 
                         // Phase 6: Coupon Codes Section
-                        _buildCouponSection(context, orderProvider, isDark, restId),
+                        _buildCouponSection(
+                          context,
+                          orderProvider,
+                          isDark,
+                          restId,
+                        ),
 
                         const SizedBox(height: 16),
 
@@ -152,7 +166,11 @@ class _CartPageState extends State<CartPage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.local_offer_outlined, color: Color(0xFFD97706), size: 18),
+              const Icon(
+                Icons.local_offer_outlined,
+                color: Color(0xFFD97706),
+                size: 18,
+              ),
               const SizedBox(width: 8),
               Text(
                 "Coupon & Offers",
@@ -171,11 +189,17 @@ class _CartPageState extends State<CartPage> {
               decoration: BoxDecoration(
                 color: const Color(0xFF16A34A).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: const Color(0xFF16A34A).withValues(alpha: 0.4),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle, color: Color(0xFF16A34A), size: 18),
+                  const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF16A34A),
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -200,7 +224,11 @@ class _CartPageState extends State<CartPage> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 18, color: Colors.redAccent),
+                    icon: const Icon(
+                      Icons.close,
+                      size: 18,
+                      color: Colors.redAccent,
+                    ),
                     onPressed: () {
                       _couponController.clear();
                       orderProvider.removeCoupon();
@@ -222,7 +250,10 @@ class _CartPageState extends State<CartPage> {
                       isDark: isDark,
                       hintText: "Enter promo code",
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                     ),
                   ),
                 ),
@@ -231,15 +262,23 @@ class _CartPageState extends State<CartPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD97706),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusInput),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                   ),
                   onPressed: orderProvider.isApplyingCoupon
                       ? null
                       : () async {
                           final code = _couponController.text.trim();
                           if (code.isNotEmpty) {
-                            final success = await orderProvider.applyCoupon(code, restaurantId: restId);
+                            final success = await orderProvider.applyCoupon(
+                              code,
+                              restaurantId: restId,
+                            );
                             if (success && context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -255,9 +294,15 @@ class _CartPageState extends State<CartPage> {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
-                      : const Text("Apply", style: TextStyle(fontWeight: FontWeight.bold)),
+                      : const Text(
+                          "Apply",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                 ),
               ],
             ),
@@ -265,12 +310,19 @@ class _CartPageState extends State<CartPage> {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.redAccent, size: 14),
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.redAccent,
+                    size: 14,
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       orderProvider.couponError!,
-                      style: const TextStyle(color: Colors.redAccent, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ],
@@ -290,7 +342,9 @@ class _CartPageState extends State<CartPage> {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF6B7280);
 
     final rewards = orderProvider.availableRewards;
     final points = orderProvider.availableLoyaltyPoints;
@@ -327,7 +381,9 @@ class _CartPageState extends State<CartPage> {
                 decoration: BoxDecoration(
                   color: Colors.amber.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Text(
                   "$points Points",
@@ -371,14 +427,18 @@ class _CartPageState extends State<CartPage> {
                   final isSelected = orderProvider.selectedRewardId == rewardId;
 
                   return ChoiceChip(
-                    avatar: isSelected ? const Icon(Icons.check, size: 14) : null,
+                    avatar: isSelected
+                        ? const Icon(Icons.check, size: 14)
+                        : null,
                     label: Text("$title ($ptsReq pts)"),
                     selected: isSelected,
                     selectedColor: Colors.amber.shade700,
                     disabledColor: Colors.grey.withValues(alpha: 0.2),
                     onSelected: canRedeem
                         ? (selected) {
-                            orderProvider.selectLoyaltyReward(selected ? rewardId : null);
+                            orderProvider.selectLoyaltyReward(
+                              selected ? rewardId : null,
+                            );
                           }
                         : null,
                   );
@@ -401,7 +461,12 @@ class _CartPageState extends State<CartPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.shopping_basket_outlined, key: const Key('empty_tray_icon'), size: 84, color: iconColor),
+            Icon(
+              Icons.shopping_basket_outlined,
+              key: const Key('empty_tray_icon'),
+              size: 84,
+              color: iconColor,
+            ),
             const SizedBox(height: 16),
             Text(
               "Your tray is empty!",
@@ -429,8 +494,13 @@ class _CartPageState extends State<CartPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD97706),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
@@ -480,7 +550,10 @@ class _CartPageState extends State<CartPage> {
                 key: const Key('cart_restaurant_closed_banner'),
                 width: double.infinity,
                 margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: restConfig.isPaused
                       ? const Color(0xFFD97706).withValues(alpha: 0.15)
@@ -495,18 +568,26 @@ class _CartPageState extends State<CartPage> {
                 child: Row(
                   children: [
                     Icon(
-                      restConfig.isPaused ? Icons.pause_circle_outline : Icons.schedule,
-                      color: restConfig.isPaused ? const Color(0xFFD97706) : Colors.redAccent,
+                      restConfig.isPaused
+                          ? Icons.pause_circle_outline
+                          : Icons.schedule,
+                      color: restConfig.isPaused
+                          ? const Color(0xFFD97706)
+                          : Colors.redAccent,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         restConfig.isPaused
-                            ? (restConfig.pauseReason.isNotEmpty ? restConfig.pauseReason : "Ordering temporarily paused.")
+                            ? (restConfig.pauseReason.isNotEmpty
+                                  ? restConfig.pauseReason
+                                  : "Ordering temporarily paused.")
                             : "Restaurant is closed (${restConfig.operatingHoursFormatted}).",
                         style: TextStyle(
-                          color: restConfig.isPaused ? const Color(0xFFD97706) : Colors.redAccent,
+                          color: restConfig.isPaused
+                              ? const Color(0xFFD97706)
+                              : Colors.redAccent,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -543,17 +624,23 @@ class _CartPageState extends State<CartPage> {
                       );
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: canOrder ? Colors.yellow : Colors.grey.shade400,
+                backgroundColor: canOrder
+                    ? Colors.yellow
+                    : Colors.grey.shade400,
                 foregroundColor: Colors.black,
                 minimumSize: const Size(double.infinity, 54),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 0,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    canOrder ? "Proceed to Pay • ₹$grandTotal" : "Ordering Currently Unavailable",
+                    canOrder
+                        ? "Proceed to Pay • ₹$grandTotal"
+                        : "Ordering Currently Unavailable",
                     style: TextStyle(
                       color: canOrder ? Colors.black : Colors.black54,
                       fontWeight: FontWeight.bold,
@@ -563,7 +650,11 @@ class _CartPageState extends State<CartPage> {
                   ),
                   if (canOrder) ...[
                     const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 20),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.black,
+                      size: 20,
+                    ),
                   ],
                 ],
               ),

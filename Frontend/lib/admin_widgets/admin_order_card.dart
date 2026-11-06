@@ -11,10 +11,17 @@ class AdminOrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color statusColor = Colors.grey;
-    if (order.status == 'Processing' || order.status == 'Pending' || order.status == 'Accepted') statusColor = Colors.orange;
+    if (order.status == 'Processing' ||
+        order.status == 'Pending' ||
+        order.status == 'Accepted')
+      statusColor = Colors.orange;
     if (order.status == 'Preparing') statusColor = Colors.blue;
-    if (order.status == 'Completed' || order.status == 'Ready' || order.status == 'Collected') statusColor = Colors.green;
-    if (order.status == 'Payment Rejected' || order.status == 'Cancelled') statusColor = Colors.redAccent;
+    if (order.status == 'Completed' ||
+        order.status == 'Ready' ||
+        order.status == 'Collected')
+      statusColor = Colors.green;
+    if (order.status == 'Payment Rejected' || order.status == 'Cancelled')
+      statusColor = Colors.redAccent;
 
     // Highlight orders awaiting UPI verification with Amber emphasis
     if (order.isUpi && order.isAwaitingVerification) {
@@ -24,7 +31,9 @@ class AdminOrderCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white60
+        : const Color(0xFF6B7280);
     final dividerColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
 
     final shortOrderId = order.id.length >= 4
@@ -88,11 +97,16 @@ class AdminOrderCard extends StatelessWidget {
                         if (order.isAwaitingVerification) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.amber.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                              border: Border.all(
+                                color: Colors.amber.withValues(alpha: 0.5),
+                              ),
                             ),
                             child: Text(
                               order.isResubmitted
@@ -112,7 +126,11 @@ class AdminOrderCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Row(
                         children: [
-                          Icon(Icons.access_time, size: 12, color: secondaryTextColor),
+                          Icon(
+                            Icons.access_time,
+                            size: 12,
+                            color: secondaryTextColor,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             order.formattedPlacementTime,
@@ -128,14 +146,19 @@ class AdminOrderCard extends StatelessWidget {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     order.isAwaitingVerification
-                        ? (order.isResubmitted ? "RESUBMITTED • AWAITING VERIFICATION" : "AWAITING VERIFICATION")
+                        ? (order.isResubmitted
+                              ? "RESUBMITTED • AWAITING VERIFICATION"
+                              : "AWAITING VERIFICATION")
                         : order.status.toUpperCase(),
                     style: TextStyle(
                       color: statusColor,
@@ -160,18 +183,23 @@ class AdminOrderCard extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                if (order.customerPhone.isNotEmpty && order.customerPhone != 'N/A') ...[
+                if (order.customerPhone.isNotEmpty &&
+                    order.customerPhone != 'N/A') ...[
                   const SizedBox(width: 8),
-                  Text("•", style: TextStyle(color: secondaryTextColor, fontSize: 12)),
+                  Text(
+                    "•",
+                    style: TextStyle(color: secondaryTextColor, fontSize: 12),
+                  ),
                   const SizedBox(width: 8),
-                  Icon(Icons.phone_outlined, size: 13, color: secondaryTextColor),
+                  Icon(
+                    Icons.phone_outlined,
+                    size: 13,
+                    color: secondaryTextColor,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     order.customerPhone,
-                    style: TextStyle(
-                      color: secondaryTextColor,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: secondaryTextColor, fontSize: 12),
                   ),
                 ],
               ],
@@ -182,7 +210,10 @@ class AdminOrderCard extends StatelessWidget {
               children: [
                 Text(
                   "${order.orderItems.length} Items • ₹${order.totalAmount}",
-                  style: TextStyle(color: primaryTextColor, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: primaryTextColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 _buildMethodBadge(order, isDark),
               ],
@@ -209,13 +240,17 @@ class AdminOrderCard extends StatelessWidget {
             Icon(
               Icons.qr_code_2_rounded,
               size: 13,
-              color: order.isAwaitingVerification ? const Color(0xFFD97706) : Colors.green,
+              color: order.isAwaitingVerification
+                  ? const Color(0xFFD97706)
+                  : Colors.green,
             ),
             const SizedBox(width: 4),
             Text(
               order.isAwaitingVerification ? "UPI (Unverified)" : "UPI (Paid)",
               style: TextStyle(
-                color: order.isAwaitingVerification ? const Color(0xFFD97706) : Colors.green,
+                color: order.isAwaitingVerification
+                    ? const Color(0xFFD97706)
+                    : Colors.green,
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),

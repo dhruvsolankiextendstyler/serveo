@@ -13,11 +13,7 @@ class AdminMenuListPage extends StatefulWidget {
   final http.Client? mockHttpClient;
   final List<Item>? initialItems;
 
-  const AdminMenuListPage({
-    super.key,
-    this.mockHttpClient,
-    this.initialItems,
-  });
+  const AdminMenuListPage({super.key, this.mockHttpClient, this.initialItems});
 
   @override
   State<AdminMenuListPage> createState() => _AdminMenuListPageState();
@@ -42,7 +38,7 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
     "Beverages",
     "Desserts",
     "Thali",
-    "South Indian"
+    "South Indian",
   ];
 
   @override
@@ -74,20 +70,14 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         token = await FirebaseAuth.instance.currentUser?.getIdToken();
       } catch (_) {}
 
-      final headers = {
-        if (token != null) "Authorization": "Bearer $token",
-      };
+      final headers = {if (token != null) "Authorization": "Bearer $token"};
 
       final client = widget.mockHttpClient;
       final response = await (client != null
-          ? client.get(
-              Uri.parse("${ApiConfig.baseUrl}/item"),
-              headers: headers,
-            )
-          : http.get(
-              Uri.parse("${ApiConfig.baseUrl}/item"),
-              headers: headers,
-            ).timeout(const Duration(seconds: 12)));
+          ? client.get(Uri.parse("${ApiConfig.baseUrl}/item"), headers: headers)
+          : http
+                .get(Uri.parse("${ApiConfig.baseUrl}/item"), headers: headers)
+                .timeout(const Duration(seconds: 12)));
 
       if (!mounted) return;
 
@@ -110,7 +100,8 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         String errDetail = "Failed to load menu (${response.statusCode})";
         try {
           final decoded = jsonDecode(response.body);
-          if (decoded is Map && (decoded['error'] != null || decoded['message'] != null)) {
+          if (decoded is Map &&
+              (decoded['error'] != null || decoded['message'] != null)) {
             errDetail = (decoded['error'] ?? decoded['message']).toString();
           }
         } catch (_) {}
@@ -124,7 +115,8 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = "Connection error: Unable to reach backend server ($e).";
+        _errorMessage =
+            "Connection error: Unable to reach backend server ($e).";
       });
     }
   }
@@ -164,20 +156,23 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
               },
               body: jsonEncode({"isAvailable": newStatus}),
             )
-          : http.put(
-              Uri.parse("${ApiConfig.baseUrl}/item/${item.itemId}"),
-              headers: {
-                "Content-Type": "application/json",
-                if (token != null) "Authorization": "Bearer $token",
-              },
-              body: jsonEncode({"isAvailable": newStatus}),
-            ).timeout(const Duration(seconds: 10)));
+          : http
+                .put(
+                  Uri.parse("${ApiConfig.baseUrl}/item/${item.itemId}"),
+                  headers: {
+                    "Content-Type": "application/json",
+                    if (token != null) "Authorization": "Bearer $token",
+                  },
+                  body: jsonEncode({"isAvailable": newStatus}),
+                )
+                .timeout(const Duration(seconds: 10)));
 
       if (!mounted) return;
 
       final contentType = response.headers['content-type']?.toLowerCase() ?? '';
       final bodyTrimmed = response.body.trim();
-      final isHtml = contentType.contains('text/html') ||
+      final isHtml =
+          contentType.contains('text/html') ||
           bodyTrimmed.startsWith('<!DOCTYPE') ||
           bodyTrimmed.startsWith('<!doctype') ||
           bodyTrimmed.startsWith('<html');
@@ -186,7 +181,9 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         bool confirmedStatus = newStatus;
         try {
           final decoded = jsonDecode(response.body);
-          if (decoded is Map && decoded['item'] is Map && decoded['item']['isAvailable'] != null) {
+          if (decoded is Map &&
+              decoded['item'] is Map &&
+              decoded['item']['isAvailable'] != null) {
             confirmedStatus = decoded['item']['isAvailable'] == true;
           }
         } catch (_) {}
@@ -195,7 +192,9 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         setState(() {
           final index = _items.indexWhere((it) => it.itemId == item.itemId);
           if (index != -1) {
-            _items[index] = _items[index].copyWith(isAvailable: confirmedStatus);
+            _items[index] = _items[index].copyWith(
+              isAvailable: confirmedStatus,
+            );
           }
         });
 
@@ -205,7 +204,9 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
               "'${item.itemName}' is now ${confirmedStatus ? 'Available' : 'Sold Out'}",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            backgroundColor: confirmedStatus ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+            backgroundColor: confirmedStatus
+                ? const Color(0xFF10B981)
+                : const Color(0xFFF59E0B),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
           ),
@@ -217,7 +218,8 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         if (!isHtml) {
           try {
             final decoded = jsonDecode(response.body);
-            if (decoded is Map && (decoded['error'] != null || decoded['message'] != null)) {
+            if (decoded is Map &&
+                (decoded['error'] != null || decoded['message'] != null)) {
               errDetail = (decoded['error'] ?? decoded['message']).toString();
             }
           } catch (_) {}
@@ -246,15 +248,22 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
       builder: (dialogCtx) {
         final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+          ),
           backgroundColor: isDark ? const Color(0xFF1F1F1F) : Colors.white,
           title: Text(
             "Delete Item",
-            style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1F2937), fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
+              fontWeight: FontWeight.bold,
+            ),
           ),
           content: Text(
             "Are you sure you want to delete '${item.itemName}'? This action cannot be undone.",
-            style: TextStyle(color: isDark ? Colors.white70 : const Color(0xFF4B5563)),
+            style: TextStyle(
+              color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+            ),
           ),
           actions: [
             TextButton(
@@ -264,7 +273,10 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx, true),
               style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-              child: const Text("Delete", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                "Delete",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         );
@@ -279,12 +291,12 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         token = await FirebaseAuth.instance.currentUser?.getIdToken();
       } catch (_) {}
 
-      final response = await http.delete(
-        Uri.parse("${ApiConfig.baseUrl}/item/${item.itemId}"),
-        headers: {
-          if (token != null) "Authorization": "Bearer $token",
-        },
-      ).timeout(const Duration(seconds: 8));
+      final response = await http
+          .delete(
+            Uri.parse("${ApiConfig.baseUrl}/item/${item.itemId}"),
+            headers: {if (token != null) "Authorization": "Bearer $token"},
+          )
+          .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
 
@@ -306,7 +318,8 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         String errDetail = "Failed to delete item (${response.statusCode})";
         try {
           final decoded = jsonDecode(response.body);
-          if (decoded is Map && (decoded['error'] != null || decoded['message'] != null)) {
+          if (decoded is Map &&
+              (decoded['error'] != null || decoded['message'] != null)) {
             errDetail = (decoded['error'] ?? decoded['message']).toString();
           }
         } catch (_) {}
@@ -326,9 +339,7 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (ctx) => Scaffold(
-          appBar: AppBar(
-            title: const Text("Add New Item"),
-          ),
+          appBar: AppBar(title: const Text("Add New Item")),
           body: const ItemFormPage(),
         ),
       ),
@@ -343,9 +354,7 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (ctx) => Scaffold(
-          appBar: AppBar(
-            title: const Text("Edit Item"),
-          ),
+          appBar: AppBar(title: const Text("Edit Item")),
           body: ItemFormPage(editingItem: item),
         ),
       ),
@@ -360,15 +369,19 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF4B5563);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF4B5563);
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final brandColor = isDark ? Colors.yellow : const Color(0xFFD97706);
 
     final filteredItems = _items.where((it) {
-      final matchesCategory = _selectedCategory == 'All' ||
+      final matchesCategory =
+          _selectedCategory == 'All' ||
           it.category.toLowerCase() == _selectedCategory.toLowerCase();
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           it.itemName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           it.category.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
@@ -410,11 +423,16 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: brandColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: brandColor.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: brandColor.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Text(
                           "${filteredItems.length} items",
@@ -446,7 +464,11 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
                 decoration: AppTheme.inputDecoration(
                   isDark: isDark,
                   hintText: "Search menu items...",
-                  prefixIcon: Icon(Icons.search, size: 20, color: secondaryTextColor),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 20,
+                    color: secondaryTextColor,
+                  ),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear, size: 18),
@@ -457,7 +479,10 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
                         )
                       : null,
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                 ),
                 onChanged: (val) {
                   setState(() => _searchQuery = val.trim());
@@ -480,24 +505,35 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
                           cat,
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
                             color: isSelected
                                 ? (isDark ? Colors.black : Colors.white)
-                                : (isDark ? Colors.white70 : const Color(0xFF4B5563)),
+                                : (isDark
+                                      ? Colors.white70
+                                      : const Color(0xFF4B5563)),
                           ),
                         ),
                         selected: isSelected,
                         selectedColor: brandColor,
-                        backgroundColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF3F4F6),
+                        backgroundColor: isDark
+                            ? const Color(0xFF2A2A2A)
+                            : const Color(0xFFF3F4F6),
                         checkmarkColor: isDark ? Colors.black : Colors.white,
                         showCheckmark: false,
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
                             color: isSelected
                                 ? brandColor
-                                : (isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+                                : (isDark
+                                      ? Colors.white12
+                                      : const Color(0xFFE5E7EB)),
                           ),
                         ),
                         onSelected: (_) {
@@ -515,25 +551,25 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
               child: _isLoading
                   ? const Center(child: ServeoSpinner())
                   : _errorMessage != null
-                      ? _buildErrorState(primaryTextColor, brandColor)
-                      : filteredItems.isEmpty
-                          ? _buildEmptyState(isDark)
-                          : ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(16, 6, 16, 80),
-                              itemCount: filteredItems.length,
-                              itemBuilder: (context, index) {
-                                final item = filteredItems[index];
-                                return _buildMenuItemCard(
-                                  item: item,
-                                  isDark: isDark,
-                                  cardBg: cardBg,
-                                  borderColor: borderColor,
-                                  primaryTextColor: primaryTextColor,
-                                  secondaryTextColor: secondaryTextColor,
-                                  brandColor: brandColor,
-                                );
-                              },
-                            ),
+                  ? _buildErrorState(primaryTextColor, brandColor)
+                  : filteredItems.isEmpty
+                  ? _buildEmptyState(isDark)
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 80),
+                      itemCount: filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = filteredItems[index];
+                        return _buildMenuItemCard(
+                          item: item,
+                          isDark: isDark,
+                          cardBg: cardBg,
+                          borderColor: borderColor,
+                          primaryTextColor: primaryTextColor,
+                          secondaryTextColor: secondaryTextColor,
+                          brandColor: brandColor,
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -559,7 +595,9 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         color: cardBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: item.isAvailable ? borderColor : Colors.redAccent.withValues(alpha: 0.3),
+          color: item.isAvailable
+              ? borderColor
+              : Colors.redAccent.withValues(alpha: 0.3),
         ),
         boxShadow: isDark
             ? null
@@ -582,12 +620,15 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
               child: Container(
                 width: 68,
                 height: 68,
-                color: isDark ? const Color(0xFF262626) : const Color(0xFFF3F4F6),
+                color: isDark
+                    ? const Color(0xFF262626)
+                    : const Color(0xFFF3F4F6),
                 child: hasImage
                     ? Image.network(
                         resolvedUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (ctx, err, stack) => _buildImagePlaceholder(isDark),
+                        errorBuilder: (ctx, err, stack) =>
+                            _buildImagePlaceholder(isDark),
                         loadingBuilder: (ctx, child, progress) {
                           if (progress == null) return child;
                           return const Center(
@@ -629,9 +670,14 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+                          color: isDark
+                              ? Colors.white10
+                              : const Color(0xFFE5E7EB),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -646,7 +692,10 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
                       const SizedBox(width: 8),
                       // Availability Status Badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: item.isAvailable
                               ? const Color(0xFF10B981).withValues(alpha: 0.15)
@@ -655,7 +704,9 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
                           border: Border.all(
                             color: item.isAvailable
                                 ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                                : const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                : const Color(
+                                    0xFFEF4444,
+                                  ).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(
@@ -785,11 +836,19 @@ class _AdminMenuListPageState extends State<AdminMenuListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: Colors.redAccent,
+            ),
             const SizedBox(height: 12),
             Text(
               "Failed to Load Menu",
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: primaryTextColor),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: primaryTextColor,
+              ),
             ),
             const SizedBox(height: 6),
             Text(

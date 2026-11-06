@@ -28,10 +28,24 @@ class AdminOrderProvider extends ChangeNotifier {
       _orders.where((o) => o.isUpi && o.isAwaitingVerification).toList();
 
   // Filtered Lists
-  List<AdminOrder> get liveOrders =>
-      _orders.where((o) => o.status != 'Completed' && o.status != 'Ready' && o.status != "Collected" && o.status != 'Cancelled').toList();
-  List<AdminOrder> get historyOrders =>
-      _orders.where((o) => o.status == 'Completed' || o.status == 'Ready' || o.status == "Collected" || o.status == 'Cancelled').toList();
+  List<AdminOrder> get liveOrders => _orders
+      .where(
+        (o) =>
+            o.status != 'Completed' &&
+            o.status != 'Ready' &&
+            o.status != "Collected" &&
+            o.status != 'Cancelled',
+      )
+      .toList();
+  List<AdminOrder> get historyOrders => _orders
+      .where(
+        (o) =>
+            o.status == 'Completed' ||
+            o.status == 'Ready' ||
+            o.status == "Collected" ||
+            o.status == 'Cancelled',
+      )
+      .toList();
 
   void startPolling() {
     _pollingTimer?.cancel();
@@ -48,7 +62,9 @@ class AdminOrderProvider extends ChangeNotifier {
   void dismissAlert(String orderId) {
     _dismissedOrderIds.add(orderId);
     if (_pendingAlertOrder != null && _pendingAlertOrder!.id == orderId) {
-      _dismissedOrderIds.add("${orderId}_att_${_pendingAlertOrder!.attemptCount}");
+      _dismissedOrderIds.add(
+        "${orderId}_att_${_pendingAlertOrder!.attemptCount}",
+      );
       _pendingAlertOrder = null;
     }
     notifyListeners();
@@ -74,9 +90,11 @@ class AdminOrderProvider extends ChangeNotifier {
     if (_pendingAlertOrder == null) {
       for (final o in pending) {
         final alertKey = "${o.id}_att_${o.attemptCount}";
-        final isAttemptDismissed = _dismissedOrderIds.contains(alertKey) ||
+        final isAttemptDismissed =
+            _dismissedOrderIds.contains(alertKey) ||
             (o.attemptCount <= 1 && _dismissedOrderIds.contains(o.id));
-        final isAttemptNotified = _notifiedOrderIds.contains(alertKey) ||
+        final isAttemptNotified =
+            _notifiedOrderIds.contains(alertKey) ||
             (o.attemptCount <= 1 && _notifiedOrderIds.contains(o.id));
 
         if (!isAttemptNotified && !isAttemptDismissed) {
@@ -136,7 +154,9 @@ class AdminOrderProvider extends ChangeNotifier {
         final decoded = jsonDecode(response.body);
         if (decoded is Map && decoded['message'] is List) {
           final List<dynamic> data = decoded['message'];
-          final updatedOrders = data.map((json) => AdminOrder.fromJson(json)).toList();
+          final updatedOrders = data
+              .map((json) => AdminOrder.fromJson(json))
+              .toList();
 
           _orders = updatedOrders;
           _lastUpdated = DateTime.now();
@@ -151,7 +171,11 @@ class AdminOrderProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> verifyPayment(String orderId, bool verified, {String? rejectionReason}) async {
+  Future<bool> verifyPayment(
+    String orderId,
+    bool verified, {
+    String? rejectionReason,
+  }) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       final token = await user?.getIdToken();
@@ -208,10 +232,7 @@ class AdminOrderProvider extends ChangeNotifier {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          "orderId": orderId,
-          "estimatedPrepTime": minutes,
-        }),
+        body: jsonEncode({"orderId": orderId, "estimatedPrepTime": minutes}),
       );
       if (response.statusCode == 200) {
         fetchOrdersSilent();
@@ -234,10 +255,7 @@ class AdminOrderProvider extends ChangeNotifier {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
           },
-          body: jsonEncode({
-            "id": orderId,
-            "newStatus": newStatus,
-          }),
+          body: jsonEncode({"id": orderId, "newStatus": newStatus}),
         );
         _orders[index].status = newStatus;
         notifyListeners();

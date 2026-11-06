@@ -26,7 +26,13 @@ void main() {
         'currency': 'INR',
         'currencySymbol': '₹',
         'timezone': 'Asia/Kolkata',
-        'operatingDays': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        'operatingDays': [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+        ],
         'openingTime': '08:30',
         'closingTime': '21:30',
         'defaultEstimatedPrepTime': 25,
@@ -38,10 +44,7 @@ void main() {
           'state': 'Karnataka',
           'postalCode': '560001',
         },
-        'contact': {
-          'phone': '+91 9123456789',
-          'email': 'bistro@college.edu',
-        },
+        'contact': {'phone': '+91 9123456789', 'email': 'bistro@college.edu'},
         'displayPreferences': {
           'announcement': 'Special 20% discount on Thali!',
           'showPrepTime': true,
@@ -52,7 +55,7 @@ void main() {
           'status': 'OPEN',
           'reason': 'Restaurant is open for orders.',
           'operatingHours': '08:30 - 21:30',
-        }
+        },
       };
 
       final config = RestaurantConfig.fromJson(json);
@@ -70,18 +73,21 @@ void main() {
       expect(config.announcement, 'Special 20% discount on Thali!');
     });
 
-    test('RestaurantConfig applies sensible defaults for missing or empty JSON', () {
-      final config = RestaurantConfig.fromJson({});
+    test(
+      'RestaurantConfig applies sensible defaults for missing or empty JSON',
+      () {
+        final config = RestaurantConfig.fromJson({});
 
-      expect(config.name, 'Serveo');
-      expect(config.currency, 'INR');
-      expect(config.currencySymbol, '₹');
-      expect(config.openingTime, '09:00');
-      expect(config.closingTime, '22:00');
-      expect(config.operatingDays.length, 7);
-      expect(config.canOrder, isTrue);
-      expect(config.isPaused, isFalse);
-    });
+        expect(config.name, 'Serveo');
+        expect(config.currency, 'INR');
+        expect(config.currencySymbol, '₹');
+        expect(config.openingTime, '09:00');
+        expect(config.closingTime, '22:00');
+        expect(config.operatingDays.length, 7);
+        expect(config.canOrder, isTrue);
+        expect(config.isPaused, isFalse);
+      },
+    );
 
     test('RestaurantConfig accurately identifies PAUSED status', () {
       final config = RestaurantConfig.fromJson({
@@ -91,7 +97,7 @@ void main() {
           'isOpen': false,
           'status': 'PAUSED',
           'reason': 'Kitchen under maintenance',
-        }
+        },
       });
 
       expect(config.isPaused, isTrue);
@@ -108,7 +114,7 @@ void main() {
           'status': 'CLOSED',
           'reason': 'Restaurant is closed on Sundays.',
           'operatingHours': '09:00 - 22:00',
-        }
+        },
       });
 
       expect(config.isClosed, isTrue);
@@ -128,8 +134,8 @@ void main() {
               'name': 'Gourmet Express',
               'slug': 'gourmet-express',
               'currency': 'INR',
-              'availability': {'isOpen': true, 'status': 'OPEN'}
-            }
+              'availability': {'isOpen': true, 'status': 'OPEN'},
+            },
           }),
           200,
         );
@@ -155,7 +161,7 @@ void main() {
                 'name': 'New Bistro Name',
                 'openingTime': '10:00',
                 'closingTime': '23:00',
-              }
+              },
             }),
             200,
           );
@@ -191,8 +197,12 @@ void main() {
                 'name': 'Serveo',
                 'isOrderAcceptancePaused': true,
                 'pauseReason': 'Overloaded',
-                'availability': {'isOpen': false, 'status': 'PAUSED', 'reason': 'Overloaded'}
-              }
+                'availability': {
+                  'isOpen': false,
+                  'status': 'PAUSED',
+                  'reason': 'Overloaded',
+                },
+              },
             }),
             200,
           );
@@ -214,7 +224,9 @@ void main() {
   });
 
   group('Phase 4: AdminSettingsPage Widget Tests', () {
-    testWidgets('Renders all business configuration cards and controls', (tester) async {
+    testWidgets('Renders all business configuration cards and controls', (
+      tester,
+    ) async {
       final restProvider = RestaurantProvider();
       restProvider.setConfigForTest(
         RestaurantConfig(
@@ -234,8 +246,12 @@ void main() {
         MaterialApp(
           home: MultiProvider(
             providers: [
-              ChangeNotifierProvider<ThemeProvider>(create: (_) => ThemeProvider()),
-              ChangeNotifierProvider<RestaurantProvider>.value(value: restProvider),
+              ChangeNotifierProvider<ThemeProvider>(
+                create: (_) => ThemeProvider(),
+              ),
+              ChangeNotifierProvider<RestaurantProvider>.value(
+                value: restProvider,
+              ),
             ],
             child: const AdminSettingsPage(),
           ),
@@ -250,12 +266,17 @@ void main() {
       expect(find.text('Address & Contact Information'), findsOneWidget);
       expect(find.text('Digital Restaurant QR Menu'), findsOneWidget);
       expect(find.byKey(const Key('admin_save_settings_btn')), findsOneWidget);
-      expect(find.byKey(const Key('admin_pause_orders_switch')), findsOneWidget);
+      expect(
+        find.byKey(const Key('admin_pause_orders_switch')),
+        findsOneWidget,
+      );
     });
   });
 
   group('Phase 4: Customer Dashboard & Availability Alert Tests', () {
-    testWidgets('Dashboard displays custom restaurant name and announcement', (tester) async {
+    testWidgets('Dashboard displays custom restaurant name and announcement', (
+      tester,
+    ) async {
       final restProvider = RestaurantProvider();
       restProvider.setConfigForTest(
         RestaurantConfig(
@@ -274,7 +295,9 @@ void main() {
           home: MultiProvider(
             providers: [
               ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
-              ChangeNotifierProvider<RestaurantProvider>.value(value: restProvider),
+              ChangeNotifierProvider<RestaurantProvider>.value(
+                value: restProvider,
+              ),
               ChangeNotifierProvider<MenuProvider>.value(value: menuProvider),
               ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
             ],
@@ -288,128 +311,175 @@ void main() {
       expect(find.text('Bistro Royale'), findsWidgets);
       expect(find.text('Flash Sale: 20% off all beverages!'), findsOneWidget);
       // No closed banner when OPEN
-      expect(find.byKey(const Key('dashboard_restaurant_status_banner')), findsNothing);
+      expect(
+        find.byKey(const Key('dashboard_restaurant_status_banner')),
+        findsNothing,
+      );
     });
 
-    testWidgets('Dashboard renders closed status banner when restaurant is closed', (tester) async {
-      final restProvider = RestaurantProvider();
-      restProvider.setConfigForTest(
-        RestaurantConfig(
-          name: 'Serveo Bistro',
-          isOpen: false,
-          availabilityStatus: 'CLOSED',
-          availabilityReason: 'Restaurant is currently closed. Today\'s hours: 09:00 - 22:00',
-          openingTime: '09:00',
-          closingTime: '22:00',
-        ),
-      );
-
-      final menuProvider = MenuProvider();
-      final orderProvider = OrderProvider();
-      final themeProvider = ThemeProvider();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
-              ChangeNotifierProvider<RestaurantProvider>.value(value: restProvider),
-              ChangeNotifierProvider<MenuProvider>.value(value: menuProvider),
-              ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
-            ],
-            child: const DashboardPage(uname: 'Student'),
+    testWidgets(
+      'Dashboard renders closed status banner when restaurant is closed',
+      (tester) async {
+        final restProvider = RestaurantProvider();
+        restProvider.setConfigForTest(
+          RestaurantConfig(
+            name: 'Serveo Bistro',
+            isOpen: false,
+            availabilityStatus: 'CLOSED',
+            availabilityReason:
+                'Restaurant is currently closed. Today\'s hours: 09:00 - 22:00',
+            openingTime: '09:00',
+            closingTime: '22:00',
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        final menuProvider = MenuProvider();
+        final orderProvider = OrderProvider();
+        final themeProvider = ThemeProvider();
 
-      expect(find.byKey(const Key('dashboard_restaurant_status_banner')), findsOneWidget);
-      expect(find.text('Currently Closed for Orders'), findsOneWidget);
-    });
-
-    testWidgets('Dashboard renders paused status banner with custom pause reason', (tester) async {
-      final restProvider = RestaurantProvider();
-      restProvider.setConfigForTest(
-        RestaurantConfig(
-          name: 'Serveo Bistro',
-          isOrderAcceptancePaused: true,
-          isOpen: false,
-          availabilityStatus: 'PAUSED',
-          availabilityReason: 'Kitchen maintenance until 3 PM',
-        ),
-      );
-
-      final menuProvider = MenuProvider();
-      final orderProvider = OrderProvider();
-      final themeProvider = ThemeProvider();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
-              ChangeNotifierProvider<RestaurantProvider>.value(value: restProvider),
-              ChangeNotifierProvider<MenuProvider>.value(value: menuProvider),
-              ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
-            ],
-            child: const DashboardPage(uname: 'Student'),
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider<ThemeProvider>.value(
+                  value: themeProvider,
+                ),
+                ChangeNotifierProvider<RestaurantProvider>.value(
+                  value: restProvider,
+                ),
+                ChangeNotifierProvider<MenuProvider>.value(value: menuProvider),
+                ChangeNotifierProvider<OrderProvider>.value(
+                  value: orderProvider,
+                ),
+              ],
+              child: const DashboardPage(uname: 'Student'),
+            ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('dashboard_restaurant_status_banner')), findsOneWidget);
-      expect(find.text('Ordering Paused'), findsOneWidget);
-      expect(find.text('Kitchen maintenance until 3 PM'), findsOneWidget);
-    });
+        expect(
+          find.byKey(const Key('dashboard_restaurant_status_banner')),
+          findsOneWidget,
+        );
+        expect(find.text('Currently Closed for Orders'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Dashboard renders paused status banner with custom pause reason',
+      (tester) async {
+        final restProvider = RestaurantProvider();
+        restProvider.setConfigForTest(
+          RestaurantConfig(
+            name: 'Serveo Bistro',
+            isOrderAcceptancePaused: true,
+            isOpen: false,
+            availabilityStatus: 'PAUSED',
+            availabilityReason: 'Kitchen maintenance until 3 PM',
+          ),
+        );
+
+        final menuProvider = MenuProvider();
+        final orderProvider = OrderProvider();
+        final themeProvider = ThemeProvider();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider<ThemeProvider>.value(
+                  value: themeProvider,
+                ),
+                ChangeNotifierProvider<RestaurantProvider>.value(
+                  value: restProvider,
+                ),
+                ChangeNotifierProvider<MenuProvider>.value(value: menuProvider),
+                ChangeNotifierProvider<OrderProvider>.value(
+                  value: orderProvider,
+                ),
+              ],
+              child: const DashboardPage(uname: 'Student'),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('dashboard_restaurant_status_banner')),
+          findsOneWidget,
+        );
+        expect(find.text('Ordering Paused'), findsOneWidget);
+        expect(find.text('Kitchen maintenance until 3 PM'), findsOneWidget);
+      },
+    );
   });
 
   group('Phase 4: Customer Cart Checkout Prevention Tests', () {
-    testWidgets('CartPage blocks checkout when restaurant is closed and preserves tray', (tester) async {
-      final restProvider = RestaurantProvider();
-      restProvider.setConfigForTest(
-        RestaurantConfig(
-          name: 'Serveo',
-          isOpen: false,
-          availabilityStatus: 'CLOSED',
-          availabilityReason: 'Restaurant closed for the night',
-        ),
-      );
-
-      final orderProvider = OrderProvider();
-      orderProvider.addToCart(
-        Item(itemId: 'it_1', itemName: 'Veggie Burger', itemPrice: 120, category: 'Burgers'),
-      );
-
-      final themeProvider = ThemeProvider();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
-              ChangeNotifierProvider<RestaurantProvider>.value(value: restProvider),
-              ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
-            ],
-            child: const CartPage(),
+    testWidgets(
+      'CartPage blocks checkout when restaurant is closed and preserves tray',
+      (tester) async {
+        final restProvider = RestaurantProvider();
+        restProvider.setConfigForTest(
+          RestaurantConfig(
+            name: 'Serveo',
+            isOpen: false,
+            availabilityStatus: 'CLOSED',
+            availabilityReason: 'Restaurant closed for the night',
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        final orderProvider = OrderProvider();
+        orderProvider.addToCart(
+          Item(
+            itemId: 'it_1',
+            itemName: 'Veggie Burger',
+            itemPrice: 120,
+            category: 'Burgers',
+          ),
+        );
 
-      // Closed banner is rendered on cart
-      expect(find.byKey(const Key('cart_restaurant_closed_banner')), findsOneWidget);
-      expect(find.text('Ordering Currently Unavailable'), findsOneWidget);
+        final themeProvider = ThemeProvider();
 
-      // Verify item remains preserved in tray
-      expect(find.text('Veggie Burger'), findsOneWidget);
-      expect(orderProvider.orderItems.length, 1);
-    });
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider<ThemeProvider>.value(
+                  value: themeProvider,
+                ),
+                ChangeNotifierProvider<RestaurantProvider>.value(
+                  value: restProvider,
+                ),
+                ChangeNotifierProvider<OrderProvider>.value(
+                  value: orderProvider,
+                ),
+              ],
+              child: const CartPage(),
+            ),
+          ),
+        );
 
-    testWidgets('CartPage enables Proceed to Pay when restaurant is open', (tester) async {
+        await tester.pumpAndSettle();
+
+        // Closed banner is rendered on cart
+        expect(
+          find.byKey(const Key('cart_restaurant_closed_banner')),
+          findsOneWidget,
+        );
+        expect(find.text('Ordering Currently Unavailable'), findsOneWidget);
+
+        // Verify item remains preserved in tray
+        expect(find.text('Veggie Burger'), findsOneWidget);
+        expect(orderProvider.orderItems.length, 1);
+      },
+    );
+
+    testWidgets('CartPage enables Proceed to Pay when restaurant is open', (
+      tester,
+    ) async {
       final restProvider = RestaurantProvider();
       restProvider.setConfigForTest(
         RestaurantConfig(
@@ -421,7 +491,12 @@ void main() {
 
       final orderProvider = OrderProvider();
       orderProvider.addToCart(
-        Item(itemId: 'it_1', itemName: 'Cold Coffee', itemPrice: 80, category: 'Beverages'),
+        Item(
+          itemId: 'it_1',
+          itemName: 'Cold Coffee',
+          itemPrice: 80,
+          category: 'Beverages',
+        ),
       );
 
       final themeProvider = ThemeProvider();
@@ -431,7 +506,9 @@ void main() {
           home: MultiProvider(
             providers: [
               ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
-              ChangeNotifierProvider<RestaurantProvider>.value(value: restProvider),
+              ChangeNotifierProvider<RestaurantProvider>.value(
+                value: restProvider,
+              ),
               ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
             ],
             child: const CartPage(),
@@ -441,17 +518,20 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('cart_restaurant_closed_banner')), findsNothing);
+      expect(
+        find.byKey(const Key('cart_restaurant_closed_banner')),
+        findsNothing,
+      );
       expect(find.text('Proceed to Pay • ₹80'), findsOneWidget);
     });
   });
 
   group('Phase 4: ServeoAppBar Branding Tests', () {
-    testWidgets('ServeoAppBar displays configured restaurant name', (tester) async {
+    testWidgets('ServeoAppBar displays configured restaurant name', (
+      tester,
+    ) async {
       final restProvider = RestaurantProvider();
-      restProvider.setConfigForTest(
-        RestaurantConfig(name: 'Campus Diner'),
-      );
+      restProvider.setConfigForTest(RestaurantConfig(name: 'Campus Diner'));
 
       final orderProvider = OrderProvider();
       final themeProvider = ThemeProvider();
@@ -461,7 +541,9 @@ void main() {
           home: MultiProvider(
             providers: [
               ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
-              ChangeNotifierProvider<RestaurantProvider>.value(value: restProvider),
+              ChangeNotifierProvider<RestaurantProvider>.value(
+                value: restProvider,
+              ),
               ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
             ],
             child: const Scaffold(
@@ -478,4 +560,3 @@ void main() {
     });
   });
 }
-

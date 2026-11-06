@@ -151,7 +151,13 @@ void main() {
 
       final provider = OrderProvider();
       provider.addToCart(
-        Item(itemId: '1', itemName: 'Burger', itemPrice: 100, category: 'Fast Food', isAvailable: true),
+        Item(
+          itemId: '1',
+          itemName: 'Burger',
+          itemPrice: 100,
+          category: 'Fast Food',
+          isAvailable: true,
+        ),
       );
 
       final order = await provider.placeOrder(
@@ -169,82 +175,87 @@ void main() {
   });
 
   group('Phase 5 — AdminPage Role-Based UI Gating', () {
-    testWidgets('Kitchen role displays ONLY Live Orders and restricts Settings/Menu/Analytics',
-        (tester) async {
-      final restaurantProvider = RestaurantProvider();
-      restaurantProvider.setRoleForTest('kitchen');
+    testWidgets(
+      'Kitchen role displays ONLY Live Orders and restricts Settings/Menu/Analytics',
+      (tester) async {
+        final restaurantProvider = RestaurantProvider();
+        restaurantProvider.setRoleForTest('kitchen');
 
-      final orderProvider = AdminOrderProvider();
-      final themeProvider = ThemeProvider();
+        final orderProvider = AdminOrderProvider();
+        final themeProvider = ThemeProvider();
 
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider.value(value: restaurantProvider),
-            ChangeNotifierProvider.value(value: orderProvider),
-            ChangeNotifierProvider.value(value: themeProvider),
-          ],
-          child: const MaterialApp(
-            home: AdminPage(),
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider.value(value: restaurantProvider),
+              ChangeNotifierProvider.value(value: orderProvider),
+              ChangeNotifierProvider.value(value: themeProvider),
+            ],
+            child: const MaterialApp(home: AdminPage()),
           ),
-        ),
-      );
+        );
 
-      await tester.pump();
+        await tester.pump();
 
-      // Check role pill
-      expect(find.text('KITCHEN'), findsOneWidget);
+        // Check role pill
+        expect(find.text('KITCHEN'), findsOneWidget);
 
-      // Bottom bar must not show Settings, Analytics, or Menu List for kitchen
-      expect(find.text('Live Orders'), findsNothing); // 1 screen => bottom nav is hidden
-      expect(find.text('Settings'), findsNothing);
-      expect(find.text('Analytics'), findsNothing);
-      expect(find.text('Menu List'), findsNothing);
+        // Bottom bar must not show Settings, Analytics, or Menu List for kitchen
+        expect(
+          find.text('Live Orders'),
+          findsNothing,
+        ); // 1 screen => bottom nav is hidden
+        expect(find.text('Settings'), findsNothing);
+        expect(find.text('Analytics'), findsNothing);
+        expect(find.text('Menu List'), findsNothing);
 
-      orderProvider.stopPolling();
-      await tester.pumpWidget(const SizedBox());
-    });
+        orderProvider.stopPolling();
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
 
-    testWidgets('Owner role displays all 5 navigation tabs including Settings',
-        (tester) async {
-      final restaurantProvider = RestaurantProvider();
-      restaurantProvider.setRoleForTest('owner');
+    testWidgets(
+      'Owner role displays all 5 navigation tabs including Settings',
+      (tester) async {
+        final restaurantProvider = RestaurantProvider();
+        restaurantProvider.setRoleForTest('owner');
 
-      final orderProvider = AdminOrderProvider();
-      final themeProvider = ThemeProvider();
+        final orderProvider = AdminOrderProvider();
+        final themeProvider = ThemeProvider();
 
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider.value(value: restaurantProvider),
-            ChangeNotifierProvider.value(value: orderProvider),
-            ChangeNotifierProvider.value(value: themeProvider),
-          ],
-          child: const MaterialApp(
-            home: AdminPage(),
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider.value(value: restaurantProvider),
+              ChangeNotifierProvider.value(value: orderProvider),
+              ChangeNotifierProvider.value(value: themeProvider),
+            ],
+            child: const MaterialApp(home: AdminPage()),
           ),
-        ),
-      );
+        );
 
-      await tester.pump();
+        await tester.pump();
 
-      // Check role pill
-      expect(find.text('OWNER'), findsOneWidget);
+        // Check role pill
+        expect(find.text('OWNER'), findsOneWidget);
 
-      // Bottom bar shows all 5 items
-      expect(find.text('Live Orders'), findsOneWidget);
-      expect(find.text('History'), findsOneWidget);
-      expect(find.text('Menu List'), findsOneWidget);
-      expect(find.text('Analytics'), findsOneWidget);
-      expect(find.text('Settings'), findsOneWidget);
+        // Bottom bar shows all 5 items
+        expect(find.text('Live Orders'), findsOneWidget);
+        expect(find.text('History'), findsOneWidget);
+        expect(find.text('Menu List'), findsOneWidget);
+        expect(find.text('Analytics'), findsOneWidget);
+        expect(find.text('Settings'), findsOneWidget);
 
-      orderProvider.stopPolling();
-      await tester.pumpWidget(const SizedBox());
-    });
+        orderProvider.stopPolling();
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
   });
 
   group('Phase 5 — AdminSettingsPage Subscription & Staff UI', () {
-    testWidgets('Renders Subscription Card and Staff Management Card', (tester) async {
+    testWidgets('Renders Subscription Card and Staff Management Card', (
+      tester,
+    ) async {
       final restaurantProvider = RestaurantProvider();
       restaurantProvider.setConfigForTest(
         RestaurantConfig(
@@ -288,9 +299,7 @@ void main() {
             ChangeNotifierProvider.value(value: restaurantProvider),
             ChangeNotifierProvider.value(value: themeProvider),
           ],
-          child: const MaterialApp(
-            home: AdminSettingsPage(),
-          ),
+          child: const MaterialApp(home: AdminSettingsPage()),
         ),
       );
 
@@ -310,4 +319,3 @@ void main() {
     });
   });
 }
-

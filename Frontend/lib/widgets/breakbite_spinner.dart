@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 
-class ServeoSpinner extends StatefulWidget{
+class ServeoSpinner extends StatefulWidget {
   const ServeoSpinner({super.key});
 
   @override
   State<ServeoSpinner> createState() => SpinnerState();
 }
 
-class SpinnerState extends State<ServeoSpinner> with SingleTickerProviderStateMixin{
+class SpinnerState extends State<ServeoSpinner>
+    with SingleTickerProviderStateMixin {
   late AnimationController cont;
 
   @override
   void initState() {
     super.initState();
-    cont = AnimationController(
-        duration: Duration(seconds: 2),
-        vsync: this);
+    cont = AnimationController(duration: Duration(seconds: 2), vsync: this);
     cont.repeat();
   }
 
@@ -27,19 +26,22 @@ class SpinnerState extends State<ServeoSpinner> with SingleTickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
-    return Center(child:RotationTransition(
+    return Center(
+      child: RotationTransition(
         alignment: Alignment.center,
         turns: cont,
-        child: const SizedBox( // 2. Force the spinning area to be small
+        child: const SizedBox(
+          // 2. Force the spinning area to be small
           width: 100,
           height: 100,
           child: Icon(
             Icons.fastfood,
             color: Colors.yellowAccent,
-            size: 40// The icon sits inside the 100x100 box
+            size: 40, // The icon sits inside the 100x100 box
           ),
         ),
-    ));
+      ),
+    );
   }
 }
 

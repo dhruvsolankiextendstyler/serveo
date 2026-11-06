@@ -32,14 +32,14 @@ class _ReportPageState extends State<ReportPage> {
     setState(() => isLoading = true);
 
     try {
-
       final token = await FirebaseAuth.instance.currentUser?.getIdToken();
       final response = await http.get(
         Uri.parse("${ApiConfig.baseUrl}/order/userReport"),
         headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token"
-      });
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
 
       print(response.body);
       if (response.statusCode == 200) {
@@ -69,7 +69,10 @@ class _ReportPageState extends State<ReportPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Food Stats", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "My Food Stats",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: isLoading
           ? const ServeoSpinner()
@@ -172,7 +175,14 @@ class _ReportPageState extends State<ReportPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),

@@ -42,7 +42,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
         setState(() => _isClaiming = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Unable to submit payment claim. Please check your network and try again."),
+            content: Text(
+              "Unable to submit payment claim. Please check your network and try again.",
+            ),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -60,7 +62,10 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
     }
   }
 
-  void _showClaimSubmittedDialog(BuildContext context, OrderProvider orderProvider) {
+  void _showClaimSubmittedDialog(
+    BuildContext context,
+    OrderProvider orderProvider,
+  ) {
     showGlassDialog(
       context: context,
       barrierDismissible: false,
@@ -71,7 +76,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
 
         return AlertDialog(
           backgroundColor: dialogBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+          ),
           contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -82,7 +89,11 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                   color: Colors.amber.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 54),
+                child: const Icon(
+                  Icons.hourglass_top_rounded,
+                  color: Color(0xFFD97706),
+                  size: 54,
+                ),
               ),
               const SizedBox(height: 18),
               Text(
@@ -98,11 +109,16 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.amber.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Text(
                   widget.order.isPaymentRejected
@@ -149,7 +165,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.yellow,
                     foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: const Text(
                     "Track Order",
@@ -198,7 +216,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF6B7280);
 
     final shortOrderId = widget.order.id.length >= 4
         ? widget.order.id.substring(widget.order.id.length - 4)
@@ -227,14 +247,20 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                         decoration: BoxDecoration(
                           color: Colors.redAccent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+                          border: Border.all(
+                            color: Colors.redAccent.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Row(
                               children: [
-                                Icon(Icons.error_outline, color: Colors.redAccent, size: 22),
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Colors.redAccent,
+                                  size: 22,
+                                ),
                                 SizedBox(width: 8),
                                 Text(
                                   "Previous Verification Rejected",
@@ -247,12 +273,20 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                               ],
                             ),
                             if (widget.order.paymentRejectionReason != null &&
-                                widget.order.paymentRejectionReason!.isNotEmpty) ...[
+                                widget
+                                    .order
+                                    .paymentRejectionReason!
+                                    .isNotEmpty) ...[
                               const SizedBox(height: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: Colors.redAccent.withValues(alpha: 0.1),
+                                  color: Colors.redAccent.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -269,7 +303,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                             Text(
                               "Please ensure the exact amount of ₹${widget.order.totalAmount} has been transferred to the merchant UPI ID below, then tap 'Submit Verification Again'.",
                               style: TextStyle(
-                                color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                                color: isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF4B5563),
                                 fontSize: 12,
                                 height: 1.35,
                               ),
@@ -286,12 +322,18 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.35)),
+                        border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.35),
+                        ),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 22),
+                          const Icon(
+                            Icons.info_outline,
+                            color: Color(0xFFD97706),
+                            size: 22,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -309,7 +351,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                                 Text(
                                   "Scan the QR code below using your GPay or UPI app, transfer the exact amount, and tap 'I've completed the payment'. The admin will verify the transfer manually.",
                                   style: TextStyle(
-                                    color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                                    color: isDark
+                                        ? Colors.white70
+                                        : const Color(0xFF4B5563),
                                     fontSize: 12,
                                     height: 1.35,
                                   ),
@@ -425,7 +469,10 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                                         width: 200,
                                         height: 200,
                                         fit: BoxFit.contain,
-                                        errorBuilder: (_, __, ___) => _buildUnconfiguredQrFallback(isDark),
+                                        errorBuilder: (_, __, ___) =>
+                                            _buildUnconfiguredQrFallback(
+                                              isDark,
+                                            ),
                                       ),
                                     );
                                   }
@@ -434,7 +481,8 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                                     width: 200,
                                     height: 200,
                                     fit: BoxFit.contain,
-                                    errorBuilder: (_, __, ___) => _buildUnconfiguredQrFallback(isDark),
+                                    errorBuilder: (_, __, ___) =>
+                                        _buildUnconfiguredQrFallback(isDark),
                                   );
                                 },
                               ),
@@ -456,9 +504,14 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                                 onTap: _copyUpiId,
                                 borderRadius: BorderRadius.circular(8),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isDark ? Colors.white10 : const Color(0xFFF3F4F6),
+                                    color: isDark
+                                        ? Colors.white10
+                                        : const Color(0xFFF3F4F6),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(color: borderColor),
                                   ),
@@ -468,7 +521,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                                       Text(
                                         PaymentConfig.upiId,
                                         style: TextStyle(
-                                          color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                                          color: isDark
+                                              ? Colors.yellow
+                                              : const Color(0xFFD97706),
                                           fontWeight: FontWeight.w600,
                                           fontSize: 13,
                                         ),
@@ -477,7 +532,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                                       Icon(
                                         Icons.copy_rounded,
                                         size: 15,
-                                        color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                                        color: isDark
+                                            ? Colors.yellow
+                                            : const Color(0xFFD97706),
                                       ),
                                     ],
                                   ),
@@ -507,20 +564,38 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                           Text(
                             "PAYMENT INSTRUCTIONS",
                             style: TextStyle(
-                              color: isDark ? Colors.yellow : const Color(0xFFD97706),
+                              color: isDark
+                                  ? Colors.yellow
+                                  : const Color(0xFFD97706),
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.1,
                             ),
                           ),
                           const SizedBox(height: 12),
-                          _buildInstructionStep("1", "Open Google Pay, PhonePe, Paytm, or any UPI app.", isDark),
+                          _buildInstructionStep(
+                            "1",
+                            "Open Google Pay, PhonePe, Paytm, or any UPI app.",
+                            isDark,
+                          ),
                           const SizedBox(height: 10),
-                          _buildInstructionStep("2", "Scan the QR code or enter the merchant UPI ID.", isDark),
+                          _buildInstructionStep(
+                            "2",
+                            "Scan the QR code or enter the merchant UPI ID.",
+                            isDark,
+                          ),
                           const SizedBox(height: 10),
-                          _buildInstructionStep("3", "Transfer exact payable amount: ₹${widget.order.totalAmount}.", isDark),
+                          _buildInstructionStep(
+                            "3",
+                            "Transfer exact payable amount: ₹${widget.order.totalAmount}.",
+                            isDark,
+                          ),
                           const SizedBox(height: 10),
-                          _buildInstructionStep("4", "Tap 'I've completed the payment' below so the admin can verify.", isDark),
+                          _buildInstructionStep(
+                            "4",
+                            "Tap 'I've completed the payment' below so the admin can verify.",
+                            isDark,
+                          ),
                         ],
                       ),
                     ),
@@ -587,7 +662,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  widget.order.isPaymentRejected ? Icons.replay_rounded : Icons.check_circle_outline,
+                                  widget.order.isPaymentRejected
+                                      ? Icons.replay_rounded
+                                      : Icons.check_circle_outline,
                                   color: Colors.black,
                                 ),
                                 const SizedBox(width: 8),
@@ -613,10 +690,11 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ChangeNotifierProvider.value(
-                                  value: orderProvider,
-                                  child: const OrderHistoryPage(),
-                                ),
+                                builder: (context) =>
+                                    ChangeNotifierProvider.value(
+                                      value: orderProvider,
+                                      child: const OrderHistoryPage(),
+                                    ),
                               ),
                             );
                           },
@@ -644,7 +722,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF3F4F6),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isDark ? Colors.white12 : const Color(0xFFE5E7EB),
@@ -683,7 +763,11 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
     );
   }
 
-  Widget _buildInstructionStep(String stepNumber, String instruction, bool isDark) {
+  Widget _buildInstructionStep(
+    String stepNumber,
+    String instruction,
+    bool isDark,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -692,7 +776,9 @@ class _UpiQrPaymentPageState extends State<UpiQrPaymentPage> {
           height: 22,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isDark ? Colors.yellow.withValues(alpha: 0.2) : const Color(0xFFFEF3C7),
+            color: isDark
+                ? Colors.yellow.withValues(alpha: 0.2)
+                : const Color(0xFFFEF3C7),
             shape: BoxShape.circle,
           ),
           child: Text(

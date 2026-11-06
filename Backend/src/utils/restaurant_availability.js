@@ -95,6 +95,7 @@ export function checkRestaurantAvailability(restaurant, checkDate = new Date()) 
       canOrder: false,
       day: dayOfWeek,
       operatingHours: `${openTimeStr} - ${closeTimeStr}`,
+      hoursFormatted: `${openTimeStr} - ${closeTimeStr}`,
     };
   }
 
@@ -123,6 +124,7 @@ export function checkRestaurantAvailability(restaurant, checkDate = new Date()) 
       canOrder: false,
       day: dayOfWeek,
       operatingHours: `${openTimeStr} - ${closeTimeStr}`,
+      hoursFormatted: `${openTimeStr} - ${closeTimeStr}`,
     };
   }
 
@@ -133,6 +135,7 @@ export function checkRestaurantAvailability(restaurant, checkDate = new Date()) 
     canOrder: true,
     day: dayOfWeek,
     operatingHours: `${openTimeStr} - ${closeTimeStr}`,
+    hoursFormatted: `${openTimeStr} - ${closeTimeStr}`,
   };
 }
 

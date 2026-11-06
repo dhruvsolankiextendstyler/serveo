@@ -4,6 +4,50 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'api_config.dart';
 
+class OperatingDaySchedule {
+  final String day;
+  final bool isOpen;
+  final String openTime;
+  final String closeTime;
+
+  const OperatingDaySchedule({
+    required this.day,
+    this.isOpen = true,
+    this.openTime = "09:00",
+    this.closeTime = "22:00",
+  });
+
+  factory OperatingDaySchedule.fromJson(Map<String, dynamic> json) {
+    return OperatingDaySchedule(
+      day: json['day']?.toString() ?? '',
+      isOpen: json['isOpen'] != false,
+      openTime: json['openTime']?.toString() ?? '09:00',
+      closeTime: json['closeTime']?.toString() ?? '22:00',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'day': day,
+    'isOpen': isOpen,
+    'openTime': openTime,
+    'closeTime': closeTime,
+  };
+
+  OperatingDaySchedule copyWith({
+    String? day,
+    bool? isOpen,
+    String? openTime,
+    String? closeTime,
+  }) {
+    return OperatingDaySchedule(
+      day: day ?? this.day,
+      isOpen: isOpen ?? this.isOpen,
+      openTime: openTime ?? this.openTime,
+      closeTime: closeTime ?? this.closeTime,
+    );
+  }
+}
+
 class RestaurantConfig {
   final String id;
   final String name;
@@ -23,6 +67,7 @@ class RestaurantConfig {
   final List<String> operatingDays;
   final String openingTime;
   final String closingTime;
+  final List<OperatingDaySchedule> schedule;
   final bool isOrderAcceptancePaused;
   final String pauseReason;
   final int defaultEstimatedPrepTime;
@@ -59,10 +104,54 @@ class RestaurantConfig {
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ],
     this.openingTime = '09:00',
     this.closingTime = '22:00',
+    this.schedule = const [
+      OperatingDaySchedule(
+        day: 'Monday',
+        isOpen: true,
+        openTime: '09:00',
+        closeTime: '22:00',
+      ),
+      OperatingDaySchedule(
+        day: 'Tuesday',
+        isOpen: true,
+        openTime: '09:00',
+        closeTime: '22:00',
+      ),
+      OperatingDaySchedule(
+        day: 'Wednesday',
+        isOpen: true,
+        openTime: '09:00',
+        closeTime: '22:00',
+      ),
+      OperatingDaySchedule(
+        day: 'Thursday',
+        isOpen: true,
+        openTime: '09:00',
+        closeTime: '22:00',
+      ),
+      OperatingDaySchedule(
+        day: 'Friday',
+        isOpen: true,
+        openTime: '09:00',
+        closeTime: '22:00',
+      ),
+      OperatingDaySchedule(
+        day: 'Saturday',
+        isOpen: true,
+        openTime: '09:00',
+        closeTime: '22:00',
+      ),
+      OperatingDaySchedule(
+        day: 'Sunday',
+        isOpen: true,
+        openTime: '09:00',
+        closeTime: '22:00',
+      ),
+    ],
     this.isOrderAcceptancePaused = false,
     this.pauseReason = '',
     this.defaultEstimatedPrepTime = 20,
@@ -82,8 +171,12 @@ class RestaurantConfig {
   factory RestaurantConfig.fromJson(Map<String, dynamic> json) {
     final addr = json['address'] is Map ? json['address'] as Map : {};
     final contact = json['contact'] is Map ? json['contact'] as Map : {};
-    final disp = json['displayPreferences'] is Map ? json['displayPreferences'] as Map : {};
-    final avail = json['availability'] is Map ? json['availability'] as Map : {};
+    final disp = json['displayPreferences'] is Map
+        ? json['displayPreferences'] as Map
+        : {};
+    final avail = json['availability'] is Map
+        ? json['availability'] as Map
+        : {};
 
     final days = json['operatingDays'] is List
         ? (json['operatingDays'] as List).map((e) => e.toString()).toList()
@@ -94,41 +187,96 @@ class RestaurantConfig {
             'Thursday',
             'Friday',
             'Saturday',
-            'Sunday'
+            'Sunday',
           ];
 
     final openT = (json['openingTime'] ?? '09:00').toString();
     final closeT = (json['closingTime'] ?? '22:00').toString();
 
+    final rawSchedule = json['schedule'];
+    List<OperatingDaySchedule> scheduleList = [];
+    if (rawSchedule is List && rawSchedule.isNotEmpty) {
+      scheduleList = rawSchedule
+          .whereType<Map>()
+          .map(
+            (e) => OperatingDaySchedule.fromJson(Map<String, dynamic>.from(e)),
+          )
+          .toList();
+    } else {
+      scheduleList =
+          [
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday',
+                'Saturday',
+                'Sunday',
+              ]
+              .map(
+                (day) => OperatingDaySchedule(
+                  day: day,
+                  isOpen: days.contains(day),
+                  openTime: openT,
+                  closeTime: closeT,
+                ),
+              )
+              .toList();
+    }
+
     return RestaurantConfig(
       id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       name: (json['name'] ?? 'Serveo').toString(),
       slug: (json['slug'] ?? 'default').toString(),
-      description: (json['description'] ?? 'Fresh meals & quick snacks ready for counter pickup').toString(),
+      description:
+          (json['description'] ??
+                  'Fresh meals & quick snacks ready for counter pickup')
+              .toString(),
       logoUrl: (json['logoUrl'] ?? '').toString(),
       bannerUrl: (json['bannerUrl'] ?? '').toString(),
-      addressStreet: (addr['street'] ?? json['addressStreet'] ?? 'Central Food Court').toString(),
-      addressCity: (addr['city'] ?? json['addressCity'] ?? 'Bengaluru').toString(),
-      addressState: (addr['state'] ?? json['addressState'] ?? 'Karnataka').toString(),
-      addressPostalCode: (addr['postalCode'] ?? json['addressPostalCode'] ?? '560001').toString(),
-      contactPhone: (contact['phone'] ?? json['contactPhone'] ?? '+91 98765 43210').toString(),
-      contactEmail: (contact['email'] ?? json['contactEmail'] ?? 'support@serveo.app').toString(),
+      addressStreet:
+          (addr['street'] ?? json['addressStreet'] ?? 'Central Food Court')
+              .toString(),
+      addressCity: (addr['city'] ?? json['addressCity'] ?? 'Bengaluru')
+          .toString(),
+      addressState: (addr['state'] ?? json['addressState'] ?? 'Karnataka')
+          .toString(),
+      addressPostalCode:
+          (addr['postalCode'] ?? json['addressPostalCode'] ?? '560001')
+              .toString(),
+      contactPhone:
+          (contact['phone'] ?? json['contactPhone'] ?? '+91 98765 43210')
+              .toString(),
+      contactEmail:
+          (contact['email'] ?? json['contactEmail'] ?? 'support@serveo.app')
+              .toString(),
       currency: (json['currency'] ?? 'INR').toString(),
       currencySymbol: (json['currencySymbol'] ?? '₹').toString(),
       timezone: (json['timezone'] ?? 'Asia/Kolkata').toString(),
       operatingDays: days,
       openingTime: openT,
       closingTime: closeT,
+      schedule: scheduleList,
       isOrderAcceptancePaused: json['isOrderAcceptancePaused'] == true,
       pauseReason: (json['pauseReason'] ?? '').toString(),
-      defaultEstimatedPrepTime: int.tryParse(json['defaultEstimatedPrepTime']?.toString() ?? '20') ?? 20,
-      announcement: (disp['announcement'] ?? json['announcement'] ?? '').toString(),
+      defaultEstimatedPrepTime:
+          int.tryParse(json['defaultEstimatedPrepTime']?.toString() ?? '20') ??
+          20,
+      announcement: (disp['announcement'] ?? json['announcement'] ?? '')
+          .toString(),
       showPrepTime: disp['showPrepTime'] != false,
       showDietaryBadges: disp['showDietaryBadges'] != false,
       isOpen: avail['isOpen'] != false,
-      availabilityStatus: (avail['status'] ?? (json['isOrderAcceptancePaused'] == true ? 'PAUSED' : 'OPEN')).toString(),
+      availabilityStatus:
+          (avail['status'] ??
+                  (json['isOrderAcceptancePaused'] == true ? 'PAUSED' : 'OPEN'))
+              .toString(),
       availabilityReason: (avail['reason'] ?? '').toString(),
-      operatingHoursFormatted: (avail['hoursFormatted'] ?? '$openT - $closeT').toString(),
+      operatingHoursFormatted:
+          (avail['hoursFormatted'] ??
+                  avail['operatingHours'] ??
+                  '$openT - $closeT')
+              .toString(),
     );
   }
 
@@ -145,16 +293,14 @@ class RestaurantConfig {
       'postalCode': addressPostalCode,
       'country': 'India',
     },
-    'contact': {
-      'phone': contactPhone,
-      'email': contactEmail,
-    },
+    'contact': {'phone': contactPhone, 'email': contactEmail},
     'currency': currency,
     'currencySymbol': currencySymbol,
     'timezone': timezone,
     'operatingDays': operatingDays,
     'openingTime': openingTime,
     'closingTime': closingTime,
+    'schedule': schedule.map((s) => s.toJson()).toList(),
     'isOrderAcceptancePaused': isOrderAcceptancePaused,
     'pauseReason': pauseReason,
     'defaultEstimatedPrepTime': defaultEstimatedPrepTime,
@@ -193,7 +339,9 @@ class StaffMember {
       name: json['name']?.toString() ?? '',
       role: json['role']?.toString() ?? 'manager',
       isActive: json['isActive'] != false,
-      addedAt: json['addedAt'] != null ? DateTime.tryParse(json['addedAt'].toString()) : null,
+      addedAt: json['addedAt'] != null
+          ? DateTime.tryParse(json['addedAt'].toString())
+          : null,
     );
   }
 }
@@ -241,8 +389,12 @@ class SubscriptionInfo {
     final plan = json['plan'] is Map ? json['plan'] as Map : {};
     final sub = json['subscription'] is Map ? json['subscription'] as Map : {};
     final usage = json['usage'] is Map ? json['usage'] as Map : {};
-    final activeItems = usage['activeMenuItems'] is Map ? usage['activeMenuItems'] as Map : {};
-    final staff = usage['staffAccounts'] is Map ? usage['staffAccounts'] as Map : {};
+    final activeItems = usage['activeMenuItems'] is Map
+        ? usage['activeMenuItems'] as Map
+        : {};
+    final staff = usage['staffAccounts'] is Map
+        ? usage['staffAccounts'] as Map
+        : {};
     final features = plan['features'] is Map ? plan['features'] as Map : {};
 
     final planIdStr = (plan['id'] ?? 'starter').toString();
@@ -251,19 +403,31 @@ class SubscriptionInfo {
       planName: (plan['name'] ?? 'Starter').toString(),
       planDescription: (plan['description'] ?? '').toString(),
       status: (sub['status'] ?? 'active').toString(),
-      startDate: sub['startDate'] != null ? DateTime.tryParse(sub['startDate'].toString()) : null,
-      endDate: sub['endDate'] != null ? DateTime.tryParse(sub['endDate'].toString()) : null,
-      trialEndsAt: sub['trialEndsAt'] != null ? DateTime.tryParse(sub['trialEndsAt'].toString()) : null,
+      startDate: sub['startDate'] != null
+          ? DateTime.tryParse(sub['startDate'].toString())
+          : null,
+      endDate: sub['endDate'] != null
+          ? DateTime.tryParse(sub['endDate'].toString())
+          : null,
+      trialEndsAt: sub['trialEndsAt'] != null
+          ? DateTime.tryParse(sub['trialEndsAt'].toString())
+          : null,
       isExpired: sub['isExpired'] == true,
       inGracePeriod: sub['inGracePeriod'] == true,
-      activeItemsCurrent: int.tryParse(activeItems['current']?.toString() ?? '0') ?? 0,
-      activeItemsMax: int.tryParse(activeItems['max']?.toString() ?? '20') ?? 20,
+      activeItemsCurrent:
+          int.tryParse(activeItems['current']?.toString() ?? '0') ?? 0,
+      activeItemsMax:
+          int.tryParse(activeItems['max']?.toString() ?? '20') ?? 20,
       staffCurrent: int.tryParse(staff['current']?.toString() ?? '1') ?? 1,
       staffMax: int.tryParse(staff['max']?.toString() ?? '2') ?? 2,
       allowAdvancedAnalytics: features['advancedAnalytics'] == true,
       allowExport: features['exportData'] == true,
-      allowMarketingAndLoyalty: features['marketingAndLoyalty'] == true || (planIdStr != 'starter' && planIdStr.isNotEmpty),
-      allowCustomerRetentionAnalytics: features['customerRetentionAnalytics'] == true || (planIdStr != 'starter' && planIdStr.isNotEmpty),
+      allowMarketingAndLoyalty:
+          features['marketingAndLoyalty'] == true ||
+          (planIdStr != 'starter' && planIdStr.isNotEmpty),
+      allowCustomerRetentionAnalytics:
+          features['customerRetentionAnalytics'] == true ||
+          (planIdStr != 'starter' && planIdStr.isNotEmpty),
     );
   }
 }
@@ -299,20 +463,29 @@ class RestaurantProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get auditLogs => _auditLogs;
 
   /// Loads public restaurant information and availability for the customer app.
-  Future<void> fetchPublicInfo({String identifier = 'default', http.Client? client}) async {
+  Future<void> fetchPublicInfo({
+    String identifier = 'default',
+    http.Client? client,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     final httpClient = client ?? http.Client();
     try {
-      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/public/info?slug=$identifier");
-      final response = await httpClient.get(url).timeout(const Duration(seconds: 10));
+      final url = Uri.parse(
+        "${ApiConfig.baseUrl}/restaurant/public/info?slug=$identifier",
+      );
+      final response = await httpClient
+          .get(url)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map && decoded['restaurant'] != null) {
-          _config = RestaurantConfig.fromJson(Map<String, dynamic>.from(decoded['restaurant']));
+          _config = RestaurantConfig.fromJson(
+            Map<String, dynamic>.from(decoded['restaurant']),
+          );
         }
       }
     } catch (e) {
@@ -325,7 +498,10 @@ class RestaurantProvider extends ChangeNotifier {
   }
 
   /// Loads full restaurant business settings for an authenticated restaurant administrator.
-  Future<bool> fetchAdminSettings({http.Client? client, String? overrideToken}) async {
+  Future<bool> fetchAdminSettings({
+    http.Client? client,
+    String? overrideToken,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -339,18 +515,22 @@ class RestaurantProvider extends ChangeNotifier {
       }
 
       final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/settings");
-      final response = await httpClient.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 12));
+      final response = await httpClient
+          .get(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map && decoded['restaurant'] != null) {
-          _config = RestaurantConfig.fromJson(Map<String, dynamic>.from(decoded['restaurant']));
+          _config = RestaurantConfig.fromJson(
+            Map<String, dynamic>.from(decoded['restaurant']),
+          );
           await fetchQrCode(client: httpClient, overrideToken: token);
           await fetchStaff(client: httpClient, overrideToken: token);
           await fetchSubscription(client: httpClient, overrideToken: token);
@@ -359,7 +539,8 @@ class RestaurantProvider extends ChangeNotifier {
           return true;
         }
       } else {
-        _errorMessage = "Failed to load restaurant settings (HTTP ${response.statusCode})";
+        _errorMessage =
+            "Failed to load restaurant settings (HTTP ${response.statusCode})";
       }
     } catch (e) {
       _errorMessage = "Error connecting to restaurant server: $e";
@@ -383,12 +564,12 @@ class RestaurantProvider extends ChangeNotifier {
       }
 
       final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/staff");
-      final response = await httpClient.get(
-        url,
-        headers: {
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 10));
+      final response = await httpClient
+          .get(
+            url,
+            headers: {if (token != null) 'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
@@ -410,7 +591,13 @@ class RestaurantProvider extends ChangeNotifier {
   }
 
   /// Adds a new staff member with subscription capacity validation
-  Future<bool> addStaff(String email, {String name = '', String role = 'manager', http.Client? client, String? overrideToken}) async {
+  Future<bool> addStaff(
+    String email, {
+    String name = '',
+    String role = 'manager',
+    http.Client? client,
+    String? overrideToken,
+  }) async {
     _isSaving = true;
     _errorMessage = null;
     notifyListeners();
@@ -424,18 +611,16 @@ class RestaurantProvider extends ChangeNotifier {
       }
 
       final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/staff");
-      final response = await httpClient.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'email': email,
-          'name': name,
-          'role': role,
-        }),
-      ).timeout(const Duration(seconds: 12));
+      final response = await httpClient
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'email': email, 'name': name, 'role': role}),
+          )
+          .timeout(const Duration(seconds: 12));
 
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 201) {
@@ -443,7 +628,9 @@ class RestaurantProvider extends ChangeNotifier {
         await fetchSubscription(client: httpClient, overrideToken: token);
         return true;
       } else {
-        _errorMessage = decoded is Map ? (decoded['message'] ?? decoded['error'] ?? "Failed to add staff") : "Failed to add staff";
+        _errorMessage = decoded is Map
+            ? (decoded['message'] ?? decoded['error'] ?? "Failed to add staff")
+            : "Failed to add staff";
       }
     } catch (e) {
       _errorMessage = "Network error adding staff: $e";
@@ -456,7 +643,13 @@ class RestaurantProvider extends ChangeNotifier {
   }
 
   /// Updates an existing staff member's role (enforcing last-owner guard on backend)
-  Future<bool> updateStaffRole(String staffId, String role, {bool? isActive, http.Client? client, String? overrideToken}) async {
+  Future<bool> updateStaffRole(
+    String staffId,
+    String role, {
+    bool? isActive,
+    http.Client? client,
+    String? overrideToken,
+  }) async {
     _isSaving = true;
     _errorMessage = null;
     notifyListeners();
@@ -469,25 +662,33 @@ class RestaurantProvider extends ChangeNotifier {
         token = await user?.getIdToken();
       }
 
-      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/staff/$staffId/role");
-      final response = await httpClient.patch(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'role': role,
-          if (isActive != null) 'isActive': isActive,
-        }),
-      ).timeout(const Duration(seconds: 12));
+      final url = Uri.parse(
+        "${ApiConfig.baseUrl}/restaurant/admin/staff/$staffId/role",
+      );
+      final response = await httpClient
+          .patch(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'role': role,
+              if (isActive != null) 'isActive': isActive,
+            }),
+          )
+          .timeout(const Duration(seconds: 12));
 
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200) {
         await fetchStaff(client: httpClient, overrideToken: token);
         return true;
       } else {
-        _errorMessage = decoded is Map ? (decoded['message'] ?? decoded['error'] ?? "Failed to update role") : "Failed to update role";
+        _errorMessage = decoded is Map
+            ? (decoded['message'] ??
+                  decoded['error'] ??
+                  "Failed to update role")
+            : "Failed to update role";
       }
     } catch (e) {
       _errorMessage = "Network error updating staff role: $e";
@@ -500,7 +701,11 @@ class RestaurantProvider extends ChangeNotifier {
   }
 
   /// Removes a staff member (with last-owner guard)
-  Future<bool> removeStaff(String staffId, {http.Client? client, String? overrideToken}) async {
+  Future<bool> removeStaff(
+    String staffId, {
+    http.Client? client,
+    String? overrideToken,
+  }) async {
     _isSaving = true;
     _errorMessage = null;
     notifyListeners();
@@ -513,13 +718,15 @@ class RestaurantProvider extends ChangeNotifier {
         token = await user?.getIdToken();
       }
 
-      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/staff/$staffId");
-      final response = await httpClient.delete(
-        url,
-        headers: {
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 12));
+      final url = Uri.parse(
+        "${ApiConfig.baseUrl}/restaurant/admin/staff/$staffId",
+      );
+      final response = await httpClient
+          .delete(
+            url,
+            headers: {if (token != null) 'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 12));
 
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200) {
@@ -527,7 +734,11 @@ class RestaurantProvider extends ChangeNotifier {
         await fetchSubscription(client: httpClient, overrideToken: token);
         return true;
       } else {
-        _errorMessage = decoded is Map ? (decoded['message'] ?? decoded['error'] ?? "Failed to remove staff") : "Failed to remove staff";
+        _errorMessage = decoded is Map
+            ? (decoded['message'] ??
+                  decoded['error'] ??
+                  "Failed to remove staff")
+            : "Failed to remove staff";
       }
     } catch (e) {
       _errorMessage = "Network error removing staff: $e";
@@ -540,7 +751,10 @@ class RestaurantProvider extends ChangeNotifier {
   }
 
   /// Fetches subscription plan information, limits, and usage
-  Future<bool> fetchSubscription({http.Client? client, String? overrideToken}) async {
+  Future<bool> fetchSubscription({
+    http.Client? client,
+    String? overrideToken,
+  }) async {
     final httpClient = client ?? http.Client();
     try {
       String? token = overrideToken;
@@ -549,18 +763,22 @@ class RestaurantProvider extends ChangeNotifier {
         token = await user?.getIdToken();
       }
 
-      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/subscription");
-      final response = await httpClient.get(
-        url,
-        headers: {
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 10));
+      final url = Uri.parse(
+        "${ApiConfig.baseUrl}/restaurant/admin/subscription",
+      );
+      final response = await httpClient
+          .get(
+            url,
+            headers: {if (token != null) 'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map) {
-          _subscription = SubscriptionInfo.fromJson(Map<String, dynamic>.from(decoded));
+          _subscription = SubscriptionInfo.fromJson(
+            Map<String, dynamic>.from(decoded),
+          );
           notifyListeners();
           return true;
         }
@@ -574,7 +792,11 @@ class RestaurantProvider extends ChangeNotifier {
   }
 
   /// Updates business configuration settings on the backend.
-  Future<bool> updateSettings(Map<String, dynamic> updates, {http.Client? client, String? overrideToken}) async {
+  Future<bool> updateSettings(
+    Map<String, dynamic> updates, {
+    http.Client? client,
+    String? overrideToken,
+  }) async {
     _isSaving = true;
     _errorMessage = null;
     notifyListeners();
@@ -588,24 +810,32 @@ class RestaurantProvider extends ChangeNotifier {
       }
 
       final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/settings");
-      final response = await httpClient.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(updates),
-      ).timeout(const Duration(seconds: 15));
+      final response = await httpClient
+          .put(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(updates),
+          )
+          .timeout(const Duration(seconds: 15));
 
       final decoded = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && decoded is Map && decoded['restaurant'] != null) {
-        _config = RestaurantConfig.fromJson(Map<String, dynamic>.from(decoded['restaurant']));
+      if (response.statusCode == 200 &&
+          decoded is Map &&
+          decoded['restaurant'] != null) {
+        _config = RestaurantConfig.fromJson(
+          Map<String, dynamic>.from(decoded['restaurant']),
+        );
         _isSaving = false;
         notifyListeners();
         return true;
       } else {
-        _errorMessage = decoded is Map ? (decoded['error'] ?? "Failed to save settings") : "Failed to save settings";
+        _errorMessage = decoded is Map
+            ? (decoded['error'] ?? "Failed to save settings")
+            : "Failed to save settings";
       }
     } catch (e) {
       _errorMessage = "Unable to save settings: $e";
@@ -619,7 +849,12 @@ class RestaurantProvider extends ChangeNotifier {
   }
 
   /// Quick toggle for pausing/resuming order acceptance.
-  Future<bool> togglePauseOrders(bool paused, {String reason = '', http.Client? client, String? overrideToken}) async {
+  Future<bool> togglePauseOrders(
+    bool paused, {
+    String reason = '',
+    http.Client? client,
+    String? overrideToken,
+  }) async {
     _isSaving = true;
     _errorMessage = null;
     notifyListeners();
@@ -632,18 +867,22 @@ class RestaurantProvider extends ChangeNotifier {
         token = await user?.getIdToken();
       }
 
-      final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/pause-status");
-      final response = await httpClient.patch(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'isOrderAcceptancePaused': paused,
-          'pauseReason': reason,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final url = Uri.parse(
+        "${ApiConfig.baseUrl}/restaurant/admin/pause-status",
+      );
+      final response = await httpClient
+          .patch(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'isOrderAcceptancePaused': paused,
+              'pauseReason': reason,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         await fetchAdminSettings(client: httpClient, overrideToken: token);
@@ -671,12 +910,12 @@ class RestaurantProvider extends ChangeNotifier {
       }
 
       final url = Uri.parse("${ApiConfig.baseUrl}/restaurant/admin/qr");
-      final response = await httpClient.get(
-        url,
-        headers: {
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 8));
+      final response = await httpClient
+          .get(
+            url,
+            headers: {if (token != null) 'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);

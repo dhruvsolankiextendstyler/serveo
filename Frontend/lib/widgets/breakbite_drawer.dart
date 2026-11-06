@@ -24,7 +24,9 @@ class ServeoDrawer extends StatelessWidget {
     final isDark = themeProvider.isDark;
 
     final bgColor = isDark ? const Color(0xFF161616) : Colors.white;
-    final headerBgColor = isDark ? const Color(0xFF101010) : const Color(0xFFF3F4F6);
+    final headerBgColor = isDark
+        ? const Color(0xFF101010)
+        : const Color(0xFFF3F4F6);
     final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
     final subtextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
     final dividerColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
@@ -35,9 +37,7 @@ class ServeoDrawer extends StatelessWidget {
         children: [
           // 1. The Header (Profile Area)
           UserAccountsDrawerHeader(
-            decoration: BoxDecoration(
-              color: headerBgColor,
-            ),
+            decoration: BoxDecoration(color: headerBgColor),
             accountName: Text(
               uname.isNotEmpty ? uname : "Serveo User",
               style: TextStyle(
@@ -131,9 +131,7 @@ class ServeoDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ReportPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const ReportPage()),
               );
             },
           ),
@@ -205,18 +203,20 @@ class ServeoDrawer extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Builder(builder: (ctx) {
-              RestaurantProvider? restProvider;
-              try {
-                restProvider = ctx.watch<RestaurantProvider>();
-              } catch (_) {}
-              final rest = restProvider?.config ?? RestaurantConfig();
-              return Text(
-                "${rest.name} • Hours: ${rest.openingTime} - ${rest.closingTime}",
-                style: TextStyle(color: subtextColor, fontSize: 11),
-                textAlign: TextAlign.center,
-              );
-            }),
+            child: Builder(
+              builder: (ctx) {
+                RestaurantProvider? restProvider;
+                try {
+                  restProvider = ctx.watch<RestaurantProvider>();
+                } catch (_) {}
+                final rest = restProvider?.config ?? RestaurantConfig();
+                return Text(
+                  "${rest.name} • Hours: ${rest.openingTime} - ${rest.closingTime}",
+                  style: TextStyle(color: subtextColor, fontSize: 11),
+                  textAlign: TextAlign.center,
+                );
+              },
+            ),
           ),
           const SizedBox(height: 12),
         ],

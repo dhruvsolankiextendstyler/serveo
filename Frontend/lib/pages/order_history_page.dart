@@ -72,29 +72,31 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...result.addedItems.map((item) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "${item.quantityAdded}x ${item.itemName}",
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
+                ...result.addedItems.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "${item.quantityAdded}x ${item.itemName}",
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
-                          Text(
-                            "₹${item.currentPrice * item.quantityAdded}",
-                            style: const TextStyle(
-                              color: Color(0xFFD97706),
-                              fontWeight: FontWeight.bold,
-                            ),
+                        ),
+                        Text(
+                          "₹${item.currentPrice * item.quantityAdded}",
+                          style: const TextStyle(
+                            color: Color(0xFFD97706),
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
-                    )),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 12),
               ],
 
@@ -104,7 +106,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   decoration: BoxDecoration(
                     color: Colors.amber.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.amber.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,13 +122,17 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      ...result.priceChanges.map((pc) => Text(
-                            "• ${pc.itemName}: was ₹${pc.oldPrice}, now ₹${pc.newPrice}",
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : const Color(0xFF374151),
-                              fontSize: 11,
-                            ),
-                          )),
+                      ...result.priceChanges.map(
+                        (pc) => Text(
+                          "• ${pc.itemName}: was ₹${pc.oldPrice}, now ₹${pc.newPrice}",
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white70
+                                : const Color(0xFF374151),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -137,7 +145,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   decoration: BoxDecoration(
                     color: Colors.redAccent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.redAccent.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,13 +161,17 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      ...result.unavailableItems.map((u) => Text(
-                            "• $u",
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : const Color(0xFF374151),
-                              fontSize: 11,
-                            ),
-                          )),
+                      ...result.unavailableItems.map(
+                        (u) => Text(
+                          "• $u",
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white70
+                                : const Color(0xFF374151),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -183,7 +197,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                       onPressed: () => Navigator.pop(sheetContext),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: const Text("Keep Browsing"),
                     ),
@@ -198,10 +214,11 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ChangeNotifierProvider.value(
-                                value: orderProvider,
-                                child: const CartPage(),
-                              ),
+                              builder: (context) =>
+                                  ChangeNotifierProvider.value(
+                                    value: orderProvider,
+                                    child: const CartPage(),
+                                  ),
                             ),
                           );
                         },
@@ -209,9 +226,14 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                           backgroundColor: Colors.yellow,
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                        child: const Text("Review Tray", style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          "Review Tray",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ],
@@ -247,18 +269,18 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       body: isLoading
           ? const Center(child: ServeoSpinner())
           : orders.isEmpty
-              ? _buildEmptyState(context, isDark)
-              : RefreshIndicator(
-                  onRefresh: () => orderProvider.fetchMyOrders(),
-                  color: const Color(0xFFD97706),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: orders.length,
-                    itemBuilder: (context, index) {
-                      return _buildOrderCard(context, orders[index], isDark);
-                    },
-                  ),
-                ),
+          ? _buildEmptyState(context, isDark)
+          : RefreshIndicator(
+              onRefresh: () => orderProvider.fetchMyOrders(),
+              color: const Color(0xFFD97706),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: orders.length,
+                itemBuilder: (context, index) {
+                  return _buildOrderCard(context, orders[index], isDark);
+                },
+              ),
+            ),
     );
   }
 
@@ -295,10 +317,15 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.yellow,
               foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: const Text("Order Now", style: TextStyle(fontWeight: FontWeight.bold)),
-          )
+            child: const Text(
+              "Order Now",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
         ],
       ),
     );
@@ -334,10 +361,14 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDark ? Colors.white12 : const Color(0xFFE5E7EB);
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF6B7280);
     final dividerColor = isDark ? Colors.white24 : const Color(0xFFE5E7EB);
 
-    final shortId = order.id.length >= 4 ? order.id.substring(order.id.length - 4) : order.id;
+    final shortId = order.id.length >= 4
+        ? order.id.substring(order.id.length - 4)
+        : order.id;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -381,14 +412,20 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
           // Items summary
           Text(
-            order.orderItems.map((item) {
-              final name = item['itemName'] ?? item['name'] ?? 'Item';
-              final qty = item['quantity'] ?? 1;
-              return "$qty× $name";
-            }).join(", "),
+            order.orderItems
+                .map((item) {
+                  final name = item['itemName'] ?? item['name'] ?? 'Item';
+                  final qty = item['quantity'] ?? 1;
+                  return "$qty× $name";
+                })
+                .join(", "),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: secondaryTextColor, fontSize: 13, height: 1.3),
+            style: TextStyle(
+              color: secondaryTextColor,
+              fontSize: 13,
+              height: 1.3,
+            ),
           ),
           const SizedBox(height: 10),
 
@@ -432,15 +469,25 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                     }
                   });
                 },
-                icon: const Icon(Icons.replay_rounded, color: Colors.white, size: 16),
+                icon: const Icon(
+                  Icons.replay_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
                 label: const Text(
                   "Re-submit Payment for Verification",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
                   padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),
@@ -470,8 +517,12 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    side: BorderSide(
+                      color: isDark ? Colors.white24 : Colors.black26,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ),
@@ -479,15 +530,25 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () => _handleReorder(context, order),
-                  icon: const Icon(Icons.replay_rounded, size: 16, color: Colors.black),
+                  icon: const Icon(
+                    Icons.replay_rounded,
+                    size: 16,
+                    color: Colors.black,
+                  ),
                   label: const Text(
                     "Reorder",
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.yellow,
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ),
@@ -518,8 +579,12 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                side: BorderSide(
+                  color: isDark ? Colors.white24 : Colors.black26,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),
@@ -546,15 +611,25 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                     context.read<OrderProvider>().fetchMyOrders();
                   }
                 },
-                icon: const Icon(Icons.qr_code_scanner, color: Colors.black, size: 18),
+                icon: const Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.black,
+                  size: 18,
+                ),
                 label: const Text(
                   "SHOW PICKUP RECEIPT",
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    fontSize: 12,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.greenAccent,
                   padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),

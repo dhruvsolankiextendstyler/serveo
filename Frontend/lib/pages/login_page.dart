@@ -62,19 +62,26 @@ class _LoginPageState extends State<LoginPage> {
                     padding: const EdgeInsets.symmetric(vertical: 30),
                     decoration: const BoxDecoration(
                       color: Color(0xFFD99058),
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(80)),
-                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(80),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Text(
                       "Login",
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Colors.white),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineLarge?.copyWith(color: Colors.white),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  Container(
-                    height: 20,
-                    color: Colors.yellow,
-                  ),
+                  Container(height: 20, color: Colors.yellow),
                   // --- THE "FILLINGS" (TextFields) ---
                   Container(
                     color: Colors.brown,
@@ -101,33 +108,46 @@ class _LoginPageState extends State<LoginPage> {
                   // --- BOTTOM BUN ---
                   Material(
                     color: const Color(0xFFA66D42),
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(30),
+                    ),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () async {
                         if (_isLoading) return;
 
                         final String email = uemail.text.trim();
-                        final String pass = upass.text; // Note: do not trim password
+                        final String pass =
+                            upass.text; // Note: do not trim password
 
                         if (email.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter your email")),
+                            const SnackBar(
+                              content: Text("Please enter your email"),
+                            ),
                           );
                           return;
                         }
 
-                        final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                        final emailRegex = RegExp(
+                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                        );
                         if (!emailRegex.hasMatch(email)) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter a valid email address")),
+                            const SnackBar(
+                              content: Text(
+                                "Please enter a valid email address",
+                              ),
+                            ),
                           );
                           return;
                         }
 
                         if (pass.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter your password")),
+                            const SnackBar(
+                              content: Text("Please enter your password"),
+                            ),
                           );
                           return;
                         }
@@ -154,66 +174,110 @@ class _LoginPageState extends State<LoginPage> {
                                   MaterialPageRoute(
                                     builder: (context) => MultiProvider(
                                       providers: [
-                                        ChangeNotifierProvider(create: (_) => MenuProvider()..fetchMenu()),
-                                        ChangeNotifierProvider(create: (_) => OrderProvider()),
+                                        ChangeNotifierProvider(
+                                          create: (_) =>
+                                              MenuProvider()..fetchMenu(),
+                                        ),
+                                        ChangeNotifierProvider(
+                                          create: (_) => OrderProvider(),
+                                        ),
                                       ],
-                                      child: DashboardPage(uname: FirebaseAuth.instance.currentUser?.displayName ?? "User"),
+                                      child: DashboardPage(
+                                        uname:
+                                            FirebaseAuth
+                                                .instance
+                                                .currentUser
+                                                ?.displayName ??
+                                            "User",
+                                      ),
                                     ),
                                   ),
                                 );
                               } else {
                                 Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
-                                    builder: (routeContext) => ChangeNotifierProvider<AdminOrderProvider>(
-                                      create: (_) => AdminOrderProvider()..fetchOrders(),
-                                      child: AdminPage(),
-                                    ),
+                                    builder: (routeContext) =>
+                                        ChangeNotifierProvider<
+                                          AdminOrderProvider
+                                        >(
+                                          create: (_) =>
+                                              AdminOrderProvider()
+                                                ..fetchOrders(),
+                                          child: AdminPage(),
+                                        ),
                                   ),
                                 );
                               }
                             } else if (response.statusCode >= 500) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Server unavailable. Please try again later.")),
+                                const SnackBar(
+                                  content: Text(
+                                    "Server unavailable. Please try again later.",
+                                  ),
+                                ),
                               );
                             } else {
                               String msg = "Login failed";
                               try {
                                 final body = jsonDecode(response.body);
-                                if (body is Map && body.containsKey("message")) {
+                                if (body is Map &&
+                                    body.containsKey("message")) {
                                   msg = body["message"].toString();
                                 }
                               } catch (_) {}
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(msg)),
-                              );
+                              ScaffoldMessenger.of(
+                                context,
+                              ).showSnackBar(SnackBar(content: Text(msg)));
                             }
                           }
                         } on FirebaseAuthException catch (e) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(AuthCheck.getFirebaseAuthErrorMessage(e))),
+                            SnackBar(
+                              content: Text(
+                                AuthCheck.getFirebaseAuthErrorMessage(e),
+                              ),
+                            ),
                           );
                         } on ClientException catch (_) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Network connection failed. Please check your internet connection.")),
+                            const SnackBar(
+                              content: Text(
+                                "Network connection failed. Please check your internet connection.",
+                              ),
+                            ),
                           );
                         } on TimeoutException catch (_) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Server timed out. Please try again later.")),
+                            const SnackBar(
+                              content: Text(
+                                "Server timed out. Please try again later.",
+                              ),
+                            ),
                           );
                         } catch (e) {
                           debugPrint("Login error: $e");
                           if (!context.mounted) return;
                           final errStr = e.toString().toLowerCase();
-                          if (errStr.contains("socketexception") || errStr.contains("network") || errStr.contains("connection")) {
+                          if (errStr.contains("socketexception") ||
+                              errStr.contains("network") ||
+                              errStr.contains("connection")) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Network connection failed. Please check your internet connection.")),
+                              const SnackBar(
+                                content: Text(
+                                  "Network connection failed. Please check your internet connection.",
+                                ),
+                              ),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("An unexpected error occurred. Please try again.")),
+                              const SnackBar(
+                                content: Text(
+                                  "An unexpected error occurred. Please try again.",
+                                ),
+                              ),
                             );
                           }
                         } finally {
@@ -228,7 +292,10 @@ class _LoginPageState extends State<LoginPage> {
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
                               )
                             : const Text(
                                 "Order Now (Sign In)",
@@ -244,7 +311,9 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 10),
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).push(PageNav(child: const SignupPage()));
+                      Navigator.of(
+                        context,
+                      ).push(PageNav(child: const SignupPage()));
                       uemail.clear();
                       upass.clear();
                     },
@@ -252,7 +321,7 @@ class _LoginPageState extends State<LoginPage> {
                       "No account? Sign Up!",
                       style: Theme.of(context).textTheme.labelLarge,
                     ),
-                  )
+                  ),
                 ],
               ),
             ),

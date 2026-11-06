@@ -4,7 +4,9 @@ import 'package:frontend/utils/auth_check.dart';
 
 void main() {
   group('Auth Validation Tests', () {
-    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
 
     test('Email validation rejects malformed emails', () {
       expect(emailRegex.hasMatch('userexample.com'), isFalse);
@@ -24,7 +26,7 @@ void main() {
 
     test('Phone number validation constraints (digits only, 10-15 digits)', () {
       final phoneRegex = RegExp(r'^[0-9]+$');
-      
+
       bool isValidPhone(String phone) {
         final trimmed = phone.trim();
         return trimmed.isNotEmpty &&
@@ -48,7 +50,8 @@ void main() {
     });
 
     test('Password requirements (at least 6 characters on signup)', () {
-      bool isValidSignupPassword(String pass) => pass.isNotEmpty && pass.length >= 6;
+      bool isValidSignupPassword(String pass) =>
+          pass.isNotEmpty && pass.length >= 6;
 
       expect(isValidSignupPassword(''), isFalse);
       expect(isValidSignupPassword('12345'), isFalse);
@@ -105,21 +108,27 @@ void main() {
         AuthCheck.getFirebaseAuthErrorMessage(
           FirebaseAuthException(code: 'network-request-failed'),
         ),
-        equals('Network connection failed. Please check your internet connection.'),
+        equals(
+          'Network connection failed. Please check your internet connection.',
+        ),
       );
 
       expect(
         AuthCheck.getFirebaseAuthErrorMessage(
           FirebaseAuthException(code: 'operation-not-allowed'),
         ),
-        equals('Email/password sign-in is not enabled in Firebase Console (Authentication > Sign-in method).'),
+        equals(
+          'Email/password sign-in is not enabled in Firebase Console (Authentication > Sign-in method).',
+        ),
       );
 
       expect(
         AuthCheck.getFirebaseAuthErrorMessage(
           FirebaseAuthException(code: 'configuration-not-found'),
         ),
-        equals('Email/password sign-in is not enabled in Firebase Console (Authentication > Sign-in method).'),
+        equals(
+          'Email/password sign-in is not enabled in Firebase Console (Authentication > Sign-in method).',
+        ),
       );
 
       expect(

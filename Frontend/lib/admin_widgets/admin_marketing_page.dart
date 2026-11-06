@@ -16,7 +16,8 @@ class AdminMarketingPage extends StatefulWidget {
   State<AdminMarketingPage> createState() => _AdminMarketingPageState();
 }
 
-class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTickerProviderStateMixin {
+class _AdminMarketingPageState extends State<AdminMarketingPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   String? _errorMessage;
@@ -143,7 +144,9 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
   Future<void> _fetchRetentionAnalytics(String timeframe) async {
     final token = await _getToken();
     final res = await http.get(
-      Uri.parse("${ApiConfig.baseUrl}/analytics/retention?timeframe=$timeframe"),
+      Uri.parse(
+        "${ApiConfig.baseUrl}/analytics/retention?timeframe=$timeframe",
+      ),
       headers: {
         "Content-Type": "application/json",
         if (token != null) "Authorization": "Bearer $token",
@@ -229,11 +232,19 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
     showGlassDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
-        title: const Text("Error", style: TextStyle(fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+        ),
+        title: const Text(
+          "Error",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Text(message),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("OK")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("OK"),
+          ),
         ],
       ),
     );
@@ -257,12 +268,17 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+            ),
             title: const Row(
               children: [
                 Icon(Icons.local_offer, color: Color(0xFFD97706)),
                 SizedBox(width: 8),
-                Text("Create New Coupon", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  "Create New Coupon",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             content: SingleChildScrollView(
@@ -284,30 +300,52 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: discountType,
-                      dropdownColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                      dropdownColor: isDark
+                          ? AppTheme.darkSurface
+                          : AppTheme.lightSurface,
                       decoration: AppTheme.inputDecoration(
                         isDark: isDark,
                         labelText: "Discount Type",
                         isDense: true,
                       ),
                       items: const [
-                        DropdownMenuItem(value: "percentage", child: Text("Percentage (%)")),
-                        DropdownMenuItem(value: "fixed", child: Text("Fixed Amount (₹)")),
-                        DropdownMenuItem(value: "free_delivery", child: Text("Free Delivery")),
-                        DropdownMenuItem(value: "first_order", child: Text("First Order Discount (%)")),
-                        DropdownMenuItem(value: "min_order", child: Text("Min Order Discount (₹)")),
+                        DropdownMenuItem(
+                          value: "percentage",
+                          child: Text("Percentage (%)"),
+                        ),
+                        DropdownMenuItem(
+                          value: "fixed",
+                          child: Text("Fixed Amount (₹)"),
+                        ),
+                        DropdownMenuItem(
+                          value: "free_delivery",
+                          child: Text("Free Delivery"),
+                        ),
+                        DropdownMenuItem(
+                          value: "first_order",
+                          child: Text("First Order Discount (%)"),
+                        ),
+                        DropdownMenuItem(
+                          value: "min_order",
+                          child: Text("Min Order Discount (₹)"),
+                        ),
                       ],
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => discountType = val);
+                        if (val != null)
+                          setDialogState(() => discountType = val);
                       },
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: discountValCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: AppTheme.inputDecoration(
                         isDark: isDark,
-                        labelText: discountType == "percentage" || discountType == "first_order"
+                        labelText:
+                            discountType == "percentage" ||
+                                discountType == "first_order"
                             ? "Discount Percentage (%) *"
                             : "Discount Amount (₹) *",
                         isDense: true,
@@ -376,25 +414,36 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Cancel"),
+              ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD97706),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusInput),
+                  ),
                 ),
                 onPressed: () async {
                   final code = codeCtrl.text.trim().toUpperCase();
                   final val = double.tryParse(discountValCtrl.text.trim()) ?? 0;
                   if (code.isEmpty || val <= 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please provide a valid code and discount value")),
+                      const SnackBar(
+                        content: Text(
+                          "Please provide a valid code and discount value",
+                        ),
+                      ),
                     );
                     return;
                   }
 
                   final days = int.tryParse(daysValidCtrl.text.trim()) ?? 30;
-                  final validUntil = DateTime.now().add(Duration(days: days)).toIso8601String();
+                  final validUntil = DateTime.now()
+                      .add(Duration(days: days))
+                      .toIso8601String();
 
                   final parsedMaxDiscount = maxDiscountCtrl.text.isNotEmpty
                       ? double.tryParse(maxDiscountCtrl.text.trim())
@@ -403,13 +452,16 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                     "code": code,
                     "discountType": discountType,
                     "discountValue": val,
-                    "minOrderValue": double.tryParse(minOrderCtrl.text.trim()) ?? 0,
+                    "minOrderValue":
+                        double.tryParse(minOrderCtrl.text.trim()) ?? 0,
                     if (parsedMaxDiscount != null) ...{
                       "maxDiscountAmount": parsedMaxDiscount,
                       "maxDiscount": parsedMaxDiscount,
                     },
-                    "totalUsageLimit": int.tryParse(usageLimitCtrl.text.trim()) ?? 100,
-                    "perCustomerLimit": int.tryParse(perCustomerCtrl.text.trim()) ?? 1,
+                    "totalUsageLimit":
+                        int.tryParse(usageLimitCtrl.text.trim()) ?? 100,
+                    "perCustomerLimit":
+                        int.tryParse(perCustomerCtrl.text.trim()) ?? 1,
                     "endDate": validUntil,
                     "validUntil": validUntil,
                   };
@@ -454,12 +506,17 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
     showGlassDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+        ),
         title: const Row(
           children: [
             Icon(Icons.campaign, color: Color(0xFFD97706)),
             SizedBox(width: 8),
-            Text("Create Promotion", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              "Create Promotion",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: SingleChildScrollView(
@@ -524,25 +581,34 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFD97706),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusInput),
+              ),
             ),
             onPressed: () async {
               final title = titleCtrl.text.trim();
               if (title.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Please enter a campaign title")),
+                  const SnackBar(
+                    content: Text("Please enter a campaign title"),
+                  ),
                 );
                 return;
               }
 
               final days = int.tryParse(daysCtrl.text.trim()) ?? 14;
               final startDate = DateTime.now().toIso8601String();
-              final endDate = DateTime.now().add(Duration(days: days)).toIso8601String();
+              final endDate = DateTime.now()
+                  .add(Duration(days: days))
+                  .toIso8601String();
 
               final body = {
                 "title": title,
@@ -593,7 +659,10 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
 
     if (res.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Loyalty configuration updated successfully!"), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text("Loyalty configuration updated successfully!"),
+          backgroundColor: Colors.green,
+        ),
       );
       await _fetchLoyaltyConfig();
       if (mounted) setState(() {});
@@ -617,7 +686,10 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
 
     if (res.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Referral configuration updated successfully!"), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text("Referral configuration updated successfully!"),
+          backgroundColor: Colors.green,
+        ),
       );
       await _fetchReferralConfig();
       if (mounted) setState(() {});
@@ -631,11 +703,14 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
     final theme = context.watch<ThemeProvider>();
     final isDark = theme.isDark;
     final restProvider = context.watch<RestaurantProvider>();
-    final allowMarketing = restProvider.subscription?.allowMarketingAndLoyalty ?? true;
+    final allowMarketing =
+        restProvider.subscription?.allowMarketingAndLoyalty ?? true;
 
     final bgColor = isDark ? const Color(0xFF141414) : const Color(0xFFF9FAFB);
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE5E7EB);
+    final borderColor = isDark
+        ? const Color(0xFF2C2C2C)
+        : const Color(0xFFE5E7EB);
     final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
     final subtextColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
 
@@ -651,13 +726,19 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
               color: Colors.amber.withValues(alpha: 0.15),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 20),
+                  const Icon(
+                    Icons.info_outline,
+                    color: Color(0xFFD97706),
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       "Marketing & Loyalty requires a Growth or Premium plan. You are viewing in read-only mode.",
                       style: TextStyle(
-                        color: isDark ? Colors.amber[200] : const Color(0xFFB45309),
+                        color: isDark
+                            ? Colors.amber[200]
+                            : const Color(0xFFB45309),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -692,11 +773,40 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 : TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildCouponsTab(cardBg, borderColor, textColor, subtextColor, allowMarketing),
-                      _buildCampaignsTab(cardBg, borderColor, textColor, subtextColor, allowMarketing),
-                      _buildLoyaltyTab(cardBg, borderColor, textColor, subtextColor, allowMarketing),
-                      _buildReferralsTab(cardBg, borderColor, textColor, subtextColor, allowMarketing),
-                      _buildRetentionTab(cardBg, borderColor, textColor, subtextColor),
+                      _buildCouponsTab(
+                        cardBg,
+                        borderColor,
+                        textColor,
+                        subtextColor,
+                        allowMarketing,
+                      ),
+                      _buildCampaignsTab(
+                        cardBg,
+                        borderColor,
+                        textColor,
+                        subtextColor,
+                        allowMarketing,
+                      ),
+                      _buildLoyaltyTab(
+                        cardBg,
+                        borderColor,
+                        textColor,
+                        subtextColor,
+                        allowMarketing,
+                      ),
+                      _buildReferralsTab(
+                        cardBg,
+                        borderColor,
+                        textColor,
+                        subtextColor,
+                        allowMarketing,
+                      ),
+                      _buildRetentionTab(
+                        cardBg,
+                        borderColor,
+                        textColor,
+                        subtextColor,
+                      ),
                     ],
                   ),
           ),
@@ -708,7 +818,13 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
   // ==========================================
   // TAB 1: COUPONS
   // ==========================================
-  Widget _buildCouponsTab(Color cardBg, Color borderColor, Color textColor, Color subtextColor, bool allowMarketing) {
+  Widget _buildCouponsTab(
+    Color cardBg,
+    Color borderColor,
+    Color textColor,
+    Color subtextColor,
+    bool allowMarketing,
+  ) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: allowMarketing
@@ -716,7 +832,13 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
               heroTag: 'createCouponBtn',
               backgroundColor: const Color(0xFFD97706),
               icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text("New Coupon", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              label: const Text(
+                "New Coupon",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               onPressed: _showCreateCouponDialog,
             )
           : null,
@@ -725,11 +847,21 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.local_offer_outlined, size: 48, color: subtextColor),
+                  Icon(
+                    Icons.local_offer_outlined,
+                    size: 48,
+                    color: subtextColor,
+                  ),
                   const SizedBox(height: 12),
-                  Text("No coupons created yet", style: TextStyle(color: textColor, fontSize: 16)),
+                  Text(
+                    "No coupons created yet",
+                    style: TextStyle(color: textColor, fontSize: 16),
+                  ),
                   const SizedBox(height: 6),
-                  Text("Create coupons to attract customers and increase order size.", style: TextStyle(color: subtextColor, fontSize: 13)),
+                  Text(
+                    "Create coupons to attract customers and increase order size.",
+                    style: TextStyle(color: subtextColor, fontSize: 13),
+                  ),
                 ],
               ),
             )
@@ -761,10 +893,16 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD97706).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFFD97706,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.local_offer, color: Color(0xFFD97706), size: 24),
+                        child: const Icon(
+                          Icons.local_offer,
+                          color: Color(0xFFD97706),
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -775,19 +913,30 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                               children: [
                                 Text(
                                   code,
-                                  style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isActive ? Colors.green.withValues(alpha: 0.15) : Colors.red.withValues(alpha: 0.15),
+                                    color: isActive
+                                        ? Colors.green.withValues(alpha: 0.15)
+                                        : Colors.red.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
                                     isActive ? "ACTIVE" : "INACTIVE",
                                     style: TextStyle(
-                                      color: isActive ? Colors.green : Colors.red,
+                                      color: isActive
+                                          ? Colors.green
+                                          : Colors.red,
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -800,12 +949,18 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                               type == "percentage" || type == "first_order"
                                   ? "$val% OFF (Min ₹$minOrder)"
                                   : "₹$val OFF (Min ₹$minOrder)",
-                              style: TextStyle(color: subtextColor, fontSize: 13),
+                              style: TextStyle(
+                                color: subtextColor,
+                                fontSize: 13,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               "Used: $currentUsage / $totalLimit times",
-                              style: TextStyle(color: subtextColor, fontSize: 11),
+                              style: TextStyle(
+                                color: subtextColor,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
@@ -817,7 +972,11 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                           onChanged: (_) => _toggleCouponStatus(id),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.redAccent,
+                            size: 20,
+                          ),
                           tooltip: "Delete Coupon",
                           onPressed: () => _deleteCoupon(id),
                         ),
@@ -833,7 +992,13 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
   // ==========================================
   // TAB 2: PROMOTIONS / CAMPAIGNS
   // ==========================================
-  Widget _buildCampaignsTab(Color cardBg, Color borderColor, Color textColor, Color subtextColor, bool allowMarketing) {
+  Widget _buildCampaignsTab(
+    Color cardBg,
+    Color borderColor,
+    Color textColor,
+    Color subtextColor,
+    bool allowMarketing,
+  ) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: allowMarketing
@@ -841,7 +1006,13 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
               heroTag: 'createCampaignBtn',
               backgroundColor: const Color(0xFFD97706),
               icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text("New Campaign", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              label: const Text(
+                "New Campaign",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               onPressed: _showCreateCampaignDialog,
             )
           : null,
@@ -852,9 +1023,15 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 children: [
                   Icon(Icons.campaign_outlined, size: 48, color: subtextColor),
                   const SizedBox(height: 12),
-                  Text("No marketing campaigns yet", style: TextStyle(color: textColor, fontSize: 16)),
+                  Text(
+                    "No marketing campaigns yet",
+                    style: TextStyle(color: textColor, fontSize: 16),
+                  ),
                   const SizedBox(height: 6),
-                  Text("Promote festival offers, weekend specials, or combo deals.", style: TextStyle(color: subtextColor, fontSize: 13)),
+                  Text(
+                    "Promote festival offers, weekend specials, or combo deals.",
+                    style: TextStyle(color: subtextColor, fontSize: 13),
+                  ),
                 ],
               ),
             )
@@ -890,11 +1067,21 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                               children: [
                                 Text(
                                   title,
-                                  style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                                 if (desc.isNotEmpty) ...[
                                   const SizedBox(height: 4),
-                                  Text(desc, style: TextStyle(color: subtextColor, fontSize: 13)),
+                                  Text(
+                                    desc,
+                                    style: TextStyle(
+                                      color: subtextColor,
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                 ],
                               ],
                             ),
@@ -906,7 +1093,11 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                               onChanged: (_) => _toggleCampaignStatus(id),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.redAccent,
+                                size: 20,
+                              ),
                               tooltip: "Delete Campaign",
                               onPressed: () => _deleteCampaign(id),
                             ),
@@ -918,9 +1109,14 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                         children: [
                           if (coupon.isNotEmpty) ...[
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFD97706).withValues(alpha: 0.15),
+                                color: const Color(
+                                  0xFFD97706,
+                                ).withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -934,9 +1130,15 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                             ),
                             const SizedBox(width: 12),
                           ],
-                          Text("Views: $views", style: TextStyle(color: subtextColor, fontSize: 12)),
+                          Text(
+                            "Views: $views",
+                            style: TextStyle(color: subtextColor, fontSize: 12),
+                          ),
                           const SizedBox(width: 12),
-                          Text("Clicks: $clicks", style: TextStyle(color: subtextColor, fontSize: 12)),
+                          Text(
+                            "Clicks: $clicks",
+                            style: TextStyle(color: subtextColor, fontSize: 12),
+                          ),
                         ],
                       ),
                     ],
@@ -950,12 +1152,19 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
   // ==========================================
   // TAB 3: LOYALTY PROGRAM
   // ==========================================
-  Widget _buildLoyaltyTab(Color cardBg, Color borderColor, Color textColor, Color subtextColor, bool allowMarketing) {
+  Widget _buildLoyaltyTab(
+    Color cardBg,
+    Color borderColor,
+    Color textColor,
+    Color subtextColor,
+    bool allowMarketing,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isEnabled = _loyaltyConfig['enabled'] == true;
     final pointsPerRupee = _loyaltyConfig['pointsPerRupee'] ?? 0.1;
     final minOrder = _loyaltyConfig['minOrderValue'] ?? 100;
-    final allowOnDiscounted = _loyaltyConfig['allowPointsOnDiscountedOrders'] ?? true;
+    final allowOnDiscounted =
+        _loyaltyConfig['allowPointsOnDiscountedOrders'] ?? true;
     final rewards = (_loyaltyConfig['rewardsCatalog'] as List?) ?? [];
 
     return SingleChildScrollView(
@@ -981,7 +1190,11 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                     Expanded(
                       child: Text(
                         "Customer Loyalty Program",
-                        style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                     Switch.adaptive(
@@ -1009,15 +1222,24 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Points per ₹ Spent", style: TextStyle(color: subtextColor, fontSize: 12)),
+                          Text(
+                            "Points per ₹ Spent",
+                            style: TextStyle(color: subtextColor, fontSize: 12),
+                          ),
                           const SizedBox(height: 4),
                           TextFormField(
                             initialValue: pointsPerRupee.toString(),
                             enabled: allowMarketing,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: AppTheme.inputDecoration(
+                              isDark: isDark,
+                              isDense: true,
+                            ),
                             onChanged: (val) {
-                              _loyaltyConfig['pointsPerRupee'] = double.tryParse(val) ?? 0.1;
+                              _loyaltyConfig['pointsPerRupee'] =
+                                  double.tryParse(val) ?? 0.1;
                             },
                           ),
                         ],
@@ -1028,15 +1250,22 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Min Order Value (₹)", style: TextStyle(color: subtextColor, fontSize: 12)),
+                          Text(
+                            "Min Order Value (₹)",
+                            style: TextStyle(color: subtextColor, fontSize: 12),
+                          ),
                           const SizedBox(height: 4),
                           TextFormField(
                             initialValue: minOrder.toString(),
                             enabled: allowMarketing,
                             keyboardType: TextInputType.number,
-                            decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
+                            decoration: AppTheme.inputDecoration(
+                              isDark: isDark,
+                              isDense: true,
+                            ),
                             onChanged: (val) {
-                              _loyaltyConfig['minOrderValue'] = int.tryParse(val) ?? 100;
+                              _loyaltyConfig['minOrderValue'] =
+                                  int.tryParse(val) ?? 100;
                             },
                           ),
                         ],
@@ -1046,14 +1275,18 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 ),
                 const SizedBox(height: 12),
                 CheckboxListTile(
-                  title: Text("Allow earning points on discounted orders", style: TextStyle(color: textColor, fontSize: 13)),
+                  title: Text(
+                    "Allow earning points on discounted orders",
+                    style: TextStyle(color: textColor, fontSize: 13),
+                  ),
                   value: allowOnDiscounted,
                   activeColor: const Color(0xFFD97706),
                   contentPadding: EdgeInsets.zero,
                   onChanged: allowMarketing
                       ? (val) {
                           setState(() {
-                            _loyaltyConfig['allowPointsOnDiscountedOrders'] = val ?? true;
+                            _loyaltyConfig['allowPointsOnDiscountedOrders'] =
+                                val ?? true;
                           });
                         }
                       : null,
@@ -1080,7 +1313,14 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Rewards Catalog", style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(
+                "Rewards Catalog",
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               if (allowMarketing)
                 TextButton.icon(
                   icon: const Icon(Icons.add, size: 18),
@@ -1102,7 +1342,10 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 border: Border.all(color: borderColor),
               ),
               child: Center(
-                child: Text("No rewards configured. Add rewards for customers to redeem.", style: TextStyle(color: subtextColor)),
+                child: Text(
+                  "No rewards configured. Add rewards for customers to redeem.",
+                  style: TextStyle(color: subtextColor),
+                ),
               ),
             )
           else
@@ -1113,7 +1356,10 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: cardBg,
                   borderRadius: BorderRadius.circular(10),
@@ -1121,20 +1367,34 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.card_giftcard, color: Color(0xFFD97706), size: 20),
+                    const Icon(
+                      Icons.card_giftcard,
+                      color: Color(0xFFD97706),
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         "$name — ₹$val OFF ($points Points)",
-                        style: TextStyle(color: textColor, fontWeight: FontWeight.w600, fontSize: 14),
+                        style: TextStyle(
+                          color: textColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                     if (allowMarketing)
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                          size: 18,
+                        ),
                         onPressed: () {
                           setState(() {
-                            (_loyaltyConfig['rewardsCatalog'] as List).remove(r);
+                            (_loyaltyConfig['rewardsCatalog'] as List).remove(
+                              r,
+                            );
                           });
                           _saveLoyaltyConfig();
                         },
@@ -1157,8 +1417,13 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
     showGlassDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
-        title: const Text("Add Redeemable Reward", style: TextStyle(fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusDialog),
+        ),
+        title: const Text(
+          "Add Redeemable Reward",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1194,12 +1459,17 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFD97706),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusInput)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusInput),
+              ),
             ),
             onPressed: () {
               final name = nameCtrl.text.trim();
@@ -1231,7 +1501,13 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
   // ==========================================
   // TAB 4: REFERRALS PROGRAM
   // ==========================================
-  Widget _buildReferralsTab(Color cardBg, Color borderColor, Color textColor, Color subtextColor, bool allowMarketing) {
+  Widget _buildReferralsTab(
+    Color cardBg,
+    Color borderColor,
+    Color textColor,
+    Color subtextColor,
+    bool allowMarketing,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isEnabled = _referralConfig['enabled'] == true;
     final referrerBonus = _referralConfig['referrerBonusPoints'] ?? 50;
@@ -1257,7 +1533,11 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 Expanded(
                   child: Text(
                     "Customer Referral Program",
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 Switch.adaptive(
@@ -1285,15 +1565,22 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Referrer Bonus Points", style: TextStyle(color: subtextColor, fontSize: 12)),
+                      Text(
+                        "Referrer Bonus Points",
+                        style: TextStyle(color: subtextColor, fontSize: 12),
+                      ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: referrerBonus.toString(),
                         enabled: allowMarketing,
                         keyboardType: TextInputType.number,
-                        decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
+                        decoration: AppTheme.inputDecoration(
+                          isDark: isDark,
+                          isDense: true,
+                        ),
                         onChanged: (val) {
-                          _referralConfig['referrerBonusPoints'] = int.tryParse(val) ?? 50;
+                          _referralConfig['referrerBonusPoints'] =
+                              int.tryParse(val) ?? 50;
                         },
                       ),
                     ],
@@ -1304,15 +1591,22 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Referee (Friend) Bonus", style: TextStyle(color: subtextColor, fontSize: 12)),
+                      Text(
+                        "Referee (Friend) Bonus",
+                        style: TextStyle(color: subtextColor, fontSize: 12),
+                      ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: refereeBonus.toString(),
                         enabled: allowMarketing,
                         keyboardType: TextInputType.number,
-                        decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
+                        decoration: AppTheme.inputDecoration(
+                          isDark: isDark,
+                          isDense: true,
+                        ),
                         onChanged: (val) {
-                          _referralConfig['refereeBonusPoints'] = int.tryParse(val) ?? 25;
+                          _referralConfig['refereeBonusPoints'] =
+                              int.tryParse(val) ?? 25;
                         },
                       ),
                     ],
@@ -1324,15 +1618,22 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Min Order Value for First Order (₹)", style: TextStyle(color: subtextColor, fontSize: 12)),
+                Text(
+                  "Min Order Value for First Order (₹)",
+                  style: TextStyle(color: subtextColor, fontSize: 12),
+                ),
                 const SizedBox(height: 4),
                 TextFormField(
                   initialValue: minOrder.toString(),
                   enabled: allowMarketing,
                   keyboardType: TextInputType.number,
-                  decoration: AppTheme.inputDecoration(isDark: isDark, isDense: true),
+                  decoration: AppTheme.inputDecoration(
+                    isDark: isDark,
+                    isDense: true,
+                  ),
                   onChanged: (val) {
-                    _referralConfig['minOrderValueForReward'] = int.tryParse(val) ?? 100;
+                    _referralConfig['minOrderValueForReward'] =
+                        int.tryParse(val) ?? 100;
                   },
                 ),
               ],
@@ -1360,7 +1661,12 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
   // ==========================================
   // TAB 5: RETENTION ANALYTICS
   // ==========================================
-  Widget _buildRetentionTab(Color cardBg, Color borderColor, Color textColor, Color subtextColor) {
+  Widget _buildRetentionTab(
+    Color cardBg,
+    Color borderColor,
+    Color textColor,
+    Color subtextColor,
+  ) {
     final customers = (_retentionData['customers'] as Map?) ?? {};
     final revenue = (_retentionData['revenue'] as Map?) ?? {};
     final coupons = (_retentionData['coupons'] as Map?) ?? {};
@@ -1490,7 +1796,14 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
           ),
 
           const SizedBox(height: 20),
-          Text("Campaign Attribution & Performance", style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(
+            "Campaign Attribution & Performance",
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
           const SizedBox(height: 8),
 
           if (campaigns.isEmpty)
@@ -1502,7 +1815,10 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 border: Border.all(color: borderColor),
               ),
               child: Center(
-                child: Text("No campaign attribution data recorded yet.", style: TextStyle(color: subtextColor)),
+                child: Text(
+                  "No campaign attribution data recorded yet.",
+                  style: TextStyle(color: subtextColor),
+                ),
               ),
             )
           else
@@ -1524,28 +1840,49 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.campaign, color: Color(0xFFD97706), size: 20),
+                    const Icon(
+                      Icons.campaign,
+                      color: Color(0xFFD97706),
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                          Text(
+                            title,
+                            style: TextStyle(
+                              color: textColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text("Views: $views • Clicks: $clicks • CTR: $ctr%", style: TextStyle(color: subtextColor, fontSize: 12)),
+                          Text(
+                            "Views: $views • Clicks: $clicks • CTR: $ctr%",
+                            style: TextStyle(color: subtextColor, fontSize: 12),
+                          ),
                         ],
                       ),
                     ),
                     if (coupon.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.blueAccent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           "$coupon ($usage used)",
-                          style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 11),
+                          style: const TextStyle(
+                            color: Colors.blueAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
                         ),
                       ),
                   ],
@@ -1607,12 +1944,26 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: TextStyle(color: subtextColor, fontSize: 12, fontWeight: FontWeight.w500)),
+              Text(
+                title,
+                style: TextStyle(
+                  color: subtextColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               Icon(icon, color: color, size: 18),
             ],
           ),
           const SizedBox(height: 6),
-          Text(value, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 20)),
+          Text(
+            value,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(subtitle, style: TextStyle(color: subtextColor, fontSize: 11)),
           if (badge != null) ...[
@@ -1623,7 +1974,14 @@ class _AdminMarketingPageState extends State<AdminMarketingPage> with SingleTick
                 color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(badge, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+              child: Text(
+                badge,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ],

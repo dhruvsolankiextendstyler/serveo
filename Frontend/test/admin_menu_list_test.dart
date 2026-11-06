@@ -30,9 +30,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AdminMenuListPage(
-              initialItems: [sampleAvailableItem],
-            ),
+            body: AdminMenuListPage(initialItems: [sampleAvailableItem]),
           ),
         ),
       );
@@ -46,27 +44,30 @@ void main() {
       expect(find.text('Pizza'), findsOneWidget);
     });
 
-    test('Item model correctly deserializes from MongoDB JSON representation', () {
-      final json = {
-        '_id': 'item_001',
-        'itemName': 'Paneer Tikka Sandwich',
-        'itemPrice': 119,
-        'category': 'Sandwiches',
-        'description': 'Grilled cottage cheese with spices',
-        'isAvailable': true,
-        'imageUrl': '/item/image/abc123',
-        'isVeg': true,
-        'dietary': 'Veg'
-      };
+    test(
+      'Item model correctly deserializes from MongoDB JSON representation',
+      () {
+        final json = {
+          '_id': 'item_001',
+          'itemName': 'Paneer Tikka Sandwich',
+          'itemPrice': 119,
+          'category': 'Sandwiches',
+          'description': 'Grilled cottage cheese with spices',
+          'isAvailable': true,
+          'imageUrl': '/item/image/abc123',
+          'isVeg': true,
+          'dietary': 'Veg',
+        };
 
-      final item = Item.fromJson(json);
-      expect(item.itemId, 'item_001');
-      expect(item.itemName, 'Paneer Tikka Sandwich');
-      expect(item.itemPrice, 119);
-      expect(item.category, 'Sandwiches');
-      expect(item.isAvailable, isTrue);
-      expect(item.imageUrl, '/item/image/abc123');
-    });
+        final item = Item.fromJson(json);
+        expect(item.itemId, 'item_001');
+        expect(item.itemName, 'Paneer Tikka Sandwich');
+        expect(item.itemPrice, 119);
+        expect(item.category, 'Sandwiches');
+        expect(item.isAvailable, isTrue);
+        expect(item.imageUrl, '/item/image/abc123');
+      },
+    );
 
     test('Item model handles sold out item correctly', () {
       final json = {
@@ -99,189 +100,217 @@ void main() {
   });
 
   group('Bug 1 — Food Availability Toggle Tests', () {
-    testWidgets('Toggles availability from Available -> Sold Out after server confirms', (tester) async {
-      tester.view.physicalSize = const Size(800, 1400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
+    testWidgets(
+      'Toggles availability from Available -> Sold Out after server confirms',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
 
-      String? capturedMethod;
-      String? capturedUrl;
-      Map<String, dynamic>? capturedBody;
+        String? capturedMethod;
+        String? capturedUrl;
+        Map<String, dynamic>? capturedBody;
 
-      final mockClient = MockClient((request) async {
-        capturedMethod = request.method;
-        capturedUrl = request.url.toString();
-        capturedBody = jsonDecode(request.body);
+        final mockClient = MockClient((request) async {
+          capturedMethod = request.method;
+          capturedUrl = request.url.toString();
+          capturedBody = jsonDecode(request.body);
 
-        return http.Response(
-          jsonEncode({
-            'message': 'Item updated successfully',
-            'item': {
-              '_id': '6ad8cc2026351aad0e94af8d',
-              'itemName': 'Veggie Crunch Burger',
-              'isAvailable': false,
-            }
-          }),
-          200,
-          headers: {'content-type': 'application/json'},
-        );
-      });
+          return http.Response(
+            jsonEncode({
+              'message': 'Item updated successfully',
+              'item': {
+                '_id': '6ad8cc2026351aad0e94af8d',
+                'itemName': 'Veggie Crunch Burger',
+                'isAvailable': false,
+              },
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        });
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AdminMenuListPage(
-              mockHttpClient: mockClient,
-              initialItems: [sampleAvailableItem],
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AdminMenuListPage(
+                mockHttpClient: mockClient,
+                initialItems: [sampleAvailableItem],
+              ),
             ),
           ),
-        ),
-      );
-
-      expect(find.text('Available'), findsOneWidget);
-
-      final switchFinder = find.byKey(const Key('item_switch_6ad8cc2026351aad0e94af8d'));
-      expect(switchFinder, findsOneWidget);
-
-      // Tap switch to toggle available -> unavailable
-      await tester.tap(switchFinder);
-      await tester.pumpAndSettle();
-
-      // Verify request method and payload
-      expect(capturedMethod, 'PUT');
-      expect(capturedUrl, contains('/item/6ad8cc2026351aad0e94af8d'));
-      expect(capturedBody?['isAvailable'], isFalse);
-
-      // Verify UI updated after confirmed server response
-      expect(find.text('Sold Out'), findsOneWidget);
-      expect(find.text("'Veggie Crunch Burger' is now Sold Out"), findsOneWidget);
-    });
-
-    testWidgets('Toggles availability from Sold Out -> Available after server confirms', (tester) async {
-      tester.view.physicalSize = const Size(800, 1400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          jsonEncode({
-            'message': 'Item updated successfully',
-            'item': {
-              '_id': '6ad8cc2026351aad0e94af8e',
-              'itemName': 'Paneer Tikka Pizza',
-              'isAvailable': true,
-            }
-          }),
-          200,
-          headers: {'content-type': 'application/json'},
         );
-      });
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AdminMenuListPage(
-              mockHttpClient: mockClient,
-              initialItems: [sampleSoldOutItem],
+        expect(find.text('Available'), findsOneWidget);
+
+        final switchFinder = find.byKey(
+          const Key('item_switch_6ad8cc2026351aad0e94af8d'),
+        );
+        expect(switchFinder, findsOneWidget);
+
+        // Tap switch to toggle available -> unavailable
+        await tester.tap(switchFinder);
+        await tester.pumpAndSettle();
+
+        // Verify request method and payload
+        expect(capturedMethod, 'PUT');
+        expect(capturedUrl, contains('/item/6ad8cc2026351aad0e94af8d'));
+        expect(capturedBody?['isAvailable'], isFalse);
+
+        // Verify UI updated after confirmed server response
+        expect(find.text('Sold Out'), findsOneWidget);
+        expect(
+          find.text("'Veggie Crunch Burger' is now Sold Out"),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'Toggles availability from Sold Out -> Available after server confirms',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'message': 'Item updated successfully',
+              'item': {
+                '_id': '6ad8cc2026351aad0e94af8e',
+                'itemName': 'Paneer Tikka Pizza',
+                'isAvailable': true,
+              },
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AdminMenuListPage(
+                mockHttpClient: mockClient,
+                initialItems: [sampleSoldOutItem],
+              ),
             ),
           ),
-        ),
-      );
-
-      expect(find.text('Sold Out'), findsOneWidget);
-
-      final switchFinder = find.byKey(const Key('item_switch_6ad8cc2026351aad0e94af8e'));
-      await tester.tap(switchFinder);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Available'), findsOneWidget);
-      expect(find.text("'Paneer Tikka Pizza' is now Available"), findsOneWidget);
-    });
-
-    testWidgets('Preserves toggle state and shows error when backend returns 404', (tester) async {
-      tester.view.physicalSize = const Size(800, 1400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          jsonEncode({'error': 'Item not found'}),
-          404,
-          headers: {'content-type': 'application/json'},
         );
-      });
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AdminMenuListPage(
-              mockHttpClient: mockClient,
-              initialItems: [sampleAvailableItem],
+        expect(find.text('Sold Out'), findsOneWidget);
+
+        final switchFinder = find.byKey(
+          const Key('item_switch_6ad8cc2026351aad0e94af8e'),
+        );
+        await tester.tap(switchFinder);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Available'), findsOneWidget);
+        expect(
+          find.text("'Paneer Tikka Pizza' is now Available"),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'Preserves toggle state and shows error when backend returns 404',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({'error': 'Item not found'}),
+            404,
+            headers: {'content-type': 'application/json'},
+          );
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AdminMenuListPage(
+                mockHttpClient: mockClient,
+                initialItems: [sampleAvailableItem],
+              ),
             ),
           ),
-        ),
-      );
-
-      // Initially Available
-      expect(find.text('Available'), findsOneWidget);
-
-      final switchFinder = find.byKey(const Key('item_switch_6ad8cc2026351aad0e94af8d'));
-      await tester.tap(switchFinder);
-      await tester.pumpAndSettle();
-
-      // UI must remain Available because update failed
-      expect(find.text('Available'), findsOneWidget);
-      expect(find.text('Sold Out'), findsNothing);
-      expect(find.text('Item not found'), findsOneWidget);
-    });
-
-    testWidgets('Preserves toggle state and displays safe message when server returns HTML error page', (tester) async {
-      tester.view.physicalSize = const Size(800, 1400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          '<!DOCTYPE html><html><body><h1>502 Bad Gateway</h1></body></html>',
-          502,
-          headers: {'content-type': 'text/html'},
         );
-      });
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AdminMenuListPage(
-              mockHttpClient: mockClient,
-              initialItems: [sampleAvailableItem],
+        // Initially Available
+        expect(find.text('Available'), findsOneWidget);
+
+        final switchFinder = find.byKey(
+          const Key('item_switch_6ad8cc2026351aad0e94af8d'),
+        );
+        await tester.tap(switchFinder);
+        await tester.pumpAndSettle();
+
+        // UI must remain Available because update failed
+        expect(find.text('Available'), findsOneWidget);
+        expect(find.text('Sold Out'), findsNothing);
+        expect(find.text('Item not found'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Preserves toggle state and displays safe message when server returns HTML error page',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            '<!DOCTYPE html><html><body><h1>502 Bad Gateway</h1></body></html>',
+            502,
+            headers: {'content-type': 'text/html'},
+          );
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AdminMenuListPage(
+                mockHttpClient: mockClient,
+                initialItems: [sampleAvailableItem],
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      final switchFinder = find.byKey(const Key('item_switch_6ad8cc2026351aad0e94af8d'));
-      await tester.tap(switchFinder);
-      await tester.pumpAndSettle();
+        final switchFinder = find.byKey(
+          const Key('item_switch_6ad8cc2026351aad0e94af8d'),
+        );
+        await tester.tap(switchFinder);
+        await tester.pumpAndSettle();
 
-      // UI remains Available
-      expect(find.text('Available'), findsOneWidget);
-      expect(find.text('Sold Out'), findsNothing);
-      expect(find.textContaining('Server error (502)'), findsOneWidget);
-    });
+        // UI remains Available
+        expect(find.text('Available'), findsOneWidget);
+        expect(find.text('Sold Out'), findsNothing);
+        expect(find.textContaining('Server error (502)'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Rejects toggle when item ID is empty and shows warning', (tester) async {
+    testWidgets('Rejects toggle when item ID is empty and shows warning', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -318,8 +347,15 @@ void main() {
       await tester.tap(switchFinder);
       await tester.pumpAndSettle();
 
-      expect(requestMade, isFalse, reason: 'Must not send HTTP request when ID is empty');
-      expect(find.text('Cannot update availability: Item ID is missing.'), findsOneWidget);
+      expect(
+        requestMade,
+        isFalse,
+        reason: 'Must not send HTTP request when ID is empty',
+      );
+      expect(
+        find.text('Cannot update availability: Item ID is missing.'),
+        findsOneWidget,
+      );
     });
   });
 }

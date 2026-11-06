@@ -17,35 +17,44 @@ void main() {
       expect(AppTheme.radiusBottomSheet, 24.0);
     });
 
-    test('Dark theme input decoration has softer rounded borders and filled surface', () {
-      final inputTheme = AppTheme.darkTheme.inputDecorationTheme;
-      expect(inputTheme.filled, isTrue);
-      expect(inputTheme.fillColor, AppTheme.darkInputFill);
-      expect(inputTheme.border, isA<OutlineInputBorder>());
+    test(
+      'Dark theme input decoration has softer rounded borders and filled surface',
+      () {
+        final inputTheme = AppTheme.darkTheme.inputDecorationTheme;
+        expect(inputTheme.filled, isTrue);
+        expect(inputTheme.fillColor, AppTheme.darkInputFill);
+        expect(inputTheme.border, isA<OutlineInputBorder>());
 
-      final border = inputTheme.border as OutlineInputBorder;
-      expect(border.borderRadius, BorderRadius.circular(14.0));
-      expect(border.borderSide.color, AppTheme.darkInputBorder);
+        final border = inputTheme.border as OutlineInputBorder;
+        expect(border.borderRadius, BorderRadius.circular(14.0));
+        expect(border.borderSide.color, AppTheme.darkInputBorder);
 
-      final focusedBorder = inputTheme.focusedBorder as OutlineInputBorder;
-      expect(focusedBorder.borderRadius, BorderRadius.circular(14.0));
-      expect(focusedBorder.borderSide.color, AppTheme.darkInputFocusedBorder);
-    });
+        final focusedBorder = inputTheme.focusedBorder as OutlineInputBorder;
+        expect(focusedBorder.borderRadius, BorderRadius.circular(14.0));
+        expect(focusedBorder.borderSide.color, AppTheme.darkInputFocusedBorder);
+      },
+    );
 
-    test('Light theme input decoration has softer rounded borders and filled surface', () {
-      final inputTheme = AppTheme.lightTheme.inputDecorationTheme;
-      expect(inputTheme.filled, isTrue);
-      expect(inputTheme.fillColor, AppTheme.lightInputFill);
-      expect(inputTheme.border, isA<OutlineInputBorder>());
+    test(
+      'Light theme input decoration has softer rounded borders and filled surface',
+      () {
+        final inputTheme = AppTheme.lightTheme.inputDecorationTheme;
+        expect(inputTheme.filled, isTrue);
+        expect(inputTheme.fillColor, AppTheme.lightInputFill);
+        expect(inputTheme.border, isA<OutlineInputBorder>());
 
-      final border = inputTheme.border as OutlineInputBorder;
-      expect(border.borderRadius, BorderRadius.circular(14.0));
-      expect(border.borderSide.color, AppTheme.lightInputBorder);
+        final border = inputTheme.border as OutlineInputBorder;
+        expect(border.borderRadius, BorderRadius.circular(14.0));
+        expect(border.borderSide.color, AppTheme.lightInputBorder);
 
-      final focusedBorder = inputTheme.focusedBorder as OutlineInputBorder;
-      expect(focusedBorder.borderRadius, BorderRadius.circular(14.0));
-      expect(focusedBorder.borderSide.color, AppTheme.lightInputFocusedBorder);
-    });
+        final focusedBorder = inputTheme.focusedBorder as OutlineInputBorder;
+        expect(focusedBorder.borderRadius, BorderRadius.circular(14.0));
+        expect(
+          focusedBorder.borderSide.color,
+          AppTheme.lightInputFocusedBorder,
+        );
+      },
+    );
 
     test('Dialog theme has softer rounded corners (22px)', () {
       final darkDialog = AppTheme.darkTheme.dialogTheme;
@@ -63,105 +72,130 @@ void main() {
       final darkSheet = AppTheme.darkTheme.bottomSheetTheme;
       expect(darkSheet.shape, isA<RoundedRectangleBorder>());
       final darkShape = darkSheet.shape as RoundedRectangleBorder;
-      expect(darkShape.borderRadius, const BorderRadius.vertical(top: Radius.circular(24.0)));
+      expect(
+        darkShape.borderRadius,
+        const BorderRadius.vertical(top: Radius.circular(24.0)),
+      );
 
       final lightSheet = AppTheme.lightTheme.bottomSheetTheme;
       expect(lightSheet.shape, isA<RoundedRectangleBorder>());
       final lightShape = lightSheet.shape as RoundedRectangleBorder;
-      expect(lightShape.borderRadius, const BorderRadius.vertical(top: Radius.circular(24.0)));
+      expect(
+        lightShape.borderRadius,
+        const BorderRadius.vertical(top: Radius.circular(24.0)),
+      );
     });
   });
 
   group('Global UI Refinement — ServeoGlassContainer & Backdrop Blur', () {
-    testWidgets('ServeoGlassContainer wraps content with BackdropFilter and soft borders', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.darkTheme,
-          home: const Scaffold(
-            body: ServeoGlassContainer(
-              blur: 14.0,
-              padding: EdgeInsets.all(16),
-              child: Text("Glassmorphism Content"),
-            ),
-          ),
-        ),
-      );
-
-      // Verify widget hierarchy
-      expect(find.byType(ServeoGlassContainer), findsOneWidget);
-      expect(find.byType(BackdropFilter), findsOneWidget);
-      expect(find.byType(ClipRRect), findsOneWidget);
-      expect(find.text("Glassmorphism Content"), findsOneWidget);
-
-      final backdropFilter = tester.widget<BackdropFilter>(find.byType(BackdropFilter));
-      expect(backdropFilter.filter, isNotNull);
-    });
-
-    testWidgets('showGlassDialog displays modal with soft blur and rounded dialog', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.darkTheme,
-          home: Builder(
-            builder: (ctx) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () {
-                  showGlassDialog(
-                    context: ctx,
-                    builder: (dCtx) => AlertDialog(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusDialog)),
-                      title: const Text("Glass Dialog"),
-                      content: const Text("Dialog body content"),
-                    ),
-                  );
-                },
-                child: const Text("Open Dialog"),
+    testWidgets(
+      'ServeoGlassContainer wraps content with BackdropFilter and soft borders',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.darkTheme,
+            home: const Scaffold(
+              body: ServeoGlassContainer(
+                blur: 14.0,
+                padding: EdgeInsets.all(16),
+                child: Text("Glassmorphism Content"),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text("Open Dialog"));
-      await tester.pumpAndSettle();
+        // Verify widget hierarchy
+        expect(find.byType(ServeoGlassContainer), findsOneWidget);
+        expect(find.byType(BackdropFilter), findsOneWidget);
+        expect(find.byType(ClipRRect), findsOneWidget);
+        expect(find.text("Glassmorphism Content"), findsOneWidget);
 
-      expect(find.text("Glass Dialog"), findsOneWidget);
-      expect(find.text("Dialog body content"), findsOneWidget);
-      expect(find.byType(BackdropFilter), findsWidgets);
-    });
+        final backdropFilter = tester.widget<BackdropFilter>(
+          find.byType(BackdropFilter),
+        );
+        expect(backdropFilter.filter, isNotNull);
+      },
+    );
 
-    testWidgets('showGlassBottomSheet displays modal bottom sheet with soft blur', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.darkTheme,
-          home: Builder(
-            builder: (ctx) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () {
-                  showGlassBottomSheet(
-                    context: ctx,
-                    builder: (sCtx) => const SizedBox(
-                      height: 200,
-                      child: Center(child: Text("Glass Bottom Sheet Content")),
-                    ),
-                  );
-                },
-                child: const Text("Open Sheet"),
+    testWidgets(
+      'showGlassDialog displays modal with soft blur and rounded dialog',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.darkTheme,
+            home: Builder(
+              builder: (ctx) => Scaffold(
+                body: ElevatedButton(
+                  onPressed: () {
+                    showGlassDialog(
+                      context: ctx,
+                      builder: (dCtx) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusDialog,
+                          ),
+                        ),
+                        title: const Text("Glass Dialog"),
+                        content: const Text("Dialog body content"),
+                      ),
+                    );
+                  },
+                  child: const Text("Open Dialog"),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text("Open Sheet"));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text("Open Dialog"));
+        await tester.pumpAndSettle();
 
-      expect(find.text("Glass Bottom Sheet Content"), findsOneWidget);
-      expect(find.byType(BackdropFilter), findsWidgets);
-    });
+        expect(find.text("Glass Dialog"), findsOneWidget);
+        expect(find.text("Dialog body content"), findsOneWidget);
+        expect(find.byType(BackdropFilter), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'showGlassBottomSheet displays modal bottom sheet with soft blur',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.darkTheme,
+            home: Builder(
+              builder: (ctx) => Scaffold(
+                body: ElevatedButton(
+                  onPressed: () {
+                    showGlassBottomSheet(
+                      context: ctx,
+                      builder: (sCtx) => const SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Text("Glass Bottom Sheet Content"),
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text("Open Sheet"),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text("Open Sheet"));
+        await tester.pumpAndSettle();
+
+        expect(find.text("Glass Bottom Sheet Content"), findsOneWidget);
+        expect(find.byType(BackdropFilter), findsWidgets);
+      },
+    );
   });
 
   group('Global UI Refinement — ServeoTextBox Component', () {
-    testWidgets('Renders with soft input decoration and toggles obscure text', (tester) async {
+    testWidgets('Renders with soft input decoration and toggles obscure text', (
+      tester,
+    ) async {
       final controller = TextEditingController(text: "secret123");
 
       await tester.pumpWidget(
@@ -184,7 +218,9 @@ void main() {
       // Verify initial obscure state
       final editableTextFinder = find.byType(EditableText);
       expect(editableTextFinder, findsOneWidget);
-      EditableText editableText = tester.widget<EditableText>(editableTextFinder);
+      EditableText editableText = tester.widget<EditableText>(
+        editableTextFinder,
+      );
       expect(editableText.obscureText, isTrue);
 
       // Find visibility toggle icon button and tap it
@@ -199,4 +235,3 @@ void main() {
     });
   });
 }
-
